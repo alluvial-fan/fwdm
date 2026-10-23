@@ -1,0 +1,5055 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.603293,
+          45.446397
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M118",
+        "stop_code": "10118",
+        "stop_name": "STATION ANGRIGNON",
+        "stop_lat": "45.446397",
+        "stop_lon": "-73.603293",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Angrignon",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/angrignon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.603835,
+          45.446319
+        ]
+      },
+      "properties": {
+        "stop_id": "43-01",
+        "stop_code": "10118",
+        "stop_name": "Station Angrignon",
+        "stop_lat": "45.446319",
+        "stop_lon": "-73.603835",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M118",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Angrignon",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.593265,
+          45.451166
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M120",
+        "stop_code": "10120",
+        "stop_name": "STATION MONK",
+        "stop_lat": "45.451166",
+        "stop_lon": "-73.593265",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Monk",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/monk"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.593128,
+          45.451307
+        ]
+      },
+      "properties": {
+        "stop_id": "42-01",
+        "stop_code": "10120",
+        "stop_name": "Station Monk - Accès (B) boul Monk",
+        "stop_lat": "45.451307",
+        "stop_lon": "-73.593128",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M120",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Monk",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.59338,
+          45.451007
+        ]
+      },
+      "properties": {
+        "stop_id": "42-02",
+        "stop_code": "10120",
+        "stop_name": "Station Monk - Accès (A) boul Monk",
+        "stop_lat": "45.451007",
+        "stop_lon": "-73.593380",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M120",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Monk",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.581991,
+          45.456783
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M122",
+        "stop_code": "10122",
+        "stop_name": "STATION JOLICOEUR",
+        "stop_lat": "45.456783",
+        "stop_lon": "-73.581991",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Jolicoeur",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/jolicoeur"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.582115,
+          45.456787
+        ]
+      },
+      "properties": {
+        "stop_id": "41-01",
+        "stop_code": "10122",
+        "stop_name": "Station Jolicoeur",
+        "stop_lat": "45.456787",
+        "stop_lon": "-73.582115",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M122",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Jolicoeur",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.571654,
+          45.459432
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M124",
+        "stop_code": "10124",
+        "stop_name": "STATION VERDUN",
+        "stop_lat": "45.459432",
+        "stop_lon": "-73.571654",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Verdun",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/verdun"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.571833,
+          45.459222
+        ]
+      },
+      "properties": {
+        "stop_id": "40-01",
+        "stop_code": "10124",
+        "stop_name": "Station Verdun - Accès Nord rue de Verdun",
+        "stop_lat": "45.459222",
+        "stop_lon": "-73.571833",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M124",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Verdun",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.571521,
+          45.459163
+        ]
+      },
+      "properties": {
+        "stop_id": "40-02",
+        "stop_code": "10124",
+        "stop_name": "Station Verdun - Accès Sud rue de Verdun",
+        "stop_lat": "45.459163",
+        "stop_lon": "-73.571521",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M124",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Verdun",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.567107,
+          45.461911
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M126",
+        "stop_code": "10126",
+        "stop_name": "STATION DE L'ÉGLISE",
+        "stop_lat": "45.461911",
+        "stop_lon": "-73.567107",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro De l'Église",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/de-l-eglise"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.567216,
+          45.461818
+        ]
+      },
+      "properties": {
+        "stop_id": "39-01",
+        "stop_code": "10126",
+        "stop_name": "Station De l'Église - Accès rue Galt",
+        "stop_lat": "45.461818",
+        "stop_lon": "-73.567216",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M126",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro De l'Église",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.565795,
+          45.462823
+        ]
+      },
+      "properties": {
+        "stop_id": "39-02",
+        "stop_code": "10126",
+        "stop_name": "Station De l'Église - Accès rue de l'Église",
+        "stop_lat": "45.462823",
+        "stop_lon": "-73.565795",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M126",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro De l'Église",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.566281,
+          45.470631
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M128",
+        "stop_code": "10128",
+        "stop_name": "STATION LASALLE",
+        "stop_lat": "45.470631",
+        "stop_lon": "-73.566281",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro LaSalle",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/lasalle"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.566135,
+          45.470736
+        ]
+      },
+      "properties": {
+        "stop_id": "38-01",
+        "stop_code": "10128",
+        "stop_name": "Station LaSalle",
+        "stop_lat": "45.470736",
+        "stop_lon": "-73.566135",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M128",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro LaSalle",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.569366,
+          45.478467
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M130",
+        "stop_code": "10130",
+        "stop_name": "STATION CHARLEVOIX",
+        "stop_lat": "45.478467",
+        "stop_lon": "-73.569366",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Charlevoix",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/charlevoix"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.569349,
+          45.478318
+        ]
+      },
+      "properties": {
+        "stop_id": "37-01",
+        "stop_code": "10130",
+        "stop_name": "Station Charlevoix",
+        "stop_lat": "45.478318",
+        "stop_lon": "-73.569349",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M130",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Charlevoix",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.579721,
+          45.482818
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M132",
+        "stop_code": "10132",
+        "stop_name": "STATION LIONEL-GROULX",
+        "stop_lat": "45.482818",
+        "stop_lon": "-73.579721",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Lionel-Groulx",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/lionel-groulx"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.579601,
+          45.482878
+        ]
+      },
+      "properties": {
+        "stop_id": "36-01",
+        "stop_code": "10132",
+        "stop_name": "Station Lionel-Groulx",
+        "stop_lat": "45.482878",
+        "stop_lon": "-73.579601",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M132",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Lionel-Groulx",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.585731,
+          45.490038
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M134",
+        "stop_code": "10134",
+        "stop_name": "STATION ATWATER",
+        "stop_lat": "45.490038",
+        "stop_lon": "-73.585731",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Atwater",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/atwater"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.58629,
+          45.48977
+        ]
+      },
+      "properties": {
+        "stop_id": "35-01",
+        "stop_code": "10134",
+        "stop_name": "Station Atwater - Accès (A) boul De Maisonneuve",
+        "stop_lat": "45.489770",
+        "stop_lon": "-73.586290",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M134",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Atwater",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.57925,
+          45.495692
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M136",
+        "stop_code": "10136",
+        "stop_name": "STATION GUY-CONCORDIA",
+        "stop_lat": "45.495692",
+        "stop_lon": "-73.579250",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Guy-Concordia",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/guy-concordia"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.579056,
+          45.495678
+        ]
+      },
+      "properties": {
+        "stop_id": "34-01",
+        "stop_code": "10136",
+        "stop_name": "Station Guy-Concordia - Accès (B) rue Guy",
+        "stop_lat": "45.495678",
+        "stop_lon": "-73.579056",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M136",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Guy-Concordia",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.580755,
+          45.494521
+        ]
+      },
+      "properties": {
+        "stop_id": "34-02",
+        "stop_code": "10136",
+        "stop_name": "Station Guy-Concordia - Accès (A) rue Saint-Mathieu",
+        "stop_lat": "45.494521",
+        "stop_lon": "-73.580755",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M136",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Guy-Concordia",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.57471,
+          45.500895
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M138",
+        "stop_code": "10138",
+        "stop_name": "STATION PEEL",
+        "stop_lat": "45.500895",
+        "stop_lon": "-73.574710",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Peel",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/peel"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.574971,
+          45.50089
+        ]
+      },
+      "properties": {
+        "stop_id": "33-01",
+        "stop_code": "10138",
+        "stop_name": "Station Peel - Accès Nord-Ouest boul De Maisonneuve",
+        "stop_lat": "45.500890",
+        "stop_lon": "-73.574971",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M138",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Peel",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.574218,
+          45.501543
+        ]
+      },
+      "properties": {
+        "stop_id": "33-02",
+        "stop_code": "10138",
+        "stop_name": "Station Peel - Accès Nord-Est boul De Maisonneuve",
+        "stop_lat": "45.501543",
+        "stop_lon": "-73.574218",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M138",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Peel",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.574305,
+          45.501028
+        ]
+      },
+      "properties": {
+        "stop_id": "33-03",
+        "stop_code": "10138",
+        "stop_name": "Station Peel - Accès rue Peel",
+        "stop_lat": "45.501028",
+        "stop_lon": "-73.574305",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M138",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Peel",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.574713,
+          45.499937
+        ]
+      },
+      "properties": {
+        "stop_id": "33-04",
+        "stop_code": "10138",
+        "stop_name": "Station Peel - Accès rue Stanley",
+        "stop_lat": "45.499937",
+        "stop_lon": "-73.574713",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M138",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Peel",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.571793,
+          45.504137
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M140",
+        "stop_code": "10140",
+        "stop_name": "STATION MCGILL",
+        "stop_lat": "45.504137",
+        "stop_lon": "-73.571793",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro McGill",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/mcgill"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.57131,
+          45.504117
+        ]
+      },
+      "properties": {
+        "stop_id": "32-01",
+        "stop_code": "10140",
+        "stop_name": "Station McGill - Accès Sud-Est boul De Maisonneuve",
+        "stop_lat": "45.504117",
+        "stop_lon": "-73.571310",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M140",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro McGill",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.571143,
+          45.504802
+        ]
+      },
+      "properties": {
+        "stop_id": "32-02",
+        "stop_code": "10140",
+        "stop_name": "Station McGill - Accès Nord rue Union",
+        "stop_lat": "45.504802",
+        "stop_lon": "-73.571143",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M140",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro McGill",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.570872,
+          45.504705
+        ]
+      },
+      "properties": {
+        "stop_id": "32-03",
+        "stop_code": "10140",
+        "stop_name": "Station McGill - Accès Sud rue Union",
+        "stop_lat": "45.504705",
+        "stop_lon": "-73.570872",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M140",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro McGill",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.572132,
+          45.504393
+        ]
+      },
+      "properties": {
+        "stop_id": "32-04",
+        "stop_code": "10140",
+        "stop_name": "Station McGill - Accès boul Robert-Bourassa",
+        "stop_lat": "45.504393",
+        "stop_lon": "-73.572132",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M140",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro McGill",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.572397,
+          45.503365
+        ]
+      },
+      "properties": {
+        "stop_id": "32-07",
+        "stop_code": "10140",
+        "stop_name": "Station McGill - Accès Nord-Ouest boul De Maisonneuve",
+        "stop_lat": "45.503365",
+        "stop_lon": "-73.572397",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M140",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro McGill",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.572264,
+          45.503503
+        ]
+      },
+      "properties": {
+        "stop_id": "32-08",
+        "stop_code": "10140",
+        "stop_name": "Station McGill - Accès Nord-Est boul De Maisonneuve",
+        "stop_lat": "45.503503",
+        "stop_lon": "-73.572264",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M140",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro McGill",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.568313,
+          45.508173
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M142",
+        "stop_code": "10142",
+        "stop_name": "STATION PLACE DES ARTS",
+        "stop_lat": "45.508173",
+        "stop_lon": "-73.568313",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Place-des-Arts",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/place-des-arts"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.568122,
+          45.508211
+        ]
+      },
+      "properties": {
+        "stop_id": "31-01",
+        "stop_code": "10142",
+        "stop_name": "Station Place-des-Arts - Accès (A) rue Jeanne-Mance",
+        "stop_lat": "45.508211",
+        "stop_lon": "-73.568122",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M142",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Place-des-Arts",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.569391,
+          45.507254
+        ]
+      },
+      "properties": {
+        "stop_id": "31-02",
+        "stop_code": "10142",
+        "stop_name": "Station Place-des-Arts - Accès (D) rue De Bleury",
+        "stop_lat": "45.507254",
+        "stop_lon": "-73.569391",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M142",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Place-des-Arts",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.568701,
+          45.507028
+        ]
+      },
+      "properties": {
+        "stop_id": "31-03",
+        "stop_code": "10142",
+        "stop_name": "Station Place-des-Arts - Accès (C) rue De Bleury",
+        "stop_lat": "45.507028",
+        "stop_lon": "-73.568701",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M142",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Place-des-Arts",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.568071,
+          45.509251
+        ]
+      },
+      "properties": {
+        "stop_id": "31-04",
+        "stop_code": "10142",
+        "stop_name": "Station Place-des-Arts - Accès (B) av du Président-Kennedy (UQAM)",
+        "stop_lat": "45.509251",
+        "stop_lon": "-73.568071",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M142",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Place-des-Arts",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.56534,
+          45.51059
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M144",
+        "stop_code": "10144",
+        "stop_name": "STATION ST-LAURENT",
+        "stop_lat": "45.510590",
+        "stop_lon": "-73.565340",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Saint-Laurent",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/saint-laurent"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.564915,
+          45.510835
+        ]
+      },
+      "properties": {
+        "stop_id": "30-01",
+        "stop_code": "10144",
+        "stop_name": "Station Saint-Laurent",
+        "stop_lat": "45.510835",
+        "stop_lon": "-73.564915",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M144",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Saint-Laurent",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.560106,
+          45.514852
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M146",
+        "stop_code": "10146",
+        "stop_name": "STATION BERRI-UQAM",
+        "stop_lat": "45.514852",
+        "stop_lon": "-73.560106",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Berri-UQAM",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/berri-uqam"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.559654,
+          45.514851
+        ]
+      },
+      "properties": {
+        "stop_id": "11-01",
+        "stop_code": "10146",
+        "stop_name": "Station Berri-UQAM - Accès (B) rue Sainte-Catherine",
+        "stop_lat": "45.514851",
+        "stop_lon": "-73.559654",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M146",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Berri-UQAM",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.561853,
+          45.514207
+        ]
+      },
+      "properties": {
+        "stop_id": "11-02",
+        "stop_code": "10146",
+        "stop_name": "Station Berri-UQAM - Accès (D) rue Saint-Denis",
+        "stop_lat": "45.514207",
+        "stop_lon": "-73.561853",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M146",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Berri-UQAM",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.560861,
+          45.51498
+        ]
+      },
+      "properties": {
+        "stop_id": "11-03",
+        "stop_code": "10146",
+        "stop_name": "Station Berri-UQAM - Accès (A) rue Berri",
+        "stop_lat": "45.514980",
+        "stop_lon": "-73.560861",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M146",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Berri-UQAM",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.55977,
+          45.51652
+        ]
+      },
+      "properties": {
+        "stop_id": "11-04",
+        "stop_code": "10146",
+        "stop_name": "Station Berri-UQAM - Accès (C) boul De Maisonneuve",
+        "stop_lat": "45.516520",
+        "stop_lon": "-73.559770",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M146",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Berri-UQAM",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.561645,
+          45.515736
+        ]
+      },
+      "properties": {
+        "stop_id": "11-05",
+        "stop_code": "10146",
+        "stop_name": "Station Berri-UQAM - Accès Est rue Berri (Gare d'autocars de Montréal)",
+        "stop_lat": "45.515736",
+        "stop_lon": "-73.561645",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M146",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Berri-UQAM",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.55591,
+          45.518971
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M148",
+        "stop_code": "10148",
+        "stop_name": "STATION BEAUDRY",
+        "stop_lat": "45.518971",
+        "stop_lon": "-73.555910",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Beaudry",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/beaudry"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.55585,
+          45.518977
+        ]
+      },
+      "properties": {
+        "stop_id": "29-01",
+        "stop_code": "10148",
+        "stop_name": "Station Beaudry",
+        "stop_lat": "45.518977",
+        "stop_lon": "-73.555850",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M148",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Beaudry",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.552073,
+          45.523717
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M150",
+        "stop_code": "10150",
+        "stop_name": "STATION PAPINEAU",
+        "stop_lat": "45.523717",
+        "stop_lon": "-73.552073",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Papineau",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/papineau"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.552068,
+          45.523708
+        ]
+      },
+      "properties": {
+        "stop_id": "28-01",
+        "stop_code": "10150",
+        "stop_name": "Station Papineau",
+        "stop_lat": "45.523708",
+        "stop_lon": "-73.552068",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M150",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Papineau",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.552158,
+          45.533133
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M152",
+        "stop_code": "10152",
+        "stop_name": "STATION FRONTENAC",
+        "stop_lat": "45.533133",
+        "stop_lon": "-73.552158",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Frontenac",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/frontenac"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.552138,
+          45.533131
+        ]
+      },
+      "properties": {
+        "stop_id": "27-01",
+        "stop_code": "10152",
+        "stop_name": "Station Frontenac",
+        "stop_lat": "45.533131",
+        "stop_lon": "-73.552138",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M152",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Frontenac",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.554543,
+          45.54177
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M154",
+        "stop_code": "10154",
+        "stop_name": "STATION PRÉFONTAINE",
+        "stop_lat": "45.541770",
+        "stop_lon": "-73.554543",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Préfontaine",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/prefontaine"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.554453,
+          45.541524
+        ]
+      },
+      "properties": {
+        "stop_id": "26-01",
+        "stop_code": "10154",
+        "stop_name": "Station Préfontaine - Accès (A) rue Hochelaga",
+        "stop_lat": "45.541524",
+        "stop_lon": "-73.554453",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M154",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Préfontaine",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.55479,
+          45.541641
+        ]
+      },
+      "properties": {
+        "stop_id": "26-02",
+        "stop_code": "10154",
+        "stop_name": "Station Préfontaine - Accès (B) rue Hochelaga",
+        "stop_lat": "45.541641",
+        "stop_lon": "-73.554790",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M154",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Préfontaine",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.551427,
+          45.546819
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M156",
+        "stop_code": "10156",
+        "stop_name": "STATION JOLIETTE",
+        "stop_lat": "45.546819",
+        "stop_lon": "-73.551427",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Joliette",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/joliette"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.55151,
+          45.54698
+        ]
+      },
+      "properties": {
+        "stop_id": "25-01",
+        "stop_code": "10156",
+        "stop_name": "Station Joliette - Accès (A) rue Hochelaga",
+        "stop_lat": "45.546980",
+        "stop_lon": "-73.551510",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M156",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Joliette",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.551162,
+          45.546996
+        ]
+      },
+      "properties": {
+        "stop_id": "25-02",
+        "stop_code": "10156",
+        "stop_name": "Station Joliette - Accès (B) rue Hochelaga",
+        "stop_lat": "45.546996",
+        "stop_lon": "-73.551162",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M156",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Joliette",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.551696,
+          45.553658
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M158",
+        "stop_code": "10158",
+        "stop_name": "STATION PIE IX",
+        "stop_lat": "45.553658",
+        "stop_lon": "-73.551696",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Pie-IX",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/pie-ix"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.551831,
+          45.55392
+        ]
+      },
+      "properties": {
+        "stop_id": "24-01",
+        "stop_code": "10158",
+        "stop_name": "Station Pie-IX - Accès (A) boul Pie-IX",
+        "stop_lat": "45.553920",
+        "stop_lon": "-73.551831",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M158",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Pie-IX",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.551963,
+          45.553578
+        ]
+      },
+      "properties": {
+        "stop_id": "24-02",
+        "stop_code": "10158",
+        "stop_name": "Station Pie-IX - Accès (B) Ouest boul Pie-IX",
+        "stop_lat": "45.553578",
+        "stop_lon": "-73.551963",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M158",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Pie-IX",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.54703,
+          45.560976
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M160",
+        "stop_code": "10160",
+        "stop_name": "STATION VIAU",
+        "stop_lat": "45.560976",
+        "stop_lon": "-73.547030",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Viau",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/viau"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.547166,
+          45.560986
+        ]
+      },
+      "properties": {
+        "stop_id": "23-01",
+        "stop_code": "10160",
+        "stop_name": "Station Viau",
+        "stop_lat": "45.560986",
+        "stop_lon": "-73.547166",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M160",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Viau",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.546845,
+          45.569167
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M162",
+        "stop_code": "10162",
+        "stop_name": "STATION DE L'ASSOMPTION",
+        "stop_lat": "45.569167",
+        "stop_lon": "-73.546845",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Assomption",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/assomption"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.546797,
+          45.569229
+        ]
+      },
+      "properties": {
+        "stop_id": "22-01",
+        "stop_code": "10162",
+        "stop_name": "Station Assomption",
+        "stop_lat": "45.569229",
+        "stop_lon": "-73.546797",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M162",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Assomption",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.54669,
+          45.576859
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M164",
+        "stop_code": "10164",
+        "stop_name": "STATION CADILLAC",
+        "stop_lat": "45.576859",
+        "stop_lon": "-73.546690",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Cadillac",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/cadillac"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.54636,
+          45.577005
+        ]
+      },
+      "properties": {
+        "stop_id": "21-01",
+        "stop_code": "10164",
+        "stop_name": "Station Cadillac - Accès Sud rue Sherbrooke",
+        "stop_lat": "45.577005",
+        "stop_lon": "-73.546360",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M164",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Cadillac",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.546964,
+          45.576844
+        ]
+      },
+      "properties": {
+        "stop_id": "21-02",
+        "stop_code": "10164",
+        "stop_name": "Station Cadillac - Accès Nord rue Sherbrooke",
+        "stop_lat": "45.576844",
+        "stop_lon": "-73.546964",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M164",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Cadillac",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.543101,
+          45.582784
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M166",
+        "stop_code": "10166",
+        "stop_name": "STATION LANGELIER",
+        "stop_lat": "45.582784",
+        "stop_lon": "-73.543101",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Langelier",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/langelier"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.542776,
+          45.582858
+        ]
+      },
+      "properties": {
+        "stop_id": "20-01",
+        "stop_code": "10166",
+        "stop_name": "Station Langelier - Accès Sud rue Sherbrooke",
+        "stop_lat": "45.582858",
+        "stop_lon": "-73.542776",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M166",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Langelier",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.542941,
+          45.582478
+        ]
+      },
+      "properties": {
+        "stop_id": "20-02",
+        "stop_code": "10166",
+        "stop_name": "Station Langelier - Accès Ouest boul Langelier",
+        "stop_lat": "45.582478",
+        "stop_lon": "-73.542941",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M166",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Langelier",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.54351,
+          45.582613
+        ]
+      },
+      "properties": {
+        "stop_id": "20-03",
+        "stop_code": "10166",
+        "stop_name": "Station Langelier - Accès Nord rue Sherbrooke",
+        "stop_lat": "45.582613",
+        "stop_lon": "-73.543510",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M166",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Langelier",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.539753,
+          45.589614
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M168",
+        "stop_code": "10168",
+        "stop_name": "STATION RADISSON",
+        "stop_lat": "45.589614",
+        "stop_lon": "-73.539753",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Radisson",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/radisson"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.539571,
+          45.589306
+        ]
+      },
+      "properties": {
+        "stop_id": "19-01",
+        "stop_code": "10168",
+        "stop_name": "Station Radisson - Accès (A) rue Sherbrooke",
+        "stop_lat": "45.589306",
+        "stop_lon": "-73.539571",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M168",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Radisson",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.538919,
+          45.589582
+        ]
+      },
+      "properties": {
+        "stop_id": "19-02",
+        "stop_code": "10168",
+        "stop_name": "Station Radisson - Accès (B) rue Sherbrooke",
+        "stop_lat": "45.589582",
+        "stop_lon": "-73.538919",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M168",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Radisson",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.539892,
+          45.589696
+        ]
+      },
+      "properties": {
+        "stop_id": "19-03",
+        "stop_code": "10168",
+        "stop_name": "Station Radisson - Accès (C) Terminus Radisson",
+        "stop_lat": "45.589696",
+        "stop_lon": "-73.539892",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M168",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Radisson",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.535053,
+          45.596495
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M170",
+        "stop_code": "10170",
+        "stop_name": "STATION HONORÉ-BEAUGRAND",
+        "stop_lat": "45.596495",
+        "stop_lon": "-73.535053",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Honoré-Beaugrand",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/honore-beaugrand"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.53463,
+          45.596593
+        ]
+      },
+      "properties": {
+        "stop_id": "18-01",
+        "stop_code": "10170",
+        "stop_name": "Station Honoré-Beaugrand - Accès (C) rue Sherbrooke",
+        "stop_lat": "45.596593",
+        "stop_lon": "-73.534630",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M170",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Honoré-Beaugrand",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.535039,
+          45.596868
+        ]
+      },
+      "properties": {
+        "stop_id": "18-02",
+        "stop_code": "10170",
+        "stop_name": "Station Honoré-Beaugrand - Accès (B) rue Sherbrooke",
+        "stop_lat": "45.596868",
+        "stop_lon": "-73.535039",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M170",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Honoré-Beaugrand",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.536332,
+          45.596957
+        ]
+      },
+      "properties": {
+        "stop_id": "18-03",
+        "stop_code": "10170",
+        "stop_name": "Station Honoré-Beaugrand - Accès (A) rue Honoré-Beaugrand",
+        "stop_lat": "45.596957",
+        "stop_lon": "-73.536332",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M170",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Honoré-Beaugrand",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.682766,
+          45.514244
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M222",
+        "stop_code": "10222",
+        "stop_name": "STATION CÔTE-VERTU",
+        "stop_lat": "45.514244",
+        "stop_lon": "-73.682766",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Côte-Vertu",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/cote-vertu"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.68251,
+          45.513505
+        ]
+      },
+      "properties": {
+        "stop_id": "65-01",
+        "stop_code": "10222",
+        "stop_name": "Station Côte-Vertu - Accès rue Edouard-Laurin",
+        "stop_lat": "45.513505",
+        "stop_lon": "-73.682510",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M222",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Côte-Vertu",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.682969,
+          45.513853
+        ]
+      },
+      "properties": {
+        "stop_id": "65-02",
+        "stop_code": "10222",
+        "stop_name": "Station Côte-Vertu - Accès Sud ch de la Côte-Vertu",
+        "stop_lat": "45.513853",
+        "stop_lon": "-73.682969",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M222",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Côte-Vertu",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.683087,
+          45.514222
+        ]
+      },
+      "properties": {
+        "stop_id": "65-03",
+        "stop_code": "10222",
+        "stop_name": "Station Côte-Vertu - Accès Nord ch de la Côte-Vertu",
+        "stop_lat": "45.514222",
+        "stop_lon": "-73.683087",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M222",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Côte-Vertu",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.673282,
+          45.508356
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M224",
+        "stop_code": "10224",
+        "stop_name": "STATION DU COLLÈGE",
+        "stop_lat": "45.508356",
+        "stop_lon": "-73.673282",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Du Collège",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/du-college"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.672546,
+          45.508851
+        ]
+      },
+      "properties": {
+        "stop_id": "54-01",
+        "stop_code": "10224",
+        "stop_name": "Station Du Collège - Accès rue Cartier",
+        "stop_lat": "45.508851",
+        "stop_lon": "-73.672546",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M224",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Du Collège",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.674781,
+          45.509446
+        ]
+      },
+      "properties": {
+        "stop_id": "54-02",
+        "stop_code": "10224",
+        "stop_name": "Station Du Collège - Accès rue du Collège",
+        "stop_lat": "45.509446",
+        "stop_lon": "-73.674781",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M224",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Du Collège",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.661537,
+          45.50033
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M228",
+        "stop_code": "10228",
+        "stop_name": "STATION DE LA SAVANE",
+        "stop_lat": "45.500330",
+        "stop_lon": "-73.661537",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro De la Savane",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/de-la-savane"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.661793,
+          45.50034
+        ]
+      },
+      "properties": {
+        "stop_id": "53-01",
+        "stop_code": "10228",
+        "stop_name": "Station De la Savane",
+        "stop_lat": "45.500340",
+        "stop_lon": "-73.661793",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M228",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro De la Savane",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.652755,
+          45.494637
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M230",
+        "stop_code": "10230",
+        "stop_name": "STATION NAMUR",
+        "stop_lat": "45.494637",
+        "stop_lon": "-73.652755",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Namur",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/namur"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.653108,
+          45.49497
+        ]
+      },
+      "properties": {
+        "stop_id": "52-01",
+        "stop_code": "10230",
+        "stop_name": "Station Namur",
+        "stop_lat": "45.494970",
+        "stop_lon": "-73.653108",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M230",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Namur",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.638166,
+          45.494609
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M232",
+        "stop_code": "10232",
+        "stop_name": "STATION PLAMONDON",
+        "stop_lat": "45.494609",
+        "stop_lon": "-73.638166",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Plamondon",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/plamondon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.640883,
+          45.495412
+        ]
+      },
+      "properties": {
+        "stop_id": "51-01",
+        "stop_code": "10232",
+        "stop_name": "Station Plamondon - Accès rue Plamondon",
+        "stop_lat": "45.495412",
+        "stop_lon": "-73.640883",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M232",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Plamondon",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.637885,
+          45.494344
+        ]
+      },
+      "properties": {
+        "stop_id": "51-02",
+        "stop_code": "10232",
+        "stop_name": "Station Plamondon - Accès av Van Horne",
+        "stop_lat": "45.494344",
+        "stop_lon": "-73.637885",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M232",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Plamondon",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.633146,
+          45.49236
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M234",
+        "stop_code": "10234",
+        "stop_name": "STATION CÔTE-STE-CATHERINE",
+        "stop_lat": "45.492360",
+        "stop_lon": "-73.633146",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Côte-Sainte-Catherine",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/cote-sainte-catherine"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.632837,
+          45.492385
+        ]
+      },
+      "properties": {
+        "stop_id": "50-01",
+        "stop_code": "10234",
+        "stop_name": "Station Côte-Sainte-Catherine",
+        "stop_lat": "45.492385",
+        "stop_lon": "-73.632837",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M234",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Côte-Sainte-Catherine",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.627806,
+          45.485244
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M236",
+        "stop_code": "10236",
+        "stop_name": "STATION SNOWDON",
+        "stop_lat": "45.485244",
+        "stop_lon": "-73.627806",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Snowdon",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/snowdon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.627939,
+          45.485405
+        ]
+      },
+      "properties": {
+        "stop_id": "49-01",
+        "stop_code": "10236",
+        "stop_name": "Station Snowdon",
+        "stop_lat": "45.485405",
+        "stop_lon": "-73.627939",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M236",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Snowdon",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.61979,
+          45.479559
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M238",
+        "stop_code": "10238",
+        "stop_name": "STATION VILLA-MARIA",
+        "stop_lat": "45.479559",
+        "stop_lon": "-73.619790",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Villa-Maria",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/villa-maria"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.619884,
+          45.479501
+        ]
+      },
+      "properties": {
+        "stop_id": "48-01",
+        "stop_code": "10238",
+        "stop_name": "Station Villa-Maria",
+        "stop_lat": "45.479501",
+        "stop_lon": "-73.619884",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M238",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Villa-Maria",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.603865,
+          45.473861
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M242",
+        "stop_code": "10242",
+        "stop_name": "STATION VENDÔME",
+        "stop_lat": "45.473861",
+        "stop_lon": "-73.603865",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Vendôme",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/vendome"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.604117,
+          45.473912
+        ]
+      },
+      "properties": {
+        "stop_id": "47-01",
+        "stop_code": "10242",
+        "stop_name": "Station Vendôme - Accès Ouest boul De Maisonneuve",
+        "stop_lat": "45.473912",
+        "stop_lon": "-73.604117",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M242",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Vendôme",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.603569,
+          45.474292
+        ]
+      },
+      "properties": {
+        "stop_id": "47-02",
+        "stop_code": "10242",
+        "stop_name": "Station Vendôme - Accès Est Boul De Maisonneuve",
+        "stop_lat": "45.474292",
+        "stop_lon": "-73.603569",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M242",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Vendôme",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.603153,
+          45.473085
+        ]
+      },
+      "properties": {
+        "stop_id": "47-03",
+        "stop_code": "10242",
+        "stop_name": "Station Vendôme - Accès Ouest CUSM",
+        "stop_lat": "45.473085",
+        "stop_lon": "-73.603153",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M242",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Vendôme",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.601792,
+          45.473407
+        ]
+      },
+      "properties": {
+        "stop_id": "47-04",
+        "stop_code": "10242",
+        "stop_name": "Station Vendôme - Accès principal CUSM",
+        "stop_lat": "45.473407",
+        "stop_lon": "-73.601792",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M242",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Vendôme",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.586418,
+          45.477363
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M244",
+        "stop_code": "10244",
+        "stop_name": "STATION PLACE ST-HENRI",
+        "stop_lat": "45.477363",
+        "stop_lon": "-73.586418",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Place-Saint-Henri",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/place-saint-henri"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.586634,
+          45.477199
+        ]
+      },
+      "properties": {
+        "stop_id": "46-01",
+        "stop_code": "10244",
+        "stop_name": "Station Place-Saint-Henri - Accès (A) rue Saint-Ferdinand",
+        "stop_lat": "45.477199",
+        "stop_lon": "-73.586634",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M244",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Place-Saint-Henri",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.58571,
+          45.477533
+        ]
+      },
+      "properties": {
+        "stop_id": "46-02",
+        "stop_code": "10244",
+        "stop_name": "Station Place-Saint-Henri - Accès (B) rue Saint-Jacques",
+        "stop_lat": "45.477533",
+        "stop_lon": "-73.585710",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M244",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Place-Saint-Henri",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.586247,
+          45.477566
+        ]
+      },
+      "properties": {
+        "stop_id": "46-03",
+        "stop_code": "10244",
+        "stop_name": "Station Place-Saint-Henri - Accès (C) rue Saint-Jacques",
+        "stop_lat": "45.477566",
+        "stop_lon": "-73.586247",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M244",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Place-Saint-Henri",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.576435,
+          45.488962
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M248",
+        "stop_code": "10248",
+        "stop_name": "STATION GEORGES-VANIER",
+        "stop_lat": "45.488962",
+        "stop_lon": "-73.576435",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Georges-Vanier",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/georges-vanier"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.576446,
+          45.488953
+        ]
+      },
+      "properties": {
+        "stop_id": "17-01",
+        "stop_code": "10248",
+        "stop_name": "Station Georges-Vanier",
+        "stop_lat": "45.488953",
+        "stop_lon": "-73.576446",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M248",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Georges-Vanier",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.571215,
+          45.494814
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M250",
+        "stop_code": "10250",
+        "stop_name": "STATION LUCIEN-L'ALLIER",
+        "stop_lat": "45.494814",
+        "stop_lon": "-73.571215",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Lucien-L'Allier",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/lucien-l-allier"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.57109,
+          45.494912
+        ]
+      },
+      "properties": {
+        "stop_id": "16-01",
+        "stop_code": "10250",
+        "stop_name": "Station Lucien-L'Allier",
+        "stop_lat": "45.494912",
+        "stop_lon": "-73.571090",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M250",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Lucien-L'Allier",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.567129,
+          45.498053
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M252",
+        "stop_code": "10252",
+        "stop_name": "STATION BONAVENTURE",
+        "stop_lat": "45.498053",
+        "stop_lon": "-73.567129",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Bonaventure",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/bonaventure"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.56901,
+          45.497315
+        ]
+      },
+      "properties": {
+        "stop_id": "15-01",
+        "stop_code": "10252",
+        "stop_name": "Station Bonaventure - Accès av des Canadiens-de-Montréal",
+        "stop_lat": "45.497315",
+        "stop_lon": "-73.569010",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M252",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Bonaventure",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.566947,
+          45.498069
+        ]
+      },
+      "properties": {
+        "stop_id": "15-02",
+        "stop_code": "10252",
+        "stop_name": "Station Bonaventure - Accès rue de la Cathédrale",
+        "stop_lat": "45.498069",
+        "stop_lon": "-73.566947",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M252",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Bonaventure",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.566747,
+          45.498469
+        ]
+      },
+      "properties": {
+        "stop_id": "15-03",
+        "stop_code": "10252",
+        "stop_name": "Station Bonaventure - Accès ascenseur du 1000 rue De La Gauchetière",
+        "stop_lat": "45.498469",
+        "stop_lon": "-73.566747",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M252",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Bonaventure",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.563188,
+          45.501874
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M254",
+        "stop_code": "10254",
+        "stop_name": "STATION SQUARE VICTORIA-OACI",
+        "stop_lat": "45.501874",
+        "stop_lon": "-73.563188",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Square-Victoria–OACI",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/square-victoria-oaci"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.563703,
+          45.501498
+        ]
+      },
+      "properties": {
+        "stop_id": "14-01",
+        "stop_code": "10254",
+        "stop_name": "Station Square-Victoria-OACI - Accès (C) rue Viger",
+        "stop_lat": "45.501498",
+        "stop_lon": "-73.563703",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M254",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Square-Victoria–OACI",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.562088,
+          45.50172
+        ]
+      },
+      "properties": {
+        "stop_id": "14-02",
+        "stop_code": "10254",
+        "stop_name": "Station Square-Victoria-OACI - Accès (A) rue Saint-Antoine",
+        "stop_lat": "45.501720",
+        "stop_lon": "-73.562088",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M254",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Square-Victoria–OACI",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.560755,
+          45.501194
+        ]
+      },
+      "properties": {
+        "stop_id": "14-03",
+        "stop_code": "10254",
+        "stop_name": "Station Square-Victoria-OACI - Accès (B) rue Saint-Jacques",
+        "stop_lat": "45.501194",
+        "stop_lon": "-73.560755",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M254",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Square-Victoria–OACI",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.559505,
+          45.506277
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M256",
+        "stop_code": "10256",
+        "stop_name": "STATION PLACE D'ARMES",
+        "stop_lat": "45.506277",
+        "stop_lon": "-73.559505",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Place-d'Armes",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/place-d-armes"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.559729,
+          45.506165
+        ]
+      },
+      "properties": {
+        "stop_id": "13-01",
+        "stop_code": "10256",
+        "stop_name": "Station Place-d'Armes - Accès rue Saint-Urbain",
+        "stop_lat": "45.506165",
+        "stop_lon": "-73.559729",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M256",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Place-d'Armes",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.560984,
+          45.505936
+        ]
+      },
+      "properties": {
+        "stop_id": "13-02",
+        "stop_code": "10256",
+        "stop_name": "Station Place-d'Armes - Accès rue Viger",
+        "stop_lat": "45.505936",
+        "stop_lon": "-73.560984",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M256",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Place-d'Armes",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.556462,
+          45.510031
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M258",
+        "stop_code": "10258",
+        "stop_name": "STATION CHAMPS DE MARS",
+        "stop_lat": "45.510031",
+        "stop_lon": "-73.556462",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Champ-de-Mars",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/champ-de-mars"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.556331,
+          45.510192
+        ]
+      },
+      "properties": {
+        "stop_id": "12-01",
+        "stop_code": "10258",
+        "stop_name": "Station Champ-de-Mars",
+        "stop_lat": "45.510192",
+        "stop_lon": "-73.556331",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M258",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Champ-de-Mars",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.568263,
+          45.518407
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M262",
+        "stop_code": "10262",
+        "stop_name": "STATION SHERBROOKE",
+        "stop_lat": "45.518407",
+        "stop_lon": "-73.568263",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Sherbrooke",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/sherbrooke"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.568524,
+          45.518901
+        ]
+      },
+      "properties": {
+        "stop_id": "10-01",
+        "stop_code": "10262",
+        "stop_name": "Station Sherbrooke - Accès Est rue Berri",
+        "stop_lat": "45.518901",
+        "stop_lon": "-73.568524",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M262",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Sherbrooke",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.568208,
+          45.518334
+        ]
+      },
+      "properties": {
+        "stop_id": "10-02",
+        "stop_code": "10262",
+        "stop_name": "Station Sherbrooke - Accès Ouest rue Berri",
+        "stop_lat": "45.518334",
+        "stop_lon": "-73.568208",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M262",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Sherbrooke",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.582234,
+          45.524716
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M264",
+        "stop_code": "10264",
+        "stop_name": "STATION MONT-ROYAL",
+        "stop_lat": "45.524716",
+        "stop_lon": "-73.582234",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Mont-Royal",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/mont-royal"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.581766,
+          45.524556
+        ]
+      },
+      "properties": {
+        "stop_id": "09-01",
+        "stop_code": "10264",
+        "stop_name": "Station Mont-Royal",
+        "stop_lat": "45.524556",
+        "stop_lon": "-73.581766",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M264",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Mont-Royal",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.586858,
+          45.527388
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M266",
+        "stop_code": "10266",
+        "stop_name": "STATION LAURIER",
+        "stop_lat": "45.527388",
+        "stop_lon": "-73.586858",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Laurier",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/laurier"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.586242,
+          45.527042
+        ]
+      },
+      "properties": {
+        "stop_id": "08-01",
+        "stop_code": "10266",
+        "stop_name": "Station Laurier - Accès (A) boul Saint-Joseph/rue Gilford",
+        "stop_lat": "45.527042",
+        "stop_lon": "-73.586242",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M266",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Laurier",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.588928,
+          45.5278
+        ]
+      },
+      "properties": {
+        "stop_id": "08-02",
+        "stop_code": "10266",
+        "stop_name": "Station Laurier - Accès (B) av Laurier",
+        "stop_lat": "45.527800",
+        "stop_lon": "-73.588928",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M266",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Laurier",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.598493,
+          45.531023
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M268",
+        "stop_code": "10268",
+        "stop_name": "STATION ROSEMONT",
+        "stop_lat": "45.531023",
+        "stop_lon": "-73.598493",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Rosemont",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/rosemont"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.59783,
+          45.531284
+        ]
+      },
+      "properties": {
+        "stop_id": "07-01",
+        "stop_code": "10268",
+        "stop_name": "Station Rosemont",
+        "stop_lat": "45.531284",
+        "stop_lon": "-73.597830",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M268",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Rosemont",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.597256,
+          45.53106
+        ]
+      },
+      "properties": {
+        "stop_id": "07-02",
+        "stop_code": "10268",
+        "stop_name": "Station Rosemont - Accès Terminus Rosemont",
+        "stop_lat": "45.531060",
+        "stop_lon": "-73.597256",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M268",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Rosemont",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.6044,
+          45.535236
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M270",
+        "stop_code": "10270",
+        "stop_name": "STATION BEAUBIEN",
+        "stop_lat": "45.535236",
+        "stop_lon": "-73.604400",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Beaubien",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/beaubien"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.604507,
+          45.535584
+        ]
+      },
+      "properties": {
+        "stop_id": "06-01",
+        "stop_code": "10270",
+        "stop_name": "Station Beaubien",
+        "stop_lat": "45.535584",
+        "stop_lon": "-73.604507",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M270",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Beaubien",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.613814,
+          45.539074
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M272",
+        "stop_code": "10272",
+        "stop_name": "STATION JEAN-TALON",
+        "stop_lat": "45.539074",
+        "stop_lon": "-73.613814",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Jean-Talon",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/jean-talon"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.61391,
+          45.5387
+        ]
+      },
+      "properties": {
+        "stop_id": "05-01",
+        "stop_code": "10272",
+        "stop_name": "Station Jean-Talon - Accès Ouest rue Jean-Talon",
+        "stop_lat": "45.538700",
+        "stop_lon": "-73.613910",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M272",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Jean-Talon",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.613168,
+          45.540261
+        ]
+      },
+      "properties": {
+        "stop_id": "05-02",
+        "stop_code": "10272",
+        "stop_name": "Station Jean-Talon - Accès Est rue Jean-Talon (Plaza St-Hubert)",
+        "stop_lat": "45.540261",
+        "stop_lon": "-73.613168",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M272",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Jean-Talon",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.612964,
+          45.539475
+        ]
+      },
+      "properties": {
+        "stop_id": "05-03",
+        "stop_code": "10272",
+        "stop_name": "Station Jean-Talon - Accès av De Châteaubriand",
+        "stop_lat": "45.539475",
+        "stop_lon": "-73.612964",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M272",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Jean-Talon",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.614316,
+          45.538678
+        ]
+      },
+      "properties": {
+        "stop_id": "05-04",
+        "stop_code": "10272",
+        "stop_name": "Station Jean-Talon - Accès rue Berri",
+        "stop_lat": "45.538678",
+        "stop_lon": "-73.614316",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M272",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Jean-Talon",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.628674,
+          45.543438
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M274",
+        "stop_code": "10274",
+        "stop_name": "STATION JARRY",
+        "stop_lat": "45.543438",
+        "stop_lon": "-73.628674",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Jarry",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/jarry"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.628529,
+          45.543421
+        ]
+      },
+      "properties": {
+        "stop_id": "04-01",
+        "stop_code": "10274",
+        "stop_name": "Station Jarry",
+        "stop_lat": "45.543421",
+        "stop_lon": "-73.628529",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M274",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Jarry",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.63887,
+          45.545972
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M276",
+        "stop_code": "10276",
+        "stop_name": "STATION CRÉMAZIE",
+        "stop_lat": "45.545972",
+        "stop_lon": "-73.638870",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Crémazie",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/cremazie"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.638037,
+          45.545715
+        ]
+      },
+      "properties": {
+        "stop_id": "03-01",
+        "stop_code": "10276",
+        "stop_name": "Station Crémazie - Accès (B) boul Crémazie",
+        "stop_lat": "45.545715",
+        "stop_lon": "-73.638037",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M276",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Crémazie",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.639303,
+          45.546186
+        ]
+      },
+      "properties": {
+        "stop_id": "03-02",
+        "stop_code": "10276",
+        "stop_name": "Station Crémazie - Accès (A) Terminus Crémazie",
+        "stop_lat": "45.546186",
+        "stop_lon": "-73.639303",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M276",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Crémazie",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.638776,
+          45.545968
+        ]
+      },
+      "properties": {
+        "stop_id": "03-03",
+        "stop_code": "10276",
+        "stop_name": "Station Crémazie - Accès (A) boul Crémazie",
+        "stop_lat": "45.545968",
+        "stop_lon": "-73.638776",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M276",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Crémazie",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.65593,
+          45.550819
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M278",
+        "stop_code": "10278",
+        "stop_name": "STATION SAUVÉ",
+        "stop_lat": "45.550819",
+        "stop_lon": "-73.655930",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Sauvé",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/sauve"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.656464,
+          45.550713
+        ]
+      },
+      "properties": {
+        "stop_id": "02-01",
+        "stop_code": "10278",
+        "stop_name": "Station Sauvé - Accès Nord rue Sauvé",
+        "stop_lat": "45.550713",
+        "stop_lon": "-73.656464",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M278",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Sauvé",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.655907,
+          45.55064
+        ]
+      },
+      "properties": {
+        "stop_id": "02-02",
+        "stop_code": "10278",
+        "stop_name": "Station Sauvé - Accès Sud rue Sauvé",
+        "stop_lat": "45.550640",
+        "stop_lon": "-73.655907",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M278",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Sauvé",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.668199,
+          45.55522
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M280",
+        "stop_code": "10280",
+        "stop_name": "STATION HENRI-BOURASSA",
+        "stop_lat": "45.555220",
+        "stop_lon": "-73.668199",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Henri-Bourassa",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/henri-bourassa"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.668486,
+          45.554247
+        ]
+      },
+      "properties": {
+        "stop_id": "01-01",
+        "stop_code": "10280",
+        "stop_name": "Station Henri-Bourassa - Accès rue Berri",
+        "stop_lat": "45.554247",
+        "stop_lon": "-73.668486",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M280",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Henri-Bourassa",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.668225,
+          45.555607
+        ]
+      },
+      "properties": {
+        "stop_id": "01-03",
+        "stop_code": "10280",
+        "stop_name": "Station Henri-Bourassa - Accès Nord boul Henri-Bourassa",
+        "stop_lat": "45.555607",
+        "stop_lon": "-73.668225",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M280",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Henri-Bourassa",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.667407,
+          45.556122
+        ]
+      },
+      "properties": {
+        "stop_id": "01-04",
+        "stop_code": "10280",
+        "stop_name": "Station Henri-Bourassa - Accès Sud boul Henri-Bourassa",
+        "stop_lat": "45.556122",
+        "stop_lon": "-73.667407",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M280",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Henri-Bourassa",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.667284,
+          45.555733
+        ]
+      },
+      "properties": {
+        "stop_id": "01-05",
+        "stop_code": "10280",
+        "stop_name": "Station Henri-Bourassa - Accès Terminus Henri-Bourassa",
+        "stop_lat": "45.555733",
+        "stop_lon": "-73.667284",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M280",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Henri-Bourassa",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.681719,
+          45.560398
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M282",
+        "stop_code": "10282",
+        "stop_name": "STATION CARTIER",
+        "stop_lat": "45.560398",
+        "stop_lon": "-73.681719",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Cartier",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/cartier-%28zone-b%29"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.681899,
+          45.560398
+        ]
+      },
+      "properties": {
+        "stop_id": "66-01",
+        "stop_code": "10282",
+        "stop_name": "Station Cartier - Accès Terminus Cartier",
+        "stop_lat": "45.560398",
+        "stop_lon": "-73.681899",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M282",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Cartier",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.681416,
+          45.561402
+        ]
+      },
+      "properties": {
+        "stop_id": "66-02",
+        "stop_code": "10282",
+        "stop_name": "Station Cartier - Accès boul Cartier",
+        "stop_lat": "45.561402",
+        "stop_lon": "-73.681416",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M282",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Cartier",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.709337,
+          45.560544
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M286",
+        "stop_code": "10286",
+        "stop_name": "STATION DE LA CONCORDE",
+        "stop_lat": "45.560544",
+        "stop_lon": "-73.709337",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro De la Concorde",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/de-la-concorde-%28zone-b%29"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.709596,
+          45.560504
+        ]
+      },
+      "properties": {
+        "stop_id": "67-01",
+        "stop_code": "10286",
+        "stop_name": "Station De la Concorde",
+        "stop_lat": "45.560504",
+        "stop_lon": "-73.709596",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M286",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro De la Concorde",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.722423,
+          45.558434
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M288",
+        "stop_code": "10288",
+        "stop_name": "STATION MONTMORENCY",
+        "stop_lat": "45.558434",
+        "stop_lon": "-73.722423",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Montmorency",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/montmorency-%28zone-b%29"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.721622,
+          45.558387
+        ]
+      },
+      "properties": {
+        "stop_id": "68-01",
+        "stop_code": "10288",
+        "stop_name": "Station Montmorency",
+        "stop_lat": "45.558387",
+        "stop_lon": "-73.721622",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M288",
+        "wheelchair_boarding": "1",
+        "popup_name": "Metro Montmorency",
+        "popup_type": "Entrance",
+        "popup_accessible": "Wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.532703,
+          45.512335
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M452",
+        "stop_code": "10452",
+        "stop_name": "STATION JEAN-DRAPEAU",
+        "stop_lat": "45.512335",
+        "stop_lon": "-73.532703",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Jean-Drapeau",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/jean-drapeau-%28zone-a%29"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.533371,
+          45.512289
+        ]
+      },
+      "properties": {
+        "stop_id": "45-01",
+        "stop_code": "10452",
+        "stop_name": "Station Jean-Drapeau",
+        "stop_lat": "45.512289",
+        "stop_lon": "-73.533371",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M452",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Jean-Drapeau",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.522036,
+          45.524574
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M454",
+        "stop_code": "10454",
+        "stop_name": "STATION LONGUEUIL- U. de SHERBROOKE",
+        "stop_lat": "45.524574",
+        "stop_lon": "-73.522036",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Longueuil-Université de Sherbrooke",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/longueuil-universite-de-sherbrooke-%28zone-b%29"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.521961,
+          45.525191
+        ]
+      },
+      "properties": {
+        "stop_id": "44-01",
+        "stop_code": "10454",
+        "stop_name": "Station Longueuil–U-de-Sherbrooke - Accès Université de Shebrooke",
+        "stop_lat": "45.525191",
+        "stop_lon": "-73.521961",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M454",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Longueuil-Université de Sherbrooke",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.521989,
+          45.524631
+        ]
+      },
+      "properties": {
+        "stop_id": "44-02",
+        "stop_code": "10454",
+        "stop_name": "Station Longueuil–U-de-Sherbrooke - Accès Terminus Longueuil",
+        "stop_lat": "45.524631",
+        "stop_lon": "-73.521989",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M454",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Longueuil-Université de Sherbrooke",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.522632,
+          45.524711
+        ]
+      },
+      "properties": {
+        "stop_id": "44-03",
+        "stop_code": "10454",
+        "stop_name": "Station Longueuil–U-de-Sherbrooke - Accès rue De Sérigny",
+        "stop_lat": "45.524711",
+        "stop_lon": "-73.522632",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M454",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Longueuil-Université de Sherbrooke",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.62339,
+          45.496808
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M534",
+        "stop_code": "10534",
+        "stop_name": "STATION CÔTE-DES-NEIGES",
+        "stop_lat": "45.496808",
+        "stop_lon": "-73.623390",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Côte-des-Neiges",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/cote-des-neiges"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.622534,
+          45.496306
+        ]
+      },
+      "properties": {
+        "stop_id": "55-01",
+        "stop_code": "10534",
+        "stop_name": "Station Côte-des-Neiges - Accès (A) ch de la Côte-de-Neiges",
+        "stop_lat": "45.496306",
+        "stop_lon": "-73.622534",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M534",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Côte-des-Neiges",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.622937,
+          45.49676
+        ]
+      },
+      "properties": {
+        "stop_id": "55-02",
+        "stop_code": "10534",
+        "stop_name": "Station Côte-des-Neiges - Accès (B) ch de la Côte-des-Neiges",
+        "stop_lat": "45.496760",
+        "stop_lon": "-73.622937",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M534",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Côte-des-Neiges",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.618478,
+          45.503671
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M536",
+        "stop_code": "10536",
+        "stop_name": "STATION UNIVERSITÉ DE MONTREAL",
+        "stop_lat": "45.503671",
+        "stop_lon": "-73.618478",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Université-de-Montréal",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/universite-de-montreal"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.618298,
+          45.502757
+        ]
+      },
+      "properties": {
+        "stop_id": "56-01",
+        "stop_code": "10536",
+        "stop_name": "Station Université-de-Montréal - Accès rue Louis-Colin",
+        "stop_lat": "45.502757",
+        "stop_lon": "-73.618298",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M536",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Université-de-Montréal",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.617767,
+          45.503382
+        ]
+      },
+      "properties": {
+        "stop_id": "56-02",
+        "stop_code": "10536",
+        "stop_name": "Station Université-de-Montréal - Accès boul Édouard-Montpetit",
+        "stop_lat": "45.503382",
+        "stop_lon": "-73.617767",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M536",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Université-de-Montréal",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.617256,
+          45.503582
+        ]
+      },
+      "properties": {
+        "stop_id": "56-03",
+        "stop_code": "10536",
+        "stop_name": "Station Université-de-Montréal - Accès Université de Montréal",
+        "stop_lat": "45.503582",
+        "stop_lon": "-73.617256",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M536",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Université-de-Montréal",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.612344,
+          45.51022
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M538",
+        "stop_code": "10538",
+        "stop_name": "STATION ÉDOUARD-MONTPETIT",
+        "stop_lat": "45.510220",
+        "stop_lon": "-73.612344",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Édouard-Montpetit",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/edouard-montpetit"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.612554,
+          45.510155
+        ]
+      },
+      "properties": {
+        "stop_id": "57-02",
+        "stop_code": "10538",
+        "stop_name": "Station Édouard-Montpetit - Accès (B) av Vincent-D'Indy",
+        "stop_lat": "45.510155",
+        "stop_lon": "-73.612554",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M538",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Édouard-Montpetit",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.612785,
+          45.50964
+        ]
+      },
+      "properties": {
+        "stop_id": "57-03",
+        "stop_code": "10538",
+        "stop_name": "Station Édouard-Montpetit - Accès (A) boul Édouard-Montpetit",
+        "stop_lat": "45.509640",
+        "stop_lon": "-73.612785",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M538",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Édouard-Montpetit",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.615012,
+          45.520363
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M540",
+        "stop_code": "10540",
+        "stop_name": "STATION OUTREMONT",
+        "stop_lat": "45.520363",
+        "stop_lon": "-73.615012",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Outremont",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/outremont"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.615099,
+          45.520103
+        ]
+      },
+      "properties": {
+        "stop_id": "58-01",
+        "stop_code": "10540",
+        "stop_name": "Station Outremont",
+        "stop_lat": "45.520103",
+        "stop_lon": "-73.615099",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M540",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Outremont",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.623211,
+          45.523467
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M542",
+        "stop_code": "10542",
+        "stop_name": "STATION ACADIE",
+        "stop_lat": "45.523467",
+        "stop_lon": "-73.623211",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Acadie",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/acadie"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.623194,
+          45.523679
+        ]
+      },
+      "properties": {
+        "stop_id": "59-01",
+        "stop_code": "10542",
+        "stop_name": "Station Acadie - Accès (A) av Beaumont",
+        "stop_lat": "45.523679",
+        "stop_lon": "-73.623194",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M542",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Acadie",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.623494,
+          45.523391
+        ]
+      },
+      "properties": {
+        "stop_id": "59-02",
+        "stop_code": "10542",
+        "stop_name": "Station Acadie - Accès (B) boul de l'Acadie",
+        "stop_lat": "45.523391",
+        "stop_lon": "-73.623494",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M542",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Acadie",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.624583,
+          45.530197
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M544",
+        "stop_code": "10544",
+        "stop_name": "STATION  DU PARC",
+        "stop_lat": "45.530197",
+        "stop_lon": "-73.624583",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Parc",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/parc"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.623932,
+          45.530223
+        ]
+      },
+      "properties": {
+        "stop_id": "60-01",
+        "stop_code": "10544",
+        "stop_name": "Station Parc",
+        "stop_lat": "45.530223",
+        "stop_lon": "-73.623932",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M544",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Parc",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.619871,
+          45.535483
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M546",
+        "stop_code": "10546",
+        "stop_name": "STATION DE CASTELNAU",
+        "stop_lat": "45.535483",
+        "stop_lon": "-73.619871",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro De Castelnau",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/de-castelnau"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.62,
+          45.535217
+        ]
+      },
+      "properties": {
+        "stop_id": "61-02",
+        "stop_code": "10546",
+        "stop_name": "Station De Castelnau - Accès (A) boul Saint-Laurent",
+        "stop_lat": "45.535217",
+        "stop_lon": "-73.620000",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M546",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro De Castelnau",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.607055,
+          45.547921
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M552",
+        "stop_code": "10552",
+        "stop_name": "STATION FABRE",
+        "stop_lat": "45.547921",
+        "stop_lon": "-73.607055",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Fabre",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/fabre"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.607356,
+          45.547864
+        ]
+      },
+      "properties": {
+        "stop_id": "62-01",
+        "stop_code": "10552",
+        "stop_name": "Station Fabre - Accès (A) av Papineau",
+        "stop_lat": "45.547864",
+        "stop_lon": "-73.607356",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M552",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Fabre",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.608221,
+          45.546469
+        ]
+      },
+      "properties": {
+        "stop_id": "62-02",
+        "stop_code": "10552",
+        "stop_name": "Station Fabre - Accès (B) rue Jean-Talon",
+        "stop_lat": "45.546469",
+        "stop_lon": "-73.608221",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M552",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Fabre",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.602038,
+          45.553612
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M554",
+        "stop_code": "10554",
+        "stop_name": "STATION IBERVILLE",
+        "stop_lat": "45.553612",
+        "stop_lon": "-73.602038",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro D'Iberville",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/d-iberville"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.602081,
+          45.55377
+        ]
+      },
+      "properties": {
+        "stop_id": "63-01",
+        "stop_code": "10554",
+        "stop_name": "Station D'Iberville - Accès (A) rue d'Iberville",
+        "stop_lat": "45.553770",
+        "stop_lon": "-73.602081",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M554",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro D'Iberville",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.602713,
+          45.552635
+        ]
+      },
+      "properties": {
+        "stop_id": "63-02",
+        "stop_code": "10554",
+        "stop_name": "Station D'Iberville - Accès (B) rue Louis-Hébert",
+        "stop_lat": "45.552635",
+        "stop_lon": "-73.602713",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M554",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro D'Iberville",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.600167,
+          45.559708
+        ]
+      },
+      "properties": {
+        "stop_id": "STATION_M556",
+        "stop_code": "10556",
+        "stop_name": "STATION SAINT-MICHEL",
+        "stop_lat": "45.559708",
+        "stop_lon": "-73.600167",
+        "stop_url": "",
+        "location_type": "1",
+        "parent_station": "",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Saint-Michel",
+        "popup_type": "Station",
+        "popup_accessible": "",
+        "popup_url": "https://www.stm.info/fr/infos/reseaux/metro/saint-michel"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.599833,
+          45.559694
+        ]
+      },
+      "properties": {
+        "stop_id": "64-01",
+        "stop_code": "10556",
+        "stop_name": "Station Saint-Michel - Accès (A) rue Shaughnessy",
+        "stop_lat": "45.559694",
+        "stop_lon": "-73.599833",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M556",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Saint-Michel",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.599876,
+          45.559284
+        ]
+      },
+      "properties": {
+        "stop_id": "64-02",
+        "stop_code": "10556",
+        "stop_name": "Station Saint-Michel - Accès (B) rue Shaughnessy",
+        "stop_lat": "45.559284",
+        "stop_lon": "-73.599876",
+        "stop_url": "",
+        "location_type": "2",
+        "parent_station": "STATION_M556",
+        "wheelchair_boarding": "2",
+        "popup_name": "Metro Saint-Michel",
+        "popup_type": "Entrance",
+        "popup_accessible": "Not wheelchair accessible",
+        "popup_url": ""
+      }
+    }
+  ]
+}

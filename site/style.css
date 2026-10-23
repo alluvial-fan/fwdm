@@ -1,0 +1,84 @@
+/* The page's look: the layout, the two filters, the legend's bar and grid,
+   the caveats and the popups. site/index.html is the page's markup and
+   site/app.js its behaviour; what the page is styled with is here.
+*/
+
+/* THE LAYOUT: a thin bar across the top carrying the title, the controls in
+   a column down the left, and the map taking everything that is left. A grid
+   rather than floats or flex, so the map is exactly the rest of the window
+   whatever the column holds, and one media query that stands the column back
+   on top of the map when the window is too narrow for two of anything. */
+html, body { height: 100%; }
+body { margin: 0; font-family: Arial, Helvetica, sans-serif; }
+.page { display: grid; height: 100%; grid-template-columns: minmax(300px, 380px) 1fr;
+        grid-template-rows: auto 1fr; grid-template-areas: 'bar bar' 'panel map'; }
+.bar { grid-area: bar; padding: 8px 16px; background: #1F2D5A; color: #fff; }
+.bar h1 { margin: 0; font-size: 18px; line-height: 1.3; }
+.panel { grid-area: panel; overflow-y: auto; padding: 10px 14px 16px;
+         background: #1F2D5A; border-right: 1px solid #47568A; }
+#map { grid-area: map; min-height: 240px; }
+#status { margin: 0; font-size: 13px; color: #C7D3EE; }
+@media (max-width: 760px) {
+  .page { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr;
+          grid-template-areas: 'bar' 'panel' 'map'; }
+  .panel { max-height: 45vh; border-right: 0; border-bottom: 1px solid #47568A; }
+}
+
+/* The two filters: two blocks one above the other, each one question - how
+   long, what kind, how big - with its own label on the first line and its
+   controls on the lines under it, so the column stays a column however
+   narrow the window gets. */
+#filters { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.filter { display: flex; flex-direction: column; gap: 4px; font-size: 14px;
+          padding: 6px 10px; border: 1px solid #47568A; border-radius: 4px; }
+.filter .switch { font-weight: bold; color: #fff}
+.filter select { font: inherit; font-size: 13px; padding: 2px; border: 0;
+                 border-radius: 2px; background: #fff; color: #1F2D5A; }
+
+/* The legend: the question as the filters stand, then the key a reader cannot
+   work out from the filters themselves - the five bands of a single question
+   as a bar, and the grid of mixed colours when both are asked. */
+#legend { margin-top: 10px; font-size: 13px; }
+#legend .question { margin: 0 0 4px; color: #DCBD23; }
+
+/* The mixed colours, one cell per pair of bands: the metro bands across the
+   top, the green-space bands down the left, and in each cell the colour a
+   corner passing both is drawn in with the number of corners drawn that way.
+   It is a table because it is a grid of two answers at once. */
+#legend table.blend { border-collapse: collapse; margin-top: 2px; }
+#legend table.blend td, #legend table.blend th { padding: 0; }
+#legend table.blend th { font: inherit; font-size: 11px; font-weight: normal;
+                         color: #C7D3EE; padding: 0 4px; }
+#legend table.blend td.cell { width: 30px; height: 18px; border: 1px solid #1F2D5A;
+                              text-align: center; color: #fff; font-size: 10.5px;
+                              font-variant-numeric: tabular-nums;
+                              text-shadow: 0 0 3px #000, 0 0 2px #000; }
+#legend table.blend td.blank { background: #2A3A6B; }
+#legend .axis { color: #9FC3FF; font-size: 11.5px; }
+
+/* The one-question bar: the same five cells, read as one graded scale, so
+   they lose the seams that mark out a grid. */
+#legend table.bar td.cell { border-left: 0; border-right: 0; }
+#legend table.bar td.cell:first-child { border-left: 1px solid #1F2D5A; }
+#legend table.bar td.cell:last-child { border-right: 1px solid #1F2D5A; }
+/* One line per band label: the columns are only as wide as the counts need,
+   so a label left to wrap would stack a band's two numbers. */
+#legend table.blend th { white-space: nowrap; }
+
+/* The caveats fold away: the map is the page, and what it does not know is
+   read once and then out of the way. The column is their measure, so no line
+   of the notes is set any wider than the window that holds them. */
+#notes { margin-top: 10px; font-size: 12.5px; color: #C7D3EE; }
+#notes summary { cursor: pointer; color: #9FC3FF; }
+#notes a { color: #9FC3FF; }
+#notes p { margin: 6px 0 0; }
+
+/* The story: who the map is for, why it matters, and what they can do - read
+   before the filters, so the page explains itself to a first-time visitor. */
+#story { margin-top: 10px; font-size: 13.5px; line-height: 1.5; color: #fff; }
+#story p { margin: 0 0 8px; }
+#story p:last-child { margin-bottom: 0; }
+
+/* The popups a click opens. */
+.leaflet-popup-content { font-size: 13px; line-height: 1.45; }
+.leaflet-popup-content .dim { color: #555; }
