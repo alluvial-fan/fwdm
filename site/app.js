@@ -241,6 +241,7 @@ function start() {
       readWalkData(intersectionsData);
       page.metro = metroData;
       page.parks = parksData;
+      page.parkLayer = parks;
       page.metros = metros;
       describeWalk();
       page.walkGroup = L.layerGroup().addTo(map);
@@ -272,10 +273,10 @@ const EDGE_STYLE = { color: '#1F2D5A', weight: 1.5, opacity: 0.8,
                      dashArray: '6 4', fill: false };
 
 // What the page is drawn from, once the four files have loaded: the
-// intersections features, the two files a destination is named from, the dots'
-// group, the metro layer that stays in front of them, and the mask.
-const page = { dots: null, metro: null, parks: null, metros: null,
-               walkGroup: null, mask: null };
+// intersections features, the two files a destination is named from, the park
+// and metro layers the filters show and hide, the dots' group, and the mask.
+const page = { dots: null, metro: null, parks: null, parkLayer: null,
+               metros: null, walkGroup: null, mask: null };
 
 // The build's own answers, read from the intersections file: the layers it
 // measured, each layer's walk in a corner's list, its counts per time, the
@@ -600,15 +601,33 @@ function drawDots(wanted, counts) {
   }
 }
 
+// --- Which features are drawn ---------------------------------------------
+//
+// Each family answers to its own filter: a menu left on n/a is the reader
+// saying they do not care about that family, so none of its features are
+// drawn. The layers are made once and taken on and off the map here, which
+// keeps a restored choice drawing the features it asks about.
+function showFeatures() {
+  showFeature(page.parkLayer, filters.park.minutes !== null);
+  showFeature(page.metros, filters.metro.minutes !== null);
+}
+
+function showFeature(layer, asked) {
+  if (!layer || !map) { return; }
+  if (asked && !map.hasLayer(layer)) { layer.addTo(map); }
+  else if (!asked && map.hasLayer(layer)) { map.removeLayer(layer); }
+}
+
 // Everything a filter changes goes through here: the dots, the path order and
 // the legend, from one tally. Order: borough edges at the back, then parks,
 // dots, the mask, and the metro points on top.
 function redraw() {
   const wanted = askedFamilies();
   const counts = newCounts();
+  showFeatures();
   if (page.walkGroup) { page.walkGroup.clearLayers(); }
   if (wanted.length) { drawDots(wanted, counts); }
-  if (page.metros) { page.metros.bringToFront(); }
+  if (page.metros && map.hasLayer(page.metros)) { page.metros.bringToFront(); }
   if (page.mask) { page.mask.bringToFront(); }
   if (walk.edges) { walk.edges.bringToBack(); }
   drawLegend(counts, wanted);
@@ -671,7 +690,9 @@ function drawLegend(counts, wanted) {
 // time, and the two times are never added together.
 function questionText(wanted) {
   if (!wanted.length) {
-    return 'By default, the only displayed features are the parks and metro stations. Additional features and analysis will appear when you choose what features interest you and the distance you care about.';
+    return 'Nothing is asked yet, so the map draws neither parks nor metro stations. ' +
+      'Choose a walking time for green spaces, for metro stations, or for both: ' +
+      'the features you ask about appear, and every corner within their reach is coloured.';
   }
   if (wanted.length === 1) {
     return 'Walk time to ' + askingText(wanted[0]) + '.';
