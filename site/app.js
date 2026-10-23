@@ -35,8 +35,6 @@ function parkPopup(properties) {
   return '<strong>' + shown + '</strong><br>' +
     'Type: ' + kind + '<br>' +
     'Size: ' + escapeHtml(properties.popup_size);
-    //'Size: ' + escapeHtml(properties.popup_size) + 
-    //'<br>City type: ' + escapeHtml(properties.TYPO2 || '&mdash;');
 }
 
 // Escape data for popup markup: &, <, > and ". A ' is safe, because every
@@ -208,7 +206,6 @@ function start() {
       // No zooming out past the fitted view: past it the mask fills the map
       // with grey. Panning and zooming in stay free.
       map.setMinZoom(map.getZoom());
-      // map.setZoom(2000);
 
       // The status line: metro points by kind and corners by how many street
       // ends meet at them.
@@ -286,13 +283,6 @@ const walk = {
   edges: null, asked: {}
 };
 
-// The header's state: null minutes means the filter is off, and only minutes
-// turn it on.
-const filters = {
-  park: { minutes: null, kind: 'any', band: 'any' },
-  metro: { minutes: null, kind: 'any' }
-};
-
 function valueOf(id) { return document.getElementById(id).value; }
 
 function minutesOf(id) {
@@ -300,30 +290,22 @@ function minutesOf(id) {
   return value === 'none' ? null : Number(value);
 }
 
-// Read the header into the state above.
-function readFilters() {
-  filters.park.minutes = minutesOf('park-minutes');
-  filters.park.kind = valueOf('park-kind');
-  filters.park.band = valueOf('park-band');
-  filters.metro.minutes = minutesOf('metro-minutes');
-  filters.metro.kind = valueOf('metro-kind');
-}
-
-function askedFilters() {
-  const asked = [];
-  if (filters.park.minutes !== null) { asked.push('park'); }
-  if (filters.metro.minutes !== null) { asked.push('metro'); }
+// The questions the menus hold, read from the menus themselves: one entry per
+// menu not left on n/a, with the build's layer for the choices and the minutes
+// asked. The menus are the only record of what is asked; nothing mirrors them.
+function askFilters() {
+  const asked = {};
+  const park = minutesOf('park-minutes');
+  if (park !== null) {
+    asked.park = { family: 'park', minutes: park,
+      layer: layerFor('park', valueOf('park-kind'), valueOf('park-band')) };
+  }
+  const metro = minutesOf('metro-minutes');
+  if (metro !== null) {
+    asked.metro = { family: 'metro', minutes: metro,
+      layer: layerFor('metro', valueOf('metro-kind'), 'metro') };
+  }
   return asked;
-}
-
-// The same list, from what has actually been fetched: the map never shows a
-// question it cannot answer.
-function askedFamilies() {
-  const families = [];
-  ['park', 'metro'].forEach(function (family) {
-    if (walk.asked[family]) { families.push(family); }
-  });
-  return families;
 }
 
 // Which of the five shades a walk of so many seconds falls in. A walk at
@@ -370,14 +352,19 @@ function count(value) {
 // --- Reading the walk times off the map's own file ---------------------
 
 // Everything the filters are answered from, read off the intersections file:
-// the layers, each layer's place, the four statements, and which corners the
-// page may colour.
+// the layers, each layer's place, the statements for corners with no walk, and
+// which corners the page may colour.
 function readWalkData(dots) {
   page.dots = dots;
   walk.layers = dots.walk_layers || [];
   walk.places = {};
   walk.layers.forEach(function (layer, at) { walk.places[layer.id] = at; });
-  walk.board = sentinelsFrom(dots.statements);
+  // The file's snake_case statements, renamed: a missed key would be a
+  // NaN-second walk.
+  walk.board = {
+    outside: dots.statements.outside, noStreet: dots.statements.no_street,
+    unreachable: dots.statements.unreachable
+  };
   walk.corners = dots.features.filter(function (feature) {
     return feature.properties.drawn === true;
   }).map(function (feature) { return feature.properties.id; });
@@ -409,16 +396,6 @@ function layerFor(family, kind, band) {
       ' ' + kind + ' ' + band);
   }
   return found[0];
-}
-
-// The four statements, renamed from the file's snake_case keys; a missed key
-// would turn into a NaN-second walk.
-function sentinelsFrom(statements) {
-  return {
-    outside: statements.outside, noStreet: statements.no_street,
-    unreachable: statements.unreachable,
-    noDestination: statements.no_destination
-  };
 }
 
 // The page's own wording in the filter choices, named from the file that
@@ -527,7 +504,6 @@ function formatWalk(seconds) {
 // inside the time, one outside it, and one the build could not measure.
 function lookOf(number, wanted) {
   const look = { kind: 'drawn', walks: {}, colour: null, gap: null };
-  const shades = {};
   for (let at = 0; at < wanted.length; at += 1) {
     const family = wanted[at];
     const asking = walk.asked[family];
@@ -541,16 +517,15 @@ function lookOf(number, wanted) {
       look.kind = 'beyond';
       return look;
     }
-    shades[family] = shadeOf(walked.seconds, asking.minutes);
     look.walks[family] = {
-      seconds: walked.seconds, shade: shades[family],
+      seconds: walked.seconds, shade: shadeOf(walked.seconds, asking.minutes),
       destination: walked.destination
     };
   }
   look.colour = wanted.length === 2
-    ? mixColour(shadeColour('metro', shades.metro),
-                shadeColour('park', shades.park))
-    : shadeColour(wanted[0], shades[wanted[0]]);
+    ? mixColour(shadeColour('metro', look.walks.metro.shade),
+                shadeColour('park', look.walks.park.shade))
+    : shadeColour(wanted[0], look.walks[wanted[0]].shade);
   return look;
 }
 
@@ -608,8 +583,8 @@ function drawDots(wanted, counts) {
 // drawn. The layers are made once and taken on and off the map here, which
 // keeps a restored choice drawing the features it asks about.
 function showFeatures() {
-  showFeature(page.parkLayer, filters.park.minutes !== null);
-  showFeature(page.metros, filters.metro.minutes !== null);
+  showFeature(page.parkLayer, minutesOf('park-minutes') !== null);
+  showFeature(page.metros, minutesOf('metro-minutes') !== null);
 }
 
 function showFeature(layer, asked) {
@@ -622,7 +597,7 @@ function showFeature(layer, asked) {
 // the legend, from one tally. Order: borough edges at the back, then parks,
 // dots, the mask, and the metro points on top.
 function redraw() {
-  const wanted = askedFamilies();
+  const wanted = Object.keys(walk.asked);
   const counts = newCounts();
   showFeatures();
   if (page.walkGroup) { page.walkGroup.clearLayers(); }
@@ -639,7 +614,6 @@ function redraw() {
 function cornerPopup(number, look) {
   const properties = page.dots.features[number].properties;
   const lines = ['<strong>' + escapeHtml(properties.popup_title) + '</strong>'];
-  // lines.push('<span class="dim">' + escapeHtml(properties.popup_degree) + '</span>');
   const where = boroughOf(number);
   if (where) { lines.push('<span class="dim">' + escapeHtml(where) + '</span>'); }
   if (look.walks.park) {
@@ -703,14 +677,14 @@ function questionText(wanted) {
 }
 
 function askingText(family) {
-  const minutes = filters[family].minutes;
+  const asked = walk.asked[family];
   if (family === 'metro') {
-    return labelOf('metro_kinds', filters.metro.kind).toLowerCase() +
-      ' within ' + minutes + ' min';
+    return labelOf('metro_kinds', asked.layer.kind).toLowerCase() +
+      ' within ' + asked.minutes + ' min';
   }
-  return 'a green space (' + labelOf('kinds', filters.park.kind).toLowerCase() +
-    ', ' + labelOf('bands', filters.park.band).toLowerCase() + ') within ' +
-    minutes + ' min';
+  return 'a green space (' + labelOf('kinds', asked.layer.kind).toLowerCase() +
+    ', ' + labelOf('bands', asked.layer.band).toLowerCase() + ') within ' +
+    asked.minutes + ' min';
 }
 
 function labelOf(list, key) {
@@ -723,8 +697,8 @@ function labelOf(list, key) {
 // The mixed colours as a grid: metro bands across, green-space bands down, each
 // cell the colour and the count of corners drawn that way.
 function blendGrid(counts) {
-  const across = shadeLabels(filters.metro.minutes);
-  const down = shadeLabels(filters.park.minutes);
+  const across = shadeLabels(walk.asked.metro.minutes);
+  const down = shadeLabels(walk.asked.park.minutes);
   const rows = ['<p class="axis">Metro bands horizontal (x axis), green spaces vertical (y axis). ' +
     'Each cell is the colour of an intersection passing both, and displays how many dots are coloured that way.</p>', '<table class="blend">',
     '<tr><th></th>' + across.map(function (label) {
@@ -780,28 +754,11 @@ function wireFilters() {
   }
 }
 
-// The layers the filters name, keyed by family: one entry per filter not on
-// "don't care", with the build's layer and the minutes asked.
-function askedLayers() {
-  const asked = {};
-  askedFilters().forEach(function (family) {
-    asked[family] = {
-      family: family,
-      layer: family === 'park'
-        ? layerFor('park', filters.park.kind, filters.park.band)
-        : layerFor('metro', filters.metro.kind, 'metro'),
-      minutes: filters[family].minutes
-    };
-  });
-  return asked;
-}
-
 // A control was touched: read the header, then redraw. A question the file
 // cannot answer clears the map and names the failure.
 function afterChange() {
-  readFilters();
   try {
-    walk.asked = askedLayers();
+    walk.asked = askFilters();
     redraw();
   } catch (error) {
     walk.asked = {};
@@ -881,40 +838,35 @@ async function checkWithoutBrowser() {
     dots.tick_minutes.length + ' times, ' + dots.kinds.length + ' kinds, ' +
     dots.bands.length + ' bands, ' + dots.metro_kinds.length + ' metro kinds');
 
-  // Every pair must be two whole numbers: the four statements are the largest
-  // the file holds, and a destination must be a feature's own number.
-  const bad = [];
-  features.forEach(function (feature) {
-    feature.properties.walk.forEach(function (pair, at) {
-      const whole = Array.isArray(pair) && pair.length === 2
-        && pair.every(function (value) {
-          return Number.isInteger(value) && value >= 0 && value <= 0xffff;
-        });
-      if (!whole) { bad.push(feature.properties.id + '/' + layers[at].id); }
-    });
-  });
-  check('every walk is two whole numbers a corner could be drawn from',
-    bad.length === 0, bad.length ? bad.slice(0, 3).join(', ')
-      : total + ' corners of ' + layers.length + ' walks');
-
   // A destination past the end of the parks or metro file would name nothing,
-  // so every walk's destination is checked against the file it names.
+  // so every walk's destination is checked against the file it names, and every
+  // pair must be two whole numbers: the four statements are the largest the
+  // file holds, and a destination must be a feature's own number.
   const opened = { park: 'city_parks.geojson', metro: 'metro_stops.geojson' };
   const lengths = {};
   Object.keys(opened).forEach(function (family) {
     lengths[family] = JSON.parse(fs.readFileSync(
       path.join(__dirname, 'data', opened[family]), 'utf8')).features.length;
   });
+  const bad = [];
   const stray = [];
   features.forEach(function (feature) {
     feature.properties.walk.forEach(function (pair, at) {
       const layer = layers[at];
-      if (pair[0] < walk.board.unreachable
+      const whole = Array.isArray(pair) && pair.length === 2
+        && pair.every(function (value) {
+          return Number.isInteger(value) && value >= 0 && value <= 0xffff;
+        });
+      if (!whole) { bad.push(feature.properties.id + '/' + layer.id); }
+      else if (pair[0] < walk.board.unreachable
           && pair[1] >= lengths[layer.family]) {
         stray.push(layer.id + ' on ' + feature.properties.id);
       }
     });
   });
+  check('every walk is two whole numbers a corner could be drawn from',
+    bad.length === 0, bad.length ? bad.slice(0, 3).join(', ')
+      : total + ' corners of ' + layers.length + ' walks');
   check('every destination a walk reached is a feature of the file it names',
     stray.length === 0, stray.length ? stray.slice(0, 3).join(', ')
       : lengths.park + ' green spaces and ' + lengths.metro + ' metro points');
