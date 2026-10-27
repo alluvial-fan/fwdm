@@ -36,7 +36,7 @@ Every output is checked by reading the file back, and the checks run before
 the file is moved into place, so a run that fails leaves the output the page
 loads untouched.
 
-Run it with:  ./.venv/Scripts/python.exe site/build_geojson.py
+Run it with:  python site/build_geojson.py
 '''
 
 import collections
@@ -48,10 +48,10 @@ import re
 import zipfile
 from pathlib import Path
 
-# The projection lives in network.py, which also checks it against the city's
-# own metres. Only that one name is taken: this file has a `network` of its own
-# inside check_intersections, which is the street graph rather than the module.
-from network import to_metres
+# The projection and the street knobs live in network.py, which also checks the
+# projection against the city's own metres. The names are taken one by one: this
+# file has a `network` of its own inside check_intersections, the street graph.
+from network import CELL_METRES, SNAP_METRES, UNWALKABLE_CLASSES, to_metres
 
 # Paths are worked out from this file's own location, so it does not matter
 # which folder you run it from.
@@ -731,17 +731,15 @@ def check_parks(source, out_path):
 # The city draws its streets as troncons: one LineString for each stretch of
 # street between two corners, 48031 of them, in degrees. CLASSE says what kind
 # of road each one is, and that column is the one filter here, the same one
-# step 3 uses. The motorways and the service ways beside them (class 8) go
-# first, before anything else is done, because nobody walks there. So no point
-# in this file is an intersection a person cannot stand on, and the points and
-# the walks measured from them agree about what a street is.
-UNWALKABLE_CLASSES = ('8',)
+# step 3 uses (network.py's UNWALKABLE_CLASSES). The motorways and the service
+# ways beside them go first, before anything else is done, because nobody walks
+# there. So no point in this file is an intersection a person cannot stand on,
+# and the points and the walks measured from them agree about what a street is.
 
 # The file draws one corner once for every street that touches it, a
 # centimetre or two apart. Two ends this close together are the same corner,
 # and the first one read decides where that corner sits, right down to the
-# degrees the file wrote it in.
-SNAP_METRES = 0.1
+# degrees the file wrote it in. SNAP_METRES is network.py's.
 
 # How many street ends a corner needs before it is written out. A corner with
 # two ends is the middle of a street and a corner with one is a dead end, so
@@ -756,11 +754,6 @@ MIN_DEGREE = 3
 # Six would be 11 cm, which would let the snapping's own tolerance through and
 # put two neighbouring corners on the same point.
 COORD_DIGITS = 7
-
-# Side of the little squares the corner lookup uses to skip most of the
-# comparisons it would otherwise make. It is a lookup size, not a measurement:
-# nothing is measured against it or rounded to it.
-CELL_METRES = 25.0
 
 # The city's own placeholder for a way it has not named, which is 1079 of the
 # troncons a pedestrian can walk. It is not a name, so it is kept out of a

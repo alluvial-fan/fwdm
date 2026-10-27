@@ -110,39 +110,30 @@ const WORLD_RING = [[85, -180], [85, 180], [-85, 180], [-85, -180]];
 function ringsOf(geometry) {
   const polygons = geometry.type === 'Polygon' ? [geometry.coordinates]
     : geometry.type === 'MultiPolygon' ? geometry.coordinates : [];
-  const rings = [];
-  polygons.forEach(function (polygon) {
-    polygon.forEach(function (ring) {
-      rings.push(ring.map(function (point) { return [point[1], point[0]]; }));
-    });
+  return polygons.flat().map(function (ring) {
+    return ring.map(function (point) { return [point[1], point[0]]; });
   });
-  return rings;
 }
 
 // The mask from the outlines, or null and a message when none is flagged as
 // drawn: a mask with no holes would cover the whole map.
-function maskOf(outlines) {
-  const windows = drawnOutlines(outlines);
+function maskOf(windows) {
   if (!windows.length) {
     say('The outline file does not say which of its shapes this page draws, so ' +
       'nothing outside them is covered.');
     return null;
   }
-  const holes = [];
-  windows.forEach(function (feature) {
-    ringsOf(feature.geometry).forEach(function (ring) { holes.push(ring); });
-  });
+  const holes = windows.map(function (feature) {
+    return ringsOf(feature.geometry);
+  }).flat();
   return L.polygon([WORLD_RING].concat(holes), MASK_STYLE);
 }
 
 // The box round the 19 drawn boroughs: the view the map opens on.
-function focusBounds(outlines) {
-  const box = L.latLngBounds([]);
-  drawnOutlines(outlines).forEach(function (feature) {
-    ringsOf(feature.geometry).forEach(function (ring) {
-      ring.forEach(function (point) { box.extend(point); });
-    });
-  });
+function focusBounds(windows) {
+  const box = L.latLngBounds(windows.map(function (feature) {
+    return ringsOf(feature.geometry);
+  }).flat(2));
   return box.isValid() ? box : null;
 }
 
@@ -154,13 +145,10 @@ function start() {
     loadGeojson('data/metro_stops.geojson'),
     loadGeojson('data/boroughs.geojson')
   ])
-    .then(function (results) {
-      const parksData = results[0];
-      const intersectionsData = results[1];
-      const metroData = results[2];
+    .then(function ([parksData, intersectionsData, metroData, outlines]) {
       // The outlines come with the base map, not the walk times: the mask is
       // the map's own shape, so it is in place before any filter is asked.
-      walk.outlines = results[3];
+      walk.outlines = outlines;
 
       // Parks first, then the metro points, so a click finds a metro point
       // where a park edge lies under one; the size order of the parks file
@@ -194,13 +182,14 @@ function start() {
 
       // The mask, added after the parks and metro points, takes the clicks they
       // miss; redraw() brings it to the front again.
-      page.mask = maskOf(walk.outlines);
+      const windows = drawnOutlines(walk.outlines);
+      page.mask = maskOf(windows);
       if (page.mask) { page.mask.addTo(map); }
 
       // The 19 boroughs, edged and named on hover, and the opening view: the
       // whole of what the page draws.
-      drawBoroughEdges();
-      const drawn = focusBounds(walk.outlines);
+      drawBoroughEdges(windows);
+      const drawn = focusBounds(windows);
       map.fitBounds(drawn || parks.getBounds().extend(metros.getBounds()));
 
       // No zooming out past the fitted view: past it the mask fills the map
@@ -279,8 +268,8 @@ const page = { dots: null, metro: null, parks: null, parkLayer: null,
 // measured, each layer's walk in a corner's list, its counts per time, the
 // statements for corners with no walk, and the corners the page may colour.
 const walk = {
-  outlines: null, layers: null, places: null, board: null, corners: null,
-  edges: null, asked: {}
+  outlines: null, layers: null, places: null, byChoice: null, board: null,
+  corners: null, edges: null, asked: {}
 };
 
 function valueOf(id) { return document.getElementById(id).value; }
@@ -358,13 +347,16 @@ function readWalkData(dots) {
   page.dots = dots;
   walk.layers = dots.walk_layers || [];
   walk.places = {};
-  walk.layers.forEach(function (layer, at) { walk.places[layer.id] = at; });
+  walk.byChoice = {};
+  walk.layers.forEach(function (layer, at) {
+    walk.places[layer.id] = at;
+    walk.byChoice[[layer.family, layer.kind, layer.band].join(' ')] = layer;
+  });
   // The file's snake_case statements, renamed: a missed key would be a
   // NaN-second walk.
-  walk.board = {
-    outside: dots.statements.outside, noStreet: dots.statements.no_street,
-    unreachable: dots.statements.unreachable
-  };
+  walk.board = { outside: dots.statements.outside,
+                 noStreet: dots.statements.no_street,
+                 unreachable: dots.statements.unreachable };
   walk.corners = dots.features.filter(function (feature) {
     return feature.properties.drawn === true;
   }).map(function (feature) { return feature.properties.id; });
@@ -387,15 +379,11 @@ function walkedOf(number, family) {
 // combination of family, kind and size band, so a combination with none of
 // them is a bug the page can name rather than a blank map.
 function layerFor(family, kind, band) {
-  const found = walk.layers.filter(function (layer) {
-    return layer.family === family && layer.kind === kind
-      && layer.band === band;
-  });
-  if (found.length !== 1) {
-    throw new Error('the build has ' + found.length + ' layers for ' + family +
-      ' ' + kind + ' ' + band);
+  const layer = walk.byChoice[[family, kind, band].join(' ')];
+  if (!layer) {
+    throw new Error('the build has 0 layers for ' + family + ' ' + kind + ' ' + band);
   }
-  return found[0];
+  return layer;
 }
 
 // The page's own wording in the filter choices, named from the file that
@@ -414,11 +402,16 @@ function describeWalk() {
     say('The build measured the corners of ' + measured.join(', ') +
       ' and this page draws ' + namesOf(flagged) + ': one of the two is wrong.');
   }
-  fillSelect('park-kind', data.kinds, missing);
-  fillSelect('park-band', data.bands, missing);
-  fillSelect('metro-kind', data.metro_kinds, missing);
-  fillMinutes('park-minutes', data.tick_minutes, missing);
-  fillMinutes('metro-minutes', data.tick_minutes, missing);
+  fillMenu('park-kind', data.kinds, missing);
+  fillMenu('park-band', data.bands, missing);
+  fillMenu('metro-kind', data.metro_kinds, missing);
+  // A time menu is the build's ticks beside a value that means n/a.
+  const minutes = [{ key: 'none', label: 'n/a' }].concat(data.tick_minutes.map(
+    function (minute) {
+      return { key: String(minute), label: 'within ' + minute + ' min' };
+    }));
+  fillMenu('park-minutes', minutes, missing);
+  fillMenu('metro-minutes', minutes, missing);
   if (missing.length) {
     say('The page offers a choice the build does not have: ' +
       missing.join(', '));
@@ -426,54 +419,40 @@ function describeWalk() {
 }
 
 // The wording of a menu, from the build rather than from this file, so a
-// question cannot be described in two places at once.
-function fillSelect(id, entries, missing) {
+// question cannot be described in two places at once. A menu whose options are
+// not the build's own choices is named, not relabelled: it offers a choice the
+// build never counted, or cannot ask for one it did.
+function fillMenu(id, entries, missing) {
+  const select = document.getElementById(id);
   const words = {};
   entries.forEach(function (entry) { words[entry.key] = entry.label; });
-  const select = document.getElementById(id);
-  for (let at = 0; at < select.options.length; at += 1) {
-    const option = select.options[at];
+  Array.prototype.forEach.call(select.options, function (option) {
     if (words[option.value] === undefined) {
       missing.push(id + ' "' + option.value + '"');
     } else {
       option.textContent = words[option.value];
     }
-  }
-}
-
-// The times the build counted at are the times the two menus offer: a menu
-// offering a time the build never counted, or a tick no menu can ask for, is a
-// bug rather than a state the page can be in.
-function fillMinutes(id, ticks, missing) {
-  const select = document.getElementById(id);
-  const offered = Array.prototype.map.call(select.options, function (option) {
-    return option.value;
   });
-  if (offered.join() !== ['none'].concat(ticks.map(String)).join()) {
-    missing.push(id + ' "' + offered.join('/') + '"');
-    return;
+  if (select.options.length !== entries.length) {
+    missing.push(id + ' offers ' + select.options.length + ' choices');
   }
-  ticks.forEach(function (minute, at) {
-    select.options[at + 1].textContent = 'within ' + minute + ' min';
-  });
 }
 
 // The 19 boroughs, drawn round as a dashed edge: with the mask covering
 // everything else, they are the windows the map is read through. The edges go
 // to the back, or they would take clicks meant for parks inside them.
-function drawBoroughEdges() {
+function drawBoroughEdges(windows) {
   if (!walk.outlines) {
     say('The borough outlines did not come with the base map, so the boroughs ' +
       'the page draws are not drawn round.');
     return;
   }
-  const features = drawnOutlines(walk.outlines);
-  if (!features.length) {
+  if (!windows.length) {
     say('The outline file does not say which of its shapes this page draws, so ' +
       'none of them is drawn round.');
     return;
   }
-  walk.edges = L.geoJSON({ type: 'FeatureCollection', features: features }, {
+  walk.edges = L.geoJSON({ type: 'FeatureCollection', features: windows }, {
     style: EDGE_STYLE,
     onEachFeature: function (feature, layer) {
       layer.bindTooltip(feature.properties.name);
@@ -532,12 +511,10 @@ function lookOf(number, wanted) {
 // --- Drawing the corners the filters pass ---------------------------------
 //
 function newCounts() {
-  const cells = [];
-  for (let down = 0; down < WALK_SHADES; down += 1) {
-    cells.push([0, 0, 0, 0, 0]);
-  }
+  const zeros = function () { return [0, 0, 0, 0, 0]; };
   return {
-    metro: [0, 0, 0, 0, 0], park: [0, 0, 0, 0, 0], cells: cells,
+    metro: zeros(), park: zeros(),
+    cells: [zeros(), zeros(), zeros(), zeros(), zeros()],
     gaps: {}, drawn: 0, beyond: 0, total: walk.corners.length
   };
 }
@@ -582,11 +559,6 @@ function drawDots(wanted, counts) {
 // saying they do not care about that family, so none of its features are
 // drawn. The layers are made once and taken on and off the map here, which
 // keeps a restored choice drawing the features it asks about.
-function showFeatures() {
-  showFeature(page.parkLayer, minutesOf('park-minutes') !== null);
-  showFeature(page.metros, minutesOf('metro-minutes') !== null);
-}
-
 function showFeature(layer, asked) {
   if (!layer || !map) { return; }
   if (asked && !map.hasLayer(layer)) { layer.addTo(map); }
@@ -599,7 +571,8 @@ function showFeature(layer, asked) {
 function redraw() {
   const wanted = Object.keys(walk.asked);
   const counts = newCounts();
-  showFeatures();
+  showFeature(page.parkLayer, walk.asked.park);
+  showFeature(page.metros, walk.asked.metro);
   if (page.walkGroup) { page.walkGroup.clearLayers(); }
   if (wanted.length) { drawDots(wanted, counts); }
   if (page.metros && map.hasLayer(page.metros)) { page.metros.bringToFront(); }
@@ -614,20 +587,17 @@ function redraw() {
 function cornerPopup(number, look) {
   const properties = page.dots.features[number].properties;
   const lines = ['<strong>' + escapeHtml(properties.popup_title) + '</strong>'];
-  const where = boroughOf(number);
-  if (where) { lines.push('<span class="dim">' + escapeHtml(where) + '</span>'); }
-  if (look.walks.park) {
-    lines.push(walkLine('park', look.walks.park, 'Green space'));
+  if (properties.drawn === true) {
+    lines.push('<span class="dim">' + escapeHtml(properties.borough) + '</span>');
   }
-  if (look.walks.metro) {
-    lines.push(walkLine('metro', look.walks.metro, 'Metro'));
-  }
+  ['park', 'metro'].forEach(function (family) {
+    const walked = look.walks[family];
+    if (!walked) { return; }
+    lines.push(escapeHtml(family === 'metro' ? 'Metro' : 'Green space') + ': <b>' +
+      escapeHtml(formatWalk(walked.seconds)) + '</b> to ' +
+      escapeHtml(destinationName(family, walked.destination)));
+  });
   return lines.join('<br>');
-}
-
-function walkLine(family, walked, word) {
-  return escapeHtml(word) + ': <b>' + escapeHtml(formatWalk(walked.seconds)) +
-    '</b> to ' + escapeHtml(destinationName(family, walked.destination));
 }
 
 // A destination number is a feature's own number in the parks or metro file,
@@ -637,13 +607,6 @@ function destinationName(family, number) {
   if (!opened) { return 'a place the file no longer holds'; }
   return family === 'metro' ? opened.properties.popup_name
                             : opened.properties.popup_title;
-}
-
-// The borough a corner is in, or null when the build's flag says it is not in
-// one of the 19 this page draws.
-function boroughOf(number) {
-  const properties = page.dots.features[number].properties;
-  return properties.drawn === true ? properties.borough : null;
 }
 
 // --- The legend -----------------------------------------------------------
@@ -668,12 +631,10 @@ function questionText(wanted) {
       'Choose a walking time for green spaces, for metro stations, or for both: ' +
       'the features you ask about appear, and every corner within their reach is coloured.';
   }
-  if (wanted.length === 1) {
-    return 'Walk time to ' + askingText(wanted[0]) + '.';
-  }
-  return 'Walk time to ' + askingText(wanted[0]) + ' and to ' +
-    askingText(wanted[1]) + ': an intersection "dot" appears only when both requested walks are inside their own time, ' +
-    'and its colour is the pair of bands it falls in.';
+  return 'Walk time to ' + askingText(wanted[0]) + (wanted.length === 1 ? '.' :
+    ' and to ' + askingText(wanted[1]) + ': an intersection "dot" appears only when ' +
+    'both requested walks are inside their own time, and its colour is the pair of ' +
+    'bands it falls in.');
 }
 
 function askingText(family) {
@@ -694,47 +655,41 @@ function labelOf(list, key) {
   return found.length ? found[0].label : key;
 }
 
+// A band's name without the unit, for a table header.
+function shortLabel(label) { return escapeHtml(label.replace(' min', '')); }
+
 // The mixed colours as a grid: metro bands across, green-space bands down, each
 // cell the colour and the count of corners drawn that way.
 function blendGrid(counts) {
   const across = shadeLabels(walk.asked.metro.minutes);
   const down = shadeLabels(walk.asked.park.minutes);
-  const rows = ['<p class="axis">Metro bands horizontal (x axis), green spaces vertical (y axis). ' +
-    'Each cell is the colour of an intersection passing both, and displays how many dots are coloured that way.</p>', '<table class="blend">',
-    '<tr><th></th>' + across.map(function (label) {
-      return '<th>' + escapeHtml(label.replace(' min', '')) + '</th>';
-    }).join('') + '</tr>'];
-  for (let row = 0; row < WALK_SHADES; row += 1) {
-    const cells = ['<th>' + escapeHtml(down[row].replace(' min', '')) + '</th>'];
-    for (let col = 0; col < WALK_SHADES; col += 1) {
-      const here = counts.cells[row][col];
-      cells.push('<td class="cell' + (here ? '' : ' blank') + '"' +
-        (here ? ' style="background:' +
-          mixColour(shadeColour('metro', col), shadeColour('park', row)) +
-          '"' : '') + '>' + (here ? count(here) : '&middot;') + '</td>');
-    }
-    rows.push('<tr>' + cells.join('') + '</tr>');
-  }
-  rows.push('</table>');
-  return rows.join('');
+  const rows = counts.cells.map(function (row, at) {
+    return '<tr><th>' + shortLabel(down[at]) + '</th>' + row.map(function (here, col) {
+      const colour = here ? ' style="background:' +
+        mixColour(shadeColour('metro', col), shadeColour('park', at)) + '"' : '';
+      return '<td class="cell' + (here ? '' : ' blank') + '"' + colour + '>' +
+        (here ? count(here) : '&middot;') + '</td>';
+    }).join('') + '</tr>';
+  });
+  return '<p class="axis">Metro bands horizontal (x axis), green spaces vertical (y axis). ' +
+    'Each cell is the colour of an intersection passing both, and displays how many dots are coloured that way.</p>' +
+    '<table class="blend"><tr><th></th>' + across.map(shortLabel).join('') + '</tr>' +
+    rows.join('') + '</table>';
 }
 
 // One question's five bands as a bar, nearest at the dark end on the left, each
 // cell carrying its count and keeping its colour when empty.
 function shadeBar(counts, family) {
   const labels = shadeLabels(walk.asked[family].minutes);
-  const cells = [];
-  for (let at = 0; at < WALK_SHADES; at += 1) {
-    cells.push('<td class="cell" style="background:' +
-      shadeColour(family, at) + '">' + count(counts[family][at]) + '</td>');
-  }
-  return '<p class="axis">' +
-    (family === 'metro' ? 'Metro' : 'Green spaces') +
+  const cells = counts[family].map(function (here, at) {
+    return '<td class="cell" style="background:' + shadeColour(family, at) + '">' +
+      count(here) + '</td>';
+  });
+  return '<p class="axis">' + (family === 'metro' ? 'Metro' : 'Green spaces') +
     ' bands, closest first, with each cell coloured by intersections within that band, ' +
     'and how many dots are coloured that way.</p>' +
-    '<table class="blend bar"><tr>' + labels.map(function (label) {
-      return '<th>' + escapeHtml(label.replace(' min', '')) + '</th>';
-    }).join('') + '</tr><tr>' + cells.join('') + '</tr></table>';
+    '<table class="blend bar"><tr>' + labels.map(shortLabel).join('') + '</tr><tr>' +
+    cells.join('') + '</tr></table>';
 }
 
 // --- Reading the header, and answering it ---------------------------------
@@ -926,15 +881,22 @@ async function checkWithoutBrowser() {
     linked.size + ' linked cities, ' + dots.coverage.outside +
     ' are in none of the 34 outlines');
 
+  // A sample of corners, at every time: a corner is drawn exactly when its walk
+  // is inside the time asked. The fixed stride makes a failure repeatable.
+  const sample = ids.filter(function (number, at) { return at % 97 === 0; });
+
   // Each layer's counts, worked out again through walkedOf() and compared with
-  // the counts the build wrote: a statement where a walk belongs shows up here.
+  // the counts the build wrote, then read back through lookOf() on the sample:
+  // a statement where a walk belongs, or a corner drawn when it should not be,
+  // shows up here.
   for (let at = 0; at < layers.length; at += 1) {
     const layer = layers[at];
     // The question set up as afterChange() sets it up, so walkedOf() is the
     // page's own look-up here, not a second way of reading the file.
+    const ask = { family: layer.family, layer: layer,
+                  minutes: dots.tick_minutes[0] };
     walk.asked = {};
-    walk.asked[layer.family] = { family: layer.family, layer: layer,
-                                 minutes: dots.tick_minutes[0] };
+    walk.asked[layer.family] = ask;
     let outside = 0;
     let noStreet = 0;
     let reached = 0;
@@ -961,21 +923,7 @@ async function checkWithoutBrowser() {
       check(layer.id + ': the corners within ' + minute + ' minutes',
         within[minute] === layer.within[String(minute)],
         within[minute] + ' instead of ' + layer.within[String(minute)]);
-    });
-  }
-
-  // A sample of corners, at every time: a corner is drawn exactly when its walk
-  // is inside the time asked. The fixed stride makes a failure repeatable.
-  const stride = 97;
-  const sample = ids.filter(function (number, at) {
-    return at % stride === 0;
-  });
-  for (let at = 0; at < layers.length; at += 1) {
-    const layer = layers[at];
-    dots.tick_minutes.forEach(function (minute) {
-      walk.asked = {};
-      walk.asked[layer.family] = { family: layer.family, layer: layer,
-                                   minutes: minute };
+      ask.minutes = minute;
       const wrong = sample.filter(function (number) {
         const seconds = walkedOf(number, layer.family).seconds;
         const drawn = lookOf(number, [layer.family]).kind === 'drawn';

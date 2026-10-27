@@ -17,7 +17,7 @@ Step 2 writes the corners; this step adds three properties to each of them and
 writes the file back where it was. Run it again after step 2 has run, because
 a corner that step 2 has just rewritten carries no walks at all.
 
-Run it with:  ./.venv/Scripts/python.exe site/build_walk_times.py
+Run it with:  python site/build_walk_times.py
 '''
 
 import json
@@ -36,7 +36,6 @@ import network
 SITE_DIR = Path(__file__).resolve().parent          # .../project/site
 PROJECT_DIR = SITE_DIR.parent                       # .../project
 
-STREETS_JSON = PROJECT_DIR / 'data' / 'street_network' / 'geobase.json'
 OUTLINES_JSON = (PROJECT_DIR / 'data' / 'neighbourhoods'
                  / 'limites-administratives-agglomeration.geojson.json')
 METRO_GEOJSON = SITE_DIR / 'data' / 'metro_stops.geojson'
@@ -70,13 +69,6 @@ GATEWAY_METRES = 20.0
 # limit is here to fail loudly if the two files ever stop being the same
 # corners, rather than to allow a slack.
 TIE_METRES = 0.05
-
-# The file's CLASSE 8 is its motorways, the expressway in its trench (the file
-# calls it Route 136), the bridges a motorway crosses on, and the unnamed
-# service ways that run beside them. It is the one class a pedestrian may not
-# walk, so it is dropped rather than walked. Every other class - rues, avenues,
-# boulevards, the bridges that carry people - is kept as it stands.
-UNWALKABLE_CLASSES = ('8',)
 
 # The size bands green space is asked for by. Each band is [low, high) in
 # hectares, so the four of them hold every space exactly once and none of them
@@ -165,55 +157,13 @@ COORD_DIGITS = 7
 # --- Reading the five files -----------------------------------------------
 
 def read_streets():
-    '''The troncons a pedestrian may walk, each one projected into metres.
+    '''The troncons a pedestrian may walk, each one in metres.
 
-    The one filter is the road class: UNWALKABLE_CLASSES holds the motorways,
-    the expressway and the service ways beside them, and those troncons are
-    dropped before anything else happens, so no walk in this build can be
-    routed along a motorway. What is left is every rue, avenue and boulevard
-    the city draws, plus the bridges and viaducts that carry them, and the
-    length of what was dropped is printed so the size of that decision is on
-    the record.
-
-    The troncons are read in the file's own order, which is what the corners
-    are numbered in: the intersections file this build measures from was built
-    from the same troncons in the same order, so the two agree about which
-    corner is which without either of them being asked.
+    Read by build_geojson's own reader, so this step walks the troncons step 2
+    numbered the corners from: the same file, the same road classes dropped, and
+    the same order. Only the metres are wanted here.
     '''
-    with open(STREETS_JSON, encoding='utf-8') as f:
-        source = json.load(f)
-
-    lines = []
-    points = 0
-    dropped = 0
-    dropped_metres = 0.0
-    for feature in source['features']:
-        props = feature['properties']
-        shape = [network.to_metres(lon, lat)
-                 for lon, lat in feature['geometry']['coordinates']]
-        if str(props['CLASSE']) in UNWALKABLE_CLASSES:
-            dropped += 1
-            dropped_metres += _line_length(shape)
-            continue
-        points += len(shape)
-        lines.append(shape)
-
-    walked_metres = sum(_line_length(shape) for shape in lines)
-    print(f'{len(lines)} troncons read and projected to metres, '
-          f'{points} points, {walked_metres / 1000.0:.0f} km of street')
-    print(f'{dropped} troncons dropped as motorway or motorway service, '
-          f'{dropped_metres / 1000.0:.0f} km not walked')
-    return lines
-
-
-def _line_length(shape):
-    '''How long a list of points is, in metres.'''
-    total = 0.0
-    x0, y0 = shape[0]
-    for x1, y1 in shape:
-        total += math.hypot(x1 - x0, y1 - y0)
-        x0, y0 = x1, y1
-    return total
+    return [line['metres'] for line in build_geojson.read_streets()]
 
 
 def read_dots():

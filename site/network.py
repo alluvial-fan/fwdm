@@ -63,6 +63,14 @@ from pathlib import Path
 # Two line ends closer together than this are the same corner.
 SNAP_METRES = 0.1
 
+# The city's CLASSE column, filtered to the classes a pedestrian may walk:
+# class 8 is the motorways, the expressway in its trench (the file calls it
+# Route 136), the bridges a motorway crosses on, and the unnamed service ways
+# beside them. Every other class - rues, avenues, boulevards, the bridges that
+# carry people - is kept as it stands. The corner file and the walks are both
+# filtered on this one tuple, so they agree about what a street is.
+UNWALKABLE_CLASSES = ('8',)
+
 # A line end this close to the side of another line is taken to join it: the
 # corner is moved onto that line and the line is split there.
 CROSSING_METRES = 0.3
@@ -785,7 +793,7 @@ def sample_ring(ring, step):
 # with its twin, point for point, in both directions. Neither file is ours, so
 # agreement to centimetres means the metres measured everywhere else are real.
 #
-# Run it with:  ./.venv/Scripts/python.exe site/network.py
+# Run it with:  python site/network.py
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 
