@@ -7,9 +7,14 @@ let map = null;
 // Make the map and add the OpenStreetMap tiles. Every layer is drawn on its one
 // canvas, and zoom animation is off: Leaflet would scale that canvas while the
 // tiles move, lifting the grey mask off the map for the length of the zoom.
+// The bounds set in start() are solid to a drag: at a viscosity of 1 the drag
+// stops at the edge instead of overshooting and springing back.
 function buildMap() {
-  map = L.map('map', { preferCanvas: true, zoomAnimation: false })
-    .setView([45.5216, -73.6222], 12);
+  map = L.map('map', {
+    preferCanvas: true,
+    zoomAnimation: false,
+    maxBoundsViscosity: 1
+  }).setView([45.5216, -73.6222], 12);
 
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -190,10 +195,20 @@ function start() {
       // whole of what the page draws.
       drawBoroughEdges(windows);
       const drawn = focusBounds(windows);
-      map.fitBounds(drawn || parks.getBounds().extend(metros.getBounds()));
+      const frame = drawn || parks.getBounds().extend(metros.getBounds());
+      map.fitBounds(frame);
+
+      // The hard edge on a drag: the map may be panned anywhere inside the
+      // frame plus a small margin, and no further - not to the US, not to
+      // another city, not to the ocean past the island. The margin is 5% of
+      // the frame, a few hundred metres either way: enough that a borough on
+      // the frame's edge keeps its rim beside the grey, not enough to reach
+      // anything the page does not measure.
+      map.setMaxBounds(frame.pad(0.05));
 
       // No zooming out past the fitted view: past it the mask fills the map
-      // with grey. Panning and zooming in stay free.
+      // with grey. Zooming in stays free, and every drag stays inside the
+      // frame set above.
       map.setMinZoom(map.getZoom());
 
       // The status line: metro points by kind and corners by how many street
