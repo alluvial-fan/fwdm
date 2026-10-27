@@ -1,23 +1,39 @@
-/* The page's look: the layout, the two filters, the legend's bar and grid,
-   the caveats and the popups. site/index.html is the page's markup and
-   site/app.js its behaviour; what the page is styled with is here.
+/* The page's look: the layout, the two filters, the legend's key, the caveats
+   and the popups. site/index.html is the page's markup and site/app.js its
+   behaviour; what the page is styled with is here.
 */
 
 /* THE LAYOUT: a thin bar across the top carrying the title, the controls in
    a column down the left, and the map taking everything that is left. A grid
    rather than floats or flex, so the map is exactly the rest of the window
    whatever the column holds, and one media query that stands the column back
-   on top of the map when the window is too narrow for two of anything. */
+   on top of the map when the window is too narrow for two of anything. The bar
+   is a row of its own inside that grid, so its title can stand at one end and
+   the status and the link to the source at the other. */
 html, body { height: 100%; }
 body { margin: 0; font-family: Arial, Helvetica, sans-serif; }
 .page { display: grid; height: 100%; grid-template-columns: minmax(300px, 380px) 1fr;
         grid-template-rows: auto 1fr; grid-template-areas: 'bar bar' 'panel map'; }
-.bar { grid-area: bar; padding: 8px 16px; background: #1F2D5A; color: #fff; }
+.bar { grid-area: bar; display: flex; flex-wrap: wrap; align-items: center;
+       gap: 4px 14px; padding: 8px 16px; background: #1F2D5A; color: #fff; }
 .bar h1 { margin: 0; font-size: 18px; line-height: 1.3; }
 .panel { grid-area: panel; overflow-y: auto; padding: 10px 14px 16px;
          background: #1F2D5A; border-right: 1px solid #47568A; }
 #map { grid-area: map; min-height: 240px; }
-#status { margin: 0; font-size: 13px; color: #C7D3EE; }
+/* What the page is doing, at the far end of the bar: the automatic margin takes
+   it away from the title so the two never read as one sentence. It keeps to a
+   measure and wraps against its own right edge, because the failure it reports
+   is a sentence, and the bar must not push the title aside to hold it. */
+#status { margin: 0 0 0 auto; max-width: 42ch; text-align: right;
+          font-size: 13px; color: #C7D3EE; }
+/* The source, as its mark rather than a word: white on the bar's blue, dimmed
+   until pointed at or reached by the keyboard, and filled from the bar's own
+   colour so the mark and the title cannot drift apart. The link is labelled in
+   the markup, since the mark is the only thing in it. */
+.bar .repo { display: inline-flex; align-items: center; padding: 1px;
+             color: #fff; opacity: 0.85; }
+.bar .repo:hover, .bar .repo:focus { opacity: 1; }
+.bar .repo svg { display: block; width: 20px; height: 20px; fill: currentColor; }
 @media (max-width: 760px) {
   .page { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr;
           grid-template-areas: 'bar' 'panel' 'map'; }
@@ -35,35 +51,55 @@ body { margin: 0; font-family: Arial, Helvetica, sans-serif; }
 .filter select { font: inherit; font-size: 13px; padding: 2px; border: 0;
                  border-radius: 2px; background: #fff; color: #1F2D5A; }
 
-/* The legend: the question as the filters stand, then the key a reader cannot
-   work out from the filters themselves - the five bands of a single question
-   as a bar, and the grid of mixed colours when both are asked. */
-#legend { margin-top: 10px; font-size: 13px; }
-#legend .question { margin: 0 0 4px; color: #DCBD23; }
+/* The legend: a box of the filters' own make - the same border, radius and
+   padding, and a title in bold white on its first line - so a key with nothing
+   in it yet reads as a key rather than as a dark patch under them. In it the key
+   comes first: five band names across the top of a table, one cell for each pair
+   of bands, and the grid of mixed colours when both are asked; then the question
+   as the filters stand. The table is the same size whatever is asked, so the box
+   never moves as the filters change. */
+#legend { margin-top: 10px; }
+#legend-body { font-size: 13px; }
+#legend .question { margin: 6px 0 4px; color: #DCBD23; }
 
-/* The mixed colours, one cell per pair of bands: the metro bands across the
-   top, the green-space bands down the left, and in each cell the colour a
-   corner passing both is drawn in with the number of corners drawn that way.
-   It is a table because it is a grid of two answers at once. */
-#legend table.blend { border-collapse: collapse; margin-top: 2px; }
-#legend table.blend td, #legend table.blend th { padding: 0; }
-#legend table.blend th { font: inherit; font-size: 11px; font-weight: normal;
-                         color: #C7D3EE; padding: 0 4px; }
-#legend table.blend td.cell { width: 30px; height: 18px; border: 1px solid #1F2D5A;
+/* The key's table: five columns of band names across the top and five rows of
+   them down the left, one cell for each pair. It fills the box the way the
+   filters' menus fill theirs, and the layout is fixed - a 50px column of names
+   and the five band columns sharing the rest - so an empty key, one row of
+   counts and a full 5 by 5 grid are all the same size. The names are cut to
+   "<6" and "6-12", so even the 40px band column of the narrowest panel leaves a
+   gap between one name and the next. */
+#legend table.blend { table-layout: fixed; width: 100%; border-collapse: collapse;
+                      margin: 0; }
+#legend table.blend th, #legend table.blend td { box-sizing: border-box; }
+#legend table.blend tr > :first-child { width: 50px; }
+/* The first row and the first column are the key's labels, not its data. A band
+   name sits on a rail of its own, lighter than the field of cells it heads, in
+   white and no bolder than the page, so "<1" and "1-2" do not read as one run of
+   numbers and the rail reads as the key's ruler rather than as a row of answers.
+   No shade in either ramp is this one - the park ramp runs brown to cream, the
+   metro ramp dark cyan to pale, and a corner passed by both lands in olive - so
+   a name cannot be taken for a coloured cell. The height holds the top row when
+   nothing is printed in it. */
+#legend table.blend th { font: inherit; font-size: 10px; font-weight: normal;
+                         color: #fff; background: #47568A; padding: 0;
+                         height: 15px; white-space: nowrap;
+                         border: 1px solid #1F2D5A; }
+/* A cell of the field: the shade of the pair the row and the column name, and how
+   many corners are drawn that way. The count is bold, in figures of one width and
+   with a dark halo, so it reads as a number rather than as a name and stays
+   legible on the palest shades. */
+#legend table.blend td.cell { height: 18px; border: 1px solid #1F2D5A;
                               text-align: center; color: #fff; font-size: 10.5px;
+                              font-weight: 600;
                               font-variant-numeric: tabular-nums;
                               text-shadow: 0 0 3px #000, 0 0 2px #000; }
+/* A cell of the field with nothing in it yet: a pair no corner falls in, or a
+   family nobody has asked about. Its slate is darker than the rail's, so the
+   field's empties read as unfilled slots and never as names, and the seams keep
+   the 5 by 5 structure visible even when every cell is empty. */
 #legend table.blend td.blank { background: #2A3A6B; }
-#legend .axis { color: #9FC3FF; font-size: 11.5px; }
-
-/* The one-question bar: the same five cells, read as one graded scale, so
-   they lose the seams that mark out a grid. */
-#legend table.bar td.cell { border-left: 0; border-right: 0; }
-#legend table.bar td.cell:first-child { border-left: 1px solid #1F2D5A; }
-#legend table.bar td.cell:last-child { border-right: 1px solid #1F2D5A; }
-/* One line per band label: the columns are only as wide as the counts need,
-   so a label left to wrap would stack a band's two numbers. */
-#legend table.blend th { white-space: nowrap; }
+#legend .axis { color: #9FC3FF; font-size: 11.5px; margin: 0; }
 
 /* The caveats fold away: the map is the page, and what it does not know is
    read once and then out of the way. The column is their measure, so no line
@@ -74,8 +110,10 @@ body { margin: 0; font-family: Arial, Helvetica, sans-serif; }
 #notes p { margin: 6px 0 0; }
 
 /* The story: who the map is for, why it matters, and what they can do - read
-   before the filters, so the page explains itself to a first-time visitor. */
-#story { margin-top: 10px; font-size: 13.5px; line-height: 1.5; color: #fff; }
+   before the filters, so the page explains itself to a first-time visitor. It
+   opens the column now that the load status has moved up into the bar, so its
+   own top margin would only double the panel's top padding. */
+#story { margin-top: 0; font-size: 13.5px; line-height: 1.5; color: #fff; }
 #story p { margin: 0 0 8px; }
 #story p:last-child { margin-bottom: 0; }
 

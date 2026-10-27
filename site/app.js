@@ -626,15 +626,16 @@ function destinationName(family, number) {
 
 // --- The legend -----------------------------------------------------------
 //
-// The question as the filters stand, then the key: a five-band bar for one
-// filter, or the 5 by 5 grid of mixed colours for both, each cell counted.
+// The key first, then the question as the filters stand. The key is always the
+// same five bands by five bands, so the table keeps its size and its place in
+// its box under the filters, and only the words below it change.
 
 function drawLegend(counts, wanted) {
-  const rows = ['<p class="question">' +
-    escapeHtml(questionText(wanted)) + '</p>'];
-  if (wanted.length === 2) { rows.push(blendGrid(counts)); }
-  if (wanted.length === 1) { rows.push(shadeBar(counts, wanted[0])); }
-  document.getElementById('legend').innerHTML = rows.join('');
+  document.getElementById('legend-body').innerHTML = [
+    legendTable(counts, wanted),
+    '<p class="question">' + escapeHtml(questionText(wanted)) + '</p>',
+    axisNote(wanted)
+  ].join('');
 }
 
 // The question the map is answering, in the build's own words for the choices:
@@ -670,41 +671,78 @@ function labelOf(list, key) {
   return found.length ? found[0].label : key;
 }
 
-// A band's name without the unit, for a table header.
-function shortLabel(label) { return escapeHtml(label.replace(' min', '')); }
-
-// The mixed colours as a grid: metro bands across, green-space bands down, each
-// cell the colour and the count of corners drawn that way.
-function blendGrid(counts) {
-  const across = shadeLabels(walk.asked.metro.minutes);
-  const down = shadeLabels(walk.asked.park.minutes);
-  const rows = counts.cells.map(function (row, at) {
-    return '<tr><th>' + shortLabel(down[at]) + '</th>' + row.map(function (here, col) {
-      const colour = here ? ' style="background:' +
-        mixColour(shadeColour('metro', col), shadeColour('park', at)) + '"' : '';
-      return '<td class="cell' + (here ? '' : ' blank') + '"' + colour + '>' +
-        (here ? count(here) : '&middot;') + '</td>';
-    }).join('') + '</tr>';
-  });
-  return '<p class="axis">Metro bands horizontal (x axis), green spaces vertical (y axis). ' +
-    'Each cell is the colour of an intersection passing both, and displays how many dots are coloured that way.</p>' +
-    '<table class="blend"><tr><th></th>' + across.map(shortLabel).join('') + '</tr>' +
-    rows.join('') + '</table>';
+// A band's name for a table header: the unit is in the note under the key, and a
+// dash and a "less than" keep "24 to 30" and "under 6" inside the fifth of a
+// 300 px panel, where the long spelling filled the whole cell and ran into its
+// neighbours.
+function shortLabel(label) {
+  const shorter = label.replace(' min', '').replace('under ', '<');
+  return escapeHtml(shorter).replace(' to ', '&ndash;');
 }
 
-// One question's five bands as a bar, nearest at the dark end on the left, each
-// cell carrying its count and keeping its colour when empty.
-function shadeBar(counts, family) {
-  const labels = shadeLabels(walk.asked[family].minutes);
-  const cells = counts[family].map(function (here, at) {
-    return '<td class="cell" style="background:' + shadeColour(family, at) + '">' +
-      count(here) + '</td>';
-  });
-  return '<p class="axis">' + (family === 'metro' ? 'Metro' : 'Green spaces') +
-    ' bands, closest first, with each cell coloured by intersections within that band, ' +
-    'and how many dots are coloured that way.</p>' +
-    '<table class="blend bar"><tr>' + labels.map(shortLabel).join('') + '</tr><tr>' +
-    cells.join('') + '</tr></table>';
+// The key: five bands by five bands, whatever is asked. Metro bands run across
+// the top and green-space bands down the left, and each cell is the colour of
+// the pair it stands for with the number of dots drawn that way. A family
+// nobody asked about adds no names and no counts, so its cells stay blank and
+// the grid keeps its shape instead of shrinking to a bar.
+function legendTable(counts, wanted) {
+  const both = wanted.length === 2;
+  const only = wanted.length === 1 ? wanted[0] : null;
+  const across = both ? shadeLabels(walk.asked.metro.minutes)
+    : only ? shadeLabels(walk.asked[only].minutes) : null;
+  const down = both ? shadeLabels(walk.asked.park.minutes) : null;
+
+  const head = ['<tr><th></th>'];
+  for (let col = 0; col < WALK_SHADES; col += 1) {
+    head.push(across ? '<th>' + shortLabel(across[col]) + '</th>' : '<th></th>');
+  }
+  head.push('</tr>');
+
+  const rows = [];
+  for (let at = 0; at < WALK_SHADES; at += 1) {
+    const row = [down ? '<th>' + shortLabel(down[at]) + '</th>' : '<th></th>'];
+    for (let col = 0; col < WALK_SHADES; col += 1) {
+      row.push(keyCell(counts, wanted, at, col));
+    }
+    rows.push('<tr>' + row.join('') + '</tr>');
+  }
+  return '<table class="blend">' + head.join('') + rows.join('') + '</table>';
+}
+
+// One cell of the key: the colour of the pair the row and the column stand for,
+// and how many dots are drawn that way. One question asked puts its five counts
+// along the top row, nearest first; a cell no question reaches is left blank.
+function keyCell(counts, wanted, at, col) {
+  if (wanted.length === 2) {
+    const here = counts.cells[at][col];
+    const colour = here ? ' style="background:' +
+      mixColour(shadeColour('metro', col), shadeColour('park', at)) + '"' : '';
+    return '<td class="cell' + (here ? '' : ' blank') + '"' + colour + '>' +
+      (here ? count(here) : '&middot;') + '</td>';
+  }
+  if (wanted.length === 1 && at === 0) {
+    return '<td class="cell" style="background:' + shadeColour(wanted[0], col) + '">' +
+      count(counts[wanted[0]][col]) + '</td>';
+  }
+  return '<td class="cell blank"></td>';
+}
+
+// What the key holds, said under it: the grid for two answers at once, the one
+// row of counts for one, and, before anything is asked, the note that says the
+// key fills in - so the paragraph is always there and the column never jumps.
+function axisNote(wanted) {
+  if (wanted.length === 2) {
+    return '<p class="axis">Metro bands horizontal (x axis), green spaces vertical (y axis), ' +
+      'both in minutes. Each cell is the colour of an intersection passing both, and ' +
+      'displays how many dots are coloured that way.</p>';
+  }
+  if (wanted.length === 1) {
+    return '<p class="axis">' + (wanted[0] === 'metro' ? 'Metro' : 'Green spaces') +
+      ' bands (in minutes), closest first, with each cell coloured by intersections within ' +
+      'that band, and how many dots are coloured that way.</p>';
+  }
+  return '<p class="axis">The key fills in once a walking time is chosen: five bands ' +
+    '(in minutes), closest first, from the dark end of the scale to the pale one.</p>';
 }
 
 // --- Reading the header, and answering it ---------------------------------
