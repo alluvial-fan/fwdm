@@ -1,4 +1,4 @@
-# Feature Distance Map
+# Feature Walking Distance Map
 
 This project takes public data, converts it to GeoJSON, and maps it with LeafletJS.
 
