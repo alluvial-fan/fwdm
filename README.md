@@ -141,23 +141,25 @@ Three files, a CSV, a ZIP, and a GeoJSON.
 
 ### Steps
 
-| Step | File | Reads | Writes |
+| Step | Command | Reads | Writes |
 | --- | --- | --- | --- |
-| 1 | n/a | n/a | `data/metro_stops/gtfs_stm.zip`, `data/city_parks/espace_vert.json`, `data/street_network/geobase.json` |
-| 2 | `site/build_geojson.py` | `data/metro_stops/gtfs_stm.zip`, `data/city_parks/espace_vert.json`, `data/street_network/geobase.json` | `site/data/metro_stops.geojson` (68 station points and 134 entrances), `site/data/city_parks.geojson` (1981 green spaces), `site/data/intersections.geojson` (24,669 intersections) |
-| 3 | `site/build_walk_times.py` | `data/street_network/geobase.json`, `data/neighbourhoods/limites-administratives-agglomeration.geojson.json`, and step 2's three output geojsons| a rewritten `site/data/intersections.geojson` with walk times written into the corners, and `site/data/boroughs.geojson` for the visual masking and borough labelling |
+| 1 | n/a | n/a | `data/metro_stops/gtfs_stm.zip`, `data/city_parks/espace_vert.json`, `data/street_network/geobase.json`, `data/neighbourhoods/limites-administratives-agglomeration*.geojson` |
+| 2 | `python site/build.py geojson` | `data/metro_stops/gtfs_stm.zip`, `data/city_parks/espace_vert.json`, `data/street_network/geobase.json` | `site/data/metro_stops.geojson` (68 station points and 134 entrances), `site/data/city_parks.geojson` (1981 green spaces), `site/data/intersections.geojson` (24,669 intersections) |
+| 3 | `python site/build.py walks` | `data/street_network/geobase.json`, `data/neighbourhoods/limites-administratives-agglomeration.geojson.json`, and step 2's three output geojsons| a rewritten `site/data/intersections.geojson` with walk times written into the corners, and `site/data/boroughs.geojson` for the visual masking and borough labelling |
 
-Within a venv and from the project folder, run in order:
+Before steps 2 and 3, `python site/build.py check` holds the projection every distance in this project is measured in (MTM zone 8, EPSG:32188) against the city's own metres: it projects the city's 34 outlines and compares them with the city's own MTM copy, point for point, in both directions. It reads no built file and writes nothing, so it is the first thing to run when a distance looks wrong.
+
+Within a venv and from the project folder:
 ```bash
-python site/network.py # optional sanity check making sure that logic used by build_geojson.py and build_walk_times.py will properly function, if this fails, it prevents needing to figure out what failed in the latter two
-python site/build_geojson.py 
-python site/build_walk_times.py
+python site/build.py # the projection check, step 2 and step 3, in that order
 node site/app.js 
 ```
 
+Naming a step runs only that one, always in the order above: `python site/build.py walks` is enough after changing a walking speed, a park band or a size (about a minute), because step 2's files are unchanged. Step 3 reads the intersections file step 2 writes, so a step 2 change needs `python site/build.py geojson` and then `walks`.
+
 ### Checks
 
-Inside the build scripts (py) are checks used to validate the data before it's used.
+`site/build.py` checks each file it writes before that file takes the place of the one the page loads: every output is written to a temporary name, read back off the disk, checked as it was written, and only then moved into place, so a failed run leaves the page with the files it already had.
 
 - Every question the page's filters can ask has a layer of its own (22 layers: 20 green-space combinations and 2 metro ones), so the page can never ask for something the build did not measure.
 - A corner is either given a walk or marked with the reason it has none. The build writes four statements (outside the 34 outlines, no network link, no reachable destination, unreachable); `check_statements()` checks the first two dot by dot and by count. On this run 0 corners were outside and 0 had no link, in all 22 layers.
