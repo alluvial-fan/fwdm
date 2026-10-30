@@ -2,14 +2,18 @@
 build.py
 
 The whole build, in one file: the raw project data in data/ turned into the
-four GeoJSON files site/index.html loads. It used to be three scripts -
-network.py, build_geojson.py and build_walk_times.py - and the steps, and the
-order they run in, are the same; what changed is that they are one script now,
-in four parts, run by one command.
+files site/index.html loads - the four GeoJSON files it draws, and the walking
+graph beside them. It used to be three scripts - network.py,
+build_geojson.py and build_walk_times.py - and the steps, and the order they
+run in, are the same; what changed is that they are one script now, in four
+parts, run by one command.
 
 A GeoJSON file, wherever this file says GeoJSON, is a text file of map shapes
-that a browser can read as it stands. It is the only kind of file the page
-loads, and every file the build writes is one.
+that a browser can read as it stands. Every file the page draws is one. The
+walking graph is the exception, and it is the one file the page does not draw
+but searches: it is plain JSON, because a browser reads it with code rather
+than handing it to the map library, and because a feature per street corner
+would repeat a property name for every number in it.
 
 The build runs in three steps, and each step needs what the one before it left
 behind.
@@ -28,9 +32,10 @@ street corners the map is drawn from - site/data/metro_stops.geojson,
 city_parks.geojson and intersections.geojson.
 
 Step 3, `walks`, takes those corners and gives each one the 22 walks the page's
-two questions can ask about, and writes the 34 outlines the page's mask is cut
-round: site/data/intersections.geojson, rewritten in place, and
-site/data/boroughs.geojson.
+two questions can ask about, writes the 34 outlines the page's mask is cut
+round, and writes the network the page walks by itself when a reader gives it
+an address: site/data/intersections.geojson, rewritten in place,
+site/data/boroughs.geojson, and site/data/walk_graph.json.
 
 Run it from the project folder:
 
@@ -67,7 +72,9 @@ checked and moved into place in the same way.
 
 Part 3 takes those corners and gives each one the walks the page can ask about,
 then writes them onto the corners, beside the 34 outlines the page's mask is
-cut round.
+cut round. It also writes the walking graph: the same network in the compact
+form the page searches when a reader asks about an address rather than a
+filter, since that question has no answer until the address is known.
 
 Part 4 is the command above, and nothing else.
 
@@ -122,6 +129,13 @@ METRO_GEOJSON = SITE_DIR / 'data' / 'metro_stops.geojson'
 PARKS_GEOJSON = SITE_DIR / 'data' / 'city_parks.geojson'
 INTERSECTIONS_GEOJSON = SITE_DIR / 'data' / 'intersections.geojson'
 BOROUGHS_GEOJSON = SITE_DIR / 'data' / 'boroughs.geojson'
+
+# The fifth file the page loads, and the one it searches rather than draws: the
+# street network and the city's street numbers, in the compact form Part 3
+# writes. It is plain JSON and not GeoJSON because nothing on the page draws a
+# part of it - the page runs a walk's own search over it - so the shape of a
+# GeoJSON feature would cost a property name per number for no gain.
+WALK_GRAPH_JSON = SITE_DIR / 'data' / 'walk_graph.json'
 
 # The city's 34 outlines, published twice: in degrees, which is what step 3
 # reads and the page's mask is cut round, and in MTM zone 8 metres, which is
@@ -3480,22 +3494,27 @@ def summarise(layers, plan):
 # here is the order and the running commentary.
 
 def build_walk_times():
-    '''Step 3: read what step 2 wrote, measure every layer, write the two files.
+    '''Step 3: read what step 2 wrote, measure every layer, write the three files.
 
     Five files go in: step 2's three, and the city's street and outline files,
-    the first for the network to walk and the second for the outlines. Two come
-    out: the corner file, with its walks written onto every corner, and the file
-    of 34 outlines. In between, every layer is measured and every measurement is
-    checked. This is what `python site/build.py walks` calls.
+    the first for the network to walk and the second for the outlines. Three
+    come out: the corner file, with its walks written onto every corner, the
+    file of 34 outlines, and the walking graph the page searches when a reader
+    gives it an address. In between, every layer is measured and every
+    measurement is checked. This is what `python site/build.py walks` calls.
     '''
     started = time.perf_counter()
 
     dots, corner_features = read_dots()
-    # Only the metres are wanted here, but they come through step 2's reader,
-    # so that this step walks the same troncons, in the same order, with the
-    # same road classes dropped as the corners were numbered from. One reader,
-    # so the two steps cannot disagree about what a street is.
-    lines = [line['metres'] for line in read_streets()]
+    streets = read_streets()
+    # Only the metres are wanted for the walk, but they come through step 2's
+    # reader, so that this step walks the same troncons, in the same order, with
+    # the same road classes dropped as the corners were numbered from. One
+    # reader, so the two steps cannot disagree about what a street is. The
+    # records themselves are kept as well: the walking graph written at the end
+    # of this step needs each troncon's own street numbers, which are not in the
+    # metres.
+    lines = [line['metres'] for line in streets]
     entrances = read_entrances()
     spaces = read_spaces()
     outlines = read_outlines()
@@ -3571,7 +3590,472 @@ def build_walk_times():
     summarise(layers, plan)
     print(f'{len(plan)} layers, {len(focus)} of the {len(dots)} corners drawn '
           'by the page')
+
+    # The page's own graph, out of the network this step has just walked. It is
+    # written after the rest because it is the one file that needs the gateways,
+    # and a gateway only exists once the destinations have been attached. The
+    # filters above are answered here; this file is what answers an address,
+    # which is a question no run of the build can answer in advance.
+    write_walk_graph(nodes, edges, streets, spaces, entrances, corners_of)
+
     print(f'Done in {time.perf_counter() - started:.1f} s')
+
+
+# ======== Part 3b: the graph the page walks for itself ====================
+#
+# The two filters are answered before the page is ever opened: step 3 measures
+# every corner against every destination and writes the answer beside the
+# corner, so asking a question needs no search. An address is the other case.
+# Its corner is in no file, so the page has to find the street the address
+# names, work out which way along that street the number lies, find the nearest
+# link to that spot, and search out from it - in the browser, while the reader
+# waits.
+#
+# What that needs is the network, and the city's street numbers to turn an
+# address into a place on it. Both are written here, as one file: corners in
+# degrees, links as two corner numbers and a length, and one row per troncon
+# that carries a range of civic numbers. Nothing in it is a shape the page
+# draws, which is why it is the one file the build writes that is not GeoJSON.
+
+# How far a troncon's own end may sit from the corner of the network that
+# stands for it. The two are the same point, but the network has been nudged by
+# the joins in Part 1 - a street end pulled a few centimetres onto the line it
+# ends at, a crossing given a corner of its own - so the test is a short reach
+# rather than an exact match. Two metres is far looser than any of those moves
+# and far tighter than the gap between two streets.
+ADDRESS_REACH = 2.0
+
+# How many decimals a corner's position is written to. Six is about eleven
+# centimetres, well under the width of the line the page draws and a two
+# hundredth of the twenty-five metres between two corners of the search.
+GRAPH_DECIMALS = 6
+
+# How many parts of a metre the lengths are written in: centimetres, so a length
+# is a whole number of them. The finest link in the network is a few centimetres
+# long - two corners the joining in Part 1 decided were the same junction - and
+# a coarser unit would round it to nothing, which would leave the page reading a
+# link that costs no walking. A centimetre is more precision than a walk needs,
+# and it is kept because it lets the numbers the page adds up be the numbers this
+# file added up, which is what the check below holds them to.
+GRAPH_PARTS = 100
+
+
+def corner_index(nodes):
+    '''Which 25 m square each corner of the network is in, for the lookups here.'''
+    squares = {}
+    for index, point in enumerate(nodes):
+        squares.setdefault(_square(point), []).append(index)
+    return squares
+
+
+def nearest_corner(nodes, squares, point, reach):
+    '''The corner of the network nearest a point, within a reach in metres.
+
+    The lookup is by square, as every other lookup in this file is: the corners
+    in the point's own square and the eight around it, never all quarter of a
+    million of them. None comes back when no corner is within reach, which is
+    what lets a troncon with no network of its own be counted rather than
+    guessed at.
+    '''
+    cx, cy = _square(point)
+    best = None
+    for sx in (cx - 1, cx, cx + 1):
+        for sy in (cy - 1, cy, cy + 1):
+            for index in squares.get((sx, sy), ()):
+                x, y = nodes[index]
+                gap = math.hypot(x - point[0], y - point[1])
+                if best is None or gap < best[0]:
+                    best = (gap, index)
+    if best is None or best[0] > reach:
+        return None
+    return best[1]
+
+
+def network_json(nodes, edges):
+    '''The network as the page reads it: corners in degrees, links in centimetres.
+
+    A link's length is written out rather than left for the page to measure. The
+    page has the corners in degrees and no projection; turning them into metres
+    itself would mean a second copy of the maths Part 1 is the one copy of, and
+    a second set of distances to disagree with. So each link carries the length
+    the build measured on the city's own grid, and the page's search adds up the
+    same numbers the build's did.
+
+    Returns (the corners as [lon, lat], the links as [corner, corner, length],
+    and how many links were too short to have a length of their own).
+    '''
+    corners = []
+    for x, y in nodes:
+        lon, lat = to_wgs84(x, y)
+        corners.append([round(lon, GRAPH_DECIMALS), round(lat, GRAPH_DECIMALS)])
+
+    links = []
+    clipped = 0
+    for u, v, _, _ in edges:
+        length = int(round(edge_length(nodes, (u, v)) * GRAPH_PARTS))
+        if length < 1:
+            # Two corners the joining in Part 1 left a millimetre or two apart.
+            # The link is kept, because taking it away could cut a way through
+            # the network that the page would then not find, and it is written
+            # as the centimetre it rounds up to, so that no link in the file
+            # costs no walking.
+            length = 1
+            clipped += 1
+        links.append([u, v, length])
+    return corners, links, clipped
+
+
+def street_number(value):
+    '''One of the city's four street-number columns, as a whole number.
+
+    A column the city left empty arrives as None, and one it filled with nought
+    means the same thing: no number at that end. Both come back as nought, which
+    is the value no house has, so a range with a nought in it is refused further
+    down rather than placed at one end of its street.
+    '''
+    if isinstance(value, (int, float)) and not isinstance(value, bool) \
+            and value > 0:
+        return int(value)
+    return 0
+
+
+def street_table(streets, nodes, squares):
+    '''The city's street numbers: one row per troncon that carries a range.
+
+    Every troncon knows the numbers at its own two ends on each of its two
+    sides - DEB_GCH to FIN_GCH down the left, DEB_DRT to FIN_DRT down the right,
+    left and right being the sides of the street as the city drew it. Those four
+    numbers are what turn "4250" into a place: the number is placed along the
+    troncon as its share of the range, and the side it falls on says which
+    pavement it sits on.
+
+    A row keeps the troncon's two ends as corners of the network, in the order
+    the city drew them, so the range runs from the first to the second. That
+    order is the whole reason the numbers land on the right block: the sides of
+    the street swap over if the line is read backwards, so a troncon read the
+    wrong way round would put 4250 at the other end of its street, a few hundred
+    metres from where it is.
+
+    A troncon with no name, no range, or an end that is not on the network is
+    counted and left out: the page cannot place a number on a line it does not
+    have, and a name no reader can type is no use to it. The counts are printed
+    by the writer below, so the size of each decision is on the record.
+
+    Returns (the names, the rows, the counts of what was left out).
+    '''
+    names = []
+    numbers = {}
+    rows = []
+    left_out = {'no_range': 0, 'no_name': 0, 'off_network': 0}
+
+    for troncon in streets:
+        props = troncon['props']
+        left = (street_number(props.get('DEB_GCH')),
+                street_number(props.get('FIN_GCH')))
+        right = (street_number(props.get('DEB_DRT')),
+                 street_number(props.get('FIN_DRT')))
+        if not any(deb and fin and deb != fin for deb, fin in (left, right)):
+            left_out['no_range'] += 1
+            continue
+
+        # The city's own name for the street, spaces tidied: the column holds a
+        # trailing space on most rows and none on the rest, and a reader typing
+        # the name will not know which.
+        name = ' '.join((props.get('ODONYME') or '').split())
+        if not name:
+            left_out['no_name'] += 1
+            continue
+
+        start = nearest_corner(nodes, squares, troncon['metres'][0],
+                              ADDRESS_REACH)
+        end = nearest_corner(nodes, squares, troncon['metres'][-1],
+                            ADDRESS_REACH)
+        if start is None or end is None or start == end:
+            left_out['off_network'] += 1
+            continue
+
+        if name not in numbers:
+            numbers[name] = len(names)
+            names.append(name)
+        rows.append([numbers[name], start, end,
+                     left[0], left[1], right[0], right[1]])
+
+    return names, rows, left_out
+
+
+def read_stations():
+    '''Which station each metro entrance is a way into, by the file's numbering.
+
+    A walk ends at an entrance, because that is the doorway on the pavement, but
+    a reader asking for the nearest station wants the station: Berri-UQAM has
+    several ways in and is one place. The page has the metro file in front of it
+    and draws the station's own dot, so all this has to supply is the link
+    between the two - the entrance's parent_station, which the STM's file gives
+    as its station's stop_id - turned into that station's number in the file.
+
+    The link is insisted on rather than assumed: an entrance whose station is
+    not in the file would be an entrance the page could not name.
+
+    Returns the station's number for each entrance's number.
+    '''
+    source = read_json(METRO_GEOJSON)
+    numbers = {}
+    for number, feature in enumerate(source['features']):
+        props = feature['properties']
+        if props['location_type'] == '1':
+            numbers[props['stop_id']] = number
+
+    of_entrance = {}
+    for number, feature in enumerate(source['features']):
+        props = feature['properties']
+        if props['location_type'] != '2':
+            continue
+        parent = props['parent_station']
+        assert parent in numbers, (props['stop_name'], parent)
+        of_entrance[number] = numbers[parent]
+    return of_entrance
+
+
+def gateway_table(corners_of, spaces, entrances, station_of):
+    '''The places a walk can end, gathered under the destination they belong to.
+
+    A green space arrives at the network as a gateway every twenty metres round
+    its edge, and a station as one per entrance, and the page needs every one of
+    them: a walk to a park ends at whichever of its gateways is nearest, and the
+    point of having twenty of them is that the nearest differs with where the
+    walk started. So the rows are grouped - one row per destination, the
+    gateways under it - and the page takes the shortest of them, having only had
+    to search the network once.
+
+    Each gateway is a corner of the network and the short stub from that corner
+    to the park's edge or the doorway, in whole centimetres: the last stretch of
+    the walk, which the search counts as already covered.
+
+    A destination with no gateway at all is left out and counted, because there
+    is no walk to a park that no street comes near, and a park the page listed
+    with no walk would be worse than a park it does not list.
+
+    Returns (the green spaces, the stations), each a list of
+    [the destination's number in its own file, its gateways].
+    '''
+    parks = []
+    gateways_laid = 0
+    for space in spaces:
+        gateways = corners_of.get(space['label'])
+        if not gateways:
+            continue
+        parks.append([space['id'],
+                      [[corner, int(round(approach * GRAPH_PARTS))]
+                       for corner, approach in gateways]])
+        gateways_laid += len(gateways)
+
+    by_station = {}
+    for entrance in entrances:
+        gateways = corners_of.get(entrance['label'])
+        if not gateways:
+            continue
+        held = by_station.setdefault(station_of[entrance['id']], {})
+        for corner, approach in gateways:
+            if corner not in held or approach < held[corner]:
+                held[corner] = approach
+    stations = [[station,
+                 [[corner, int(round(approach * GRAPH_PARTS))]
+                  for corner, approach in sorted(by_station[station].items())]]
+                for station in sorted(by_station)]
+
+    print(f'{len(parks)} green spaces and {len(stations)} stations have a way '
+          f'in: {gateways_laid} park gateways and '
+          f'{sum(len(row[1]) for row in stations)} metro entrances, grouped')
+    return parks, stations
+
+
+def write_walk_graph(nodes, edges, streets, spaces, entrances, corners_of):
+    '''Step 3's third file: the network and the street numbers, for the page.
+
+    Everything it needs has just been built for the walks, so it is written from
+    what the step already holds rather than by reading the city's files again:
+    the network the 22 searches ran over, the troncons those corners were read
+    from, the spaces and entrances that were attached to it, and the gateways
+    each destination ended up with. One run, one network, so the walks the page
+    searches for itself and the walks it reads off the corners cannot disagree
+    about where a street is.
+
+    The file is written through write_checked like every other: read back off
+    the disk, checked as it was written, and only then moved into place.
+    '''
+    started = time.perf_counter()
+
+    squares = corner_index(nodes)
+    corners, links, clipped = network_json(nodes, edges)
+    names, roads, left_out = street_table(streets, nodes, squares)
+    parks, stations = gateway_table(corners_of, spaces, entrances,
+                                    read_stations())
+
+    document = {
+        'meta': {'corners': len(corners), 'links': len(links),
+                 'roads': len(roads), 'parks': len(parks),
+                 'stations': len(stations), 'walk_speed_mps': WALK_SPEED_MPS,
+                 'decimals': GRAPH_DECIMALS},
+        'nodes': corners,
+        'links': links,
+        'names': names,
+        'roads': roads,
+        'parks': parks,
+        'stations': stations,
+    }
+
+    print(f'{len(names)} street names and {len(roads)} troncons carrying a '
+          'range of street numbers')
+    print(f"  left out: {left_out['no_range']} troncons with no range, "
+          f"{left_out['no_name']} with no name, "
+          f"{left_out['off_network']} whose ends are not both on the network")
+    print(f'  {clipped} links are shorter than a centimetre and are written '
+          'as one')
+
+    def report(path):
+        return (f'Written to {path} ({path.stat().st_size / 1e6:.1f} MB, '
+                f'{len(corners)} corners, {len(links)} links)')
+
+    write_checked(document, WALK_GRAPH_JSON, check_walk_graph, report=report)
+    print(f'Graph done in {time.perf_counter() - started:.1f} s')
+
+
+def check_walk_graph(path):
+    '''Check the graph as it landed on disk, and stop the build if it is wrong.
+
+    What is checked is what the page will do with the file, not what the code
+    meant to write: that a link joins two corners that exist and is as long as
+    the space between them, that a street row names a street and two corners and
+    a range with a number inside it, that every destination has a gateway and
+    every gateway sits where a walk can be, and that the counts in the header
+    are the lengths of the lists beside them. A file that fails any of those is
+    one the page would search and get nothing sensible out of, so the temporary
+    file is thrown away and the page keeps the graph it already had.
+
+    The last number printed is the one thing here that is reported rather than
+    insisted on: a gateway on a piece of network no other piece joins is a park
+    the page could list and never draw a route to, and that is a fact about the
+    city's own street file. The build says how many there are; the page says
+    there is no walk rather than pretending the way is short.
+    '''
+    document = read_json(path)
+    meta = document['meta']
+    nodes = document['nodes']
+    links = document['links']
+    names = document['names']
+    roads = document['roads']
+    parks = document['parks']
+    stations = document['stations']
+
+    assert meta['walk_speed_mps'] == WALK_SPEED_MPS, meta['walk_speed_mps']
+    assert meta['corners'] == len(nodes), meta
+    assert meta['links'] == len(links), meta
+    assert meta['roads'] == len(roads), meta
+    assert meta['parks'] == len(parks), meta
+    assert meta['stations'] == len(stations), meta
+    assert nodes and links and names and roads and parks and stations, \
+        'the graph is empty'
+
+    # Every corner is a place in Montreal, written the way GeoJSON writes a
+    # place: east first, north second. A pair the other way round would move the
+    # whole network into the Pacific and still pass every check below, so the
+    # box is loose round the island and asserts nothing more than that.
+    for lon, lat in nodes:
+        assert -74.2 < lon < -73.2 and 45.2 < lat < 45.9, (lon, lat)
+
+    assert len(set(names)) == len(names), 'two streets share a name'
+    for name in names:
+        assert name and name.strip() == name, repr(name)
+
+    linked = set()
+    for u, v, length in links:
+        assert 0 <= u < len(nodes) and 0 <= v < len(nodes), (u, v)
+        assert u != v, (u, v)
+        assert length > 0, (u, v, length)
+        linked.add(u)
+        linked.add(v)
+
+    # The links and the corners share one numbering, or the page's search walks
+    # somewhere else altogether: every length is held against the two corners it
+    # joins. Six decimals of a degree is eleven centimetres and a length is
+    # rounded to the centimetre, so a gap of more than half a metre is a link
+    # joined to the wrong corner rather than a rounding.
+    worst = 0.0
+    for u, v, length in links:
+        ux, uy = to_metres(nodes[u][0], nodes[u][1])
+        vx, vy = to_metres(nodes[v][0], nodes[v][1])
+        worst = max(worst, abs(math.hypot(vx - ux, vy - uy)
+                               - length / GRAPH_PARTS))
+    assert worst <= 0.5, f'a link is {worst:.2f} m off the corners it joins'
+
+    # A street row has to be a place a number can be found on: a name, two
+    # corners a walk can stand at, and a range on at least one side with a
+    # number inside it. A range with a nought at one end would put every number
+    # at that end of the street, so it is refused rather than believed.
+    for row in roads:
+        number, start, end, deb_gch, fin_gch, deb_drt, fin_drt = row
+        assert 0 <= number < len(names), row
+        assert 0 <= start < len(nodes) and 0 <= end < len(nodes), row
+        assert start != end, row
+        assert start in linked and end in linked, row
+        assert any(deb > 0 and fin > 0 and deb != fin
+                   for deb, fin in ((deb_gch, fin_gch),
+                                    (deb_drt, fin_drt))), row
+
+    # A destination past the end of the file the page names it from would be
+    # drawn as nothing, so every number is held against that file, counted again
+    # here rather than taken on trust.
+    park_count = len(read_json(PARKS_GEOJSON)['features'])
+    metro = read_json(METRO_GEOJSON)['features']
+    station_numbers = [number for number, feature in enumerate(metro)
+                       if feature['properties']['location_type'] == '1']
+    gateways = 0
+    for family, rows, allowed in (('green spaces', parks, range(park_count)),
+                                  ('stations', stations, station_numbers)):
+        seen = set()
+        for number, corners in rows:
+            assert number in allowed, (family, number)
+            assert number not in seen, (family, number)
+            seen.add(number)
+            assert corners, (family, number)
+            for corner, approach in corners:
+                assert 0 <= corner < len(nodes), (family, corner)
+                assert corner in linked, (family, corner)
+                assert 0 <= approach <= ATTACH_METRES * GRAPH_PARTS, \
+                    (family, approach)
+            gateways += len(corners)
+
+    # How many separate pieces the network comes in, and how many destinations
+    # sit on a piece of their own.
+    neighbours = [[] for _ in nodes]
+    for u, v, _ in links:
+        neighbours[u].append(v)
+        neighbours[v].append(u)
+    piece = [-1] * len(nodes)
+    pieces = 0
+    for start in range(len(nodes)):
+        if piece[start] != -1 or not neighbours[start]:
+            continue
+        piece[start] = pieces
+        stack = [start]
+        while stack:
+            node = stack.pop()
+            for near in neighbours[node]:
+                if piece[near] == -1:
+                    piece[near] = pieces
+                    stack.append(near)
+        pieces += 1
+    sizes = collections.Counter(number for number in piece if number >= 0)
+    biggest = sizes.most_common(1)[0][0] if sizes else -1
+    stranded = sum(1 for rows in (parks, stations) for _, corners in rows
+                   for corner, _ in corners if piece[corner] != biggest)
+
+    print(f'{len(nodes)} corners, {len(links)} links, {len(roads)} street rows '
+          f'and {gateways} gateways checked')
+    print(f'  the loosest link agrees with its own two corners to '
+          f'{worst * 100:.0f} cm; the network comes in {pieces} pieces, the '
+          f'biggest of them {sizes[biggest]} corners, with {stranded} gateways '
+          'off it')
 
 
 # ======== Part 4: running the build =======================================
@@ -3591,7 +4075,7 @@ def main():
     """
     parser = argparse.ArgumentParser(
         prog='build.py',
-        description='Build the four GeoJSON files the page loads.')
+        description='Build the files the page loads.')
     parser.add_argument(
         'steps', nargs='*', choices=STEPS,
         help='check: the projection self-check. geojson: step 2. '

@@ -145,7 +145,9 @@ Three files, a CSV, a ZIP, and a GeoJSON.
 | --- | --- | --- | --- |
 | 1 | n/a | n/a | `data/metro_stops/gtfs_stm.zip`, `data/city_parks/espace_vert.json`, `data/street_network/geobase.json`, `data/neighbourhoods/limites-administratives-agglomeration*.geojson` |
 | 2 | `python site/build.py geojson` | `data/metro_stops/gtfs_stm.zip`, `data/city_parks/espace_vert.json`, `data/street_network/geobase.json` | `site/data/metro_stops.geojson` (68 station points and 134 entrances), `site/data/city_parks.geojson` (1981 green spaces), `site/data/intersections.geojson` (24,669 intersections) |
-| 3 | `python site/build.py walks` | `data/street_network/geobase.json`, `data/neighbourhoods/limites-administratives-agglomeration.geojson.json`, and step 2's three output geojsons| a rewritten `site/data/intersections.geojson` with walk times written into the corners, and `site/data/boroughs.geojson` for the visual masking and borough labelling |
+| 3 | `python site/build.py walks` | `data/street_network/geobase.json`, `data/neighbourhoods/limites-administratives-agglomeration.geojson.json`, and step 2's three output geojsons| a rewritten `site/data/intersections.geojson` with walk times written into the corners, `site/data/boroughs.geojson` for the visual masking and borough labelling, and `site/data/walk_graph.json` for the address lookup |
+
+Step 3 also writes `site/data/walk_graph.json`: the same street network in the compact form the page searches itself when a reader gives it an address rather than a filter - 257,908 corners, 274,085 links with their lengths in centimetres, 5,996 street names with the 31,455 troncons that carry civic numbers, and the 46,371 gateways where a walk can end at 1,922 green spaces and 64 stations. It is 13.1 MB, so the page fetches it on the first address lookup and not before; a reader who only uses the filters never downloads it.
 
 Before steps 2 and 3, `python site/build.py check` holds the projection every distance in this project is measured in (MTM zone 8, EPSG:32188) against the city's own metres: it projects the city's 34 outlines and compares them with the city's own MTM copy, point for point, in both directions. It reads no built file and writes nothing, so it is the first thing to run when a distance looks wrong.
 
@@ -173,7 +175,7 @@ The build's checks are `assert` statements, so it refuses to start under `python
 
 It also prints the nine metro entrances it could not attach to a street within 100 m, with their label and station, instead of guessing a walk for them: two at Vendôme (M70/M71, inside Côte-des-Neiges–NDG), two at Cartier, one at Concorde, one at Montmorency, and three at Longueuil–Université-de-Sherbrooke. The seven outside Vendôme are in Laval and Longueuil, outside the 19 drawn boroughs. A station inside the city with no attached entrance at all stops the build (Vendôme is not one: its other two entrances attach), and both files written are read back and checked before the run ends.
 
-`node site/app.js` reads `site/data/intersections.geojson` through `readWalkData()`, the same function used by the page, and runs 212 checks with no browser. A passing run ends with `all 212 checks passed` and exit code 0; a failure prints what differed and exits 1.
+`node site/app.js` reads `site/data/intersections.geojson` through `readWalkData()`, the same function used by the page, and runs 229 checks with no browser. It also reads `site/data/walk_graph.json` through `prepareGraph()` and runs twenty addresses, one mistyped street name, one click and one point in the lake through `addressPoint()` and `lookupAt()` - so the lookup the page makes is the lookup that is tested - and it ends by drawing one answer against a stand-in for Leaflet: five lines the right way round, three parks drawn as shapes, the five names on the map, the box fitted to the answer, a refusal that clears it all, and five walks listed. A passing run ends with `all 229 checks passed` and exit code 0; a failure prints what differed and exits 1.
 
 #### Human Tests
 
@@ -212,8 +214,36 @@ I will know it works when I'm able to either click on the map or lookup an addre
 My edge case is when the address is either not recognized, or no calculations for walking distances can be calculated map.
 
 Test 1. I enter an address in the search bar.
-  Expected: It selects it and maps the closest metro/parks(1 for each type/size) and it maps the walking path.
+- Expected: It selects it and maps the closest metro/parks(1 for each type/size) and it maps the walking path.
 Test 2. I choose the "selector mode" and I click somewhere on the map.
-  Expected: It identifies the closest physical address, and maps the closest metro/parks and walking paths.
+- Expected: It identifies the closest physical address, and maps the closest metro/parks and walking paths.
 Test 3. I choose an address which isn't on the island of Montreal/out of bounds.
-  Expected: An error message lets me know the address was not found/out of bounds.
+- Expected: An error message lets me know the address was not found/out of bounds.
+
+### What was built
+
+A box above the filters, and the map itself as the second way in. Type `4250 Rue Sherbrooke Est`, or click anywhere in one of the 19 boroughs, and the page places the address on the city's own street numbers, searches the street network from there, and draws the way to the nearest three green spaces and two nearest stations, with the five walks listed under the box shortest first.
+
+The search is not precomputed, which is the depth this feature adds: the filters read a walk time that step 3 measured for every corner before anybody visited the page, and an address has no such answer until it is typed. So step 3 also writes `site/data/walk_graph.json` - the network itself, the street names and their civic ranges - and `app.js` runs Dijkstra's search over it in the browser, seeded from both ends of the link the address sits on. One search answers both families, and 23 whole-network searches take about two and a half seconds on this machine, so a single lookup is tens of milliseconds.
+
+The place the address lands on is the city's, not a web service's: the number is interpolated along the troncon whose range holds it, on the side of the street that range belongs to, using the troncon's own direction so that 4250 cannot land at the other end of its block. `Photon` is asked one thing only - how Montreal spells a street whose name the city's file does not have - and every coordinate it returns is discarded.
+
+The answer is meant to be looked at and not only read. The five places wear their names on the map, each park is drawn as the city drew it - the parks layer answers to a menu that may well be left on n/a, so the answer brings its own outline, styled apart from the filter's and keeping the park's own card on click - and the map is fitted to the address and its five walks with a 40 px margin. The fit stops at zoom 16, so a click in a dense block gives the neighbourhood rather than a rooftop, and a walk that runs nine kilometres out to Lachine is shown whole.
+
+### How to try it
+
+`python -m http.server 8000 --directory site`, then open `http://localhost:8000` and type an address. These four cover the cases worth seeing:
+
+| Typed | What should happen |
+| --- | --- |
+| `4250 Rue Sherbrooke Est` | Jardin Botanique 22 m, Olympic Park 125 m, the Golf municipal 223 m, Pie-IX metro 548 m, Joliette metro 1369 m - five lines drawn down the streets |
+| `1435 Rue Saint-Denis` | Berri-UQAM under a minute (34 m), Pasteur Plaza 15 m, then Émilie-Gamelin and the Grande Bibliothèque |
+| `4250 rue Sherbrook est` | the same answer, with the popup saying the name was re-spelt by Photon |
+| `1000 Boulevard Curé-Labelle` | a refusal: the street is Laval's, and this map measures nothing there |
+
+### What it cannot do
+
+- A number the city's file does not hold is refused, not guessed: Pie-IX has no ranges at all between 2727 and 4101, so a real 3600 Pie-IX cannot be placed and the page says so. 14,449 troncons carry no numbers.
+- 59 green spaces have no street within 100 m (Grand parc de l'Est, Bois-de-Saraguay), and four stations - Cartier, De la Concorde, Montmorency, Longueuil-Université-de-Sherbrooke - have no gateway, all four being off the island. A lookup near one of them lists what it could reach, and says how many it could not.
+- `Rue Sherbrooke` with no Est or Ouest is an exact match for a real, short street in Lachine, not a guess between the two halves of the long one - so the page prints the street it chose. The nearest metro from Lachine really is Angrignon, 9 km away.
+- A number is placed on the straight line between its troncon's two ends, and the street may bend between them: on the worst of the twenty test addresses the point stood 4.1 m off the pavement, and the snap takes it back before any walking is counted.

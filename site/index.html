@@ -40,6 +40,24 @@
         <p>Pick a walking time for parks, for metros, or for both, and the map colours every street corner by how close it is. The data comes from the STM and the City of Montreal's open data portal.</p>
       </section>
 
+      <!-- The address lookup: the one question this page cannot answer from a
+           file, because the answer depends on what the reader types. A street
+           number and a street, or a click on the map, and the page searches the
+           street network itself for the nearest three green spaces and two
+           stations, drawing the way it found to each. The box above the filters
+           because it is the other way to ask the same kind of question. -->
+      <section class='filter' id='lookup'>
+        <span class='switch'>Address lookup</span>
+        <form id='lookup-form'>
+          <input id='lookup-text' type='text' autocomplete='off' spellcheck='false'
+                 placeholder='4250 Rue Sherbrooke Est'
+                 aria-label='Street number and street'>
+          <button type='submit'>Walk it</button>
+        </form>
+        <p class='hint'>Street number first, then the street. Or click the map.</p>
+        <div id='lookup-body'></div>
+      </section>
+
       <!-- The two filters, kept apart from each other. The first asks whether
            there is a green space of a chosen kind and size within so many
            minutes' walk of a corner; the second whether there is a metro
@@ -105,6 +123,9 @@
         <p>Parks were taken from the <a href='https://donnees.montreal.ca/fr/dataset/grands-parcs-parcs-d-arrondissements-et-espaces-publics' target='_blank' rel='noopener'>Montreal City's open data portal</a>.</p>
         <p>Neighbourhoods were taken from the <a href='https://donnees.montreal.ca/fr/dataset/limites-administratives-agglomeration' target='_blank' rel='noopener'>Montreal City's open data portal</a>.</p>
         <p>Street network (aka geobase) was taken from the <a href='https://donnees.montreal.ca/dataset/geobase' target='_blank' rel='noopener'>Montreal City's open data portal</a>.</p>
+        <p>The address lookup reads the same street file, and searches it in your browser: the number you type is placed on the city's troncon that holds it, and the nearest three green spaces and two stations are found by walking out from that point at the same 1.35m/s. Nothing about an address is worked out before you ask for it, which is why the page fetches a 13 MB file of the street network the first time you look one up.</p>
+        <p>The answer is drawn on the map as well as listed: the five places wear their names, each park is outlined as the city drew it even when the parks filter is off, and the view is fitted to the address and its five walks, so a lookup you cannot see is not an answer you have to hunt for.</p>
+        <p>A number the city's file does not hold is refused rather than guessed at, and so is a street outside the 19 boroughs. A name spelled differently from the city's own spelling is checked against <a href='https://photon.komoot.io/' target='_blank' rel='noopener'>Photon</a>, which is asked for the spelling alone - no position it returns is ever used, and every walk is measured on the city's own street numbers.</p>
         <br>
         <p>On analysis request, coloured dots (representing street corners) will appear to display which areas are within the requested range, and will be coloured based on proximity to said feature(s).</p>
         <p>Dot sizes are based on the quantity of streets that connect to said intersection. Smaller side streets will have smaller dots than big 4+way intersections.</p>

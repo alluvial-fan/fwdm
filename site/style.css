@@ -51,6 +51,38 @@ body { margin: 0; font-family: Arial, Helvetica, sans-serif; }
 .filter select { font: inherit; font-size: 13px; padding: 2px; border: 0;
                  border-radius: 2px; background: #fff; color: #1F2D5A; }
 
+/* The address lookup: a box of the filters' own make, above them, because it is
+   the other way to ask this page a question - by address rather than by menu. The
+   field and its button share one line and the hint sits under them, so the box
+   keeps one line of input however narrow the panel gets; the list that answers a
+   question fills whatever is left of the box. The button is the legend's yellow,
+   the one colour on the panel that already means "here is the thing to read". */
+#lookup { margin-top: 10px; }
+#lookup form { display: flex; gap: 4px; }
+#lookup input { flex: 1 1 auto; min-width: 0; font: inherit; font-size: 13px;
+                padding: 3px 4px; border: 0; border-radius: 2px; background: #fff;
+                color: #1F2D5A; }
+#lookup button { font: inherit; font-size: 13px; padding: 2px 8px; border: 0;
+                 border-radius: 2px; background: #DCBD23; color: #1F2D5A;
+                 cursor: pointer; }
+#lookup button:hover, #lookup button:focus { background: #fff; }
+#lookup .hint { margin: 0; font-size: 11.5px; color: #9FC3FF; }
+#lookup-body { font-size: 13px; color: #fff; }
+#lookup-body .asked { margin: 4px 0 2px; color: #DCBD23; }
+#lookup-body .said { margin: 4px 0 0; }
+#lookup-body .short { margin: 4px 0 0; color: #9FC3FF; }
+#lookup-body ol { margin: 2px 0 0; padding-left: 18px; }
+#lookup-body li { margin: 2px 0; line-height: 1.35; }
+#lookup-body .far { color: #9FC3FF; }
+
+/* The name on a destination: the parks and stations an answer names are labelled
+   where they are, so a reader can tell which green shape is the park without
+   opening five popups. Small, quiet, and never in the way of a click. */
+.walk-tag { font: inherit; font-size: 11px; padding: 1px 5px; border: 0;
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.4); color: #141414;
+            background: rgba(255, 255, 255, 0.92); }
+.walk-tag::before { display: none; }
+
 /* The legend: a box of the filters' own make - the same border, radius and
    padding, and a title in bold white on its first line - so a key with nothing
    in it yet reads as a key rather than as a dark patch under them. In it the key
