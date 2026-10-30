@@ -175,7 +175,7 @@ The build's checks are `assert` statements, so it refuses to start under `python
 
 It also prints the nine metro entrances it could not attach to a street within 100 m, with their label and station, instead of guessing a walk for them: two at Vendôme (M70/M71, inside Côte-des-Neiges–NDG), two at Cartier, one at Concorde, one at Montmorency, and three at Longueuil–Université-de-Sherbrooke. The seven outside Vendôme are in Laval and Longueuil, outside the 19 drawn boroughs. A station inside the city with no attached entrance at all stops the build (Vendôme is not one: its other two entrances attach), and both files written are read back and checked before the run ends.
 
-`node site/app.js` reads `site/data/intersections.geojson` through `readWalkData()`, the same function used by the page, and runs 229 checks with no browser. It also reads `site/data/walk_graph.json` through `prepareGraph()` and runs twenty addresses, one mistyped street name, one click and one point in the lake through `addressPoint()` and `lookupAt()` - so the lookup the page makes is the lookup that is tested - and it ends by drawing one answer against a stand-in for Leaflet: five lines the right way round, three parks drawn as shapes, the five names on the map, the box fitted to the answer, a refusal that clears it all, and five walks listed. A passing run ends with `all 229 checks passed` and exit code 0; a failure prints what differed and exits 1.
+`node site/app.js` reads `site/data/intersections.geojson` through `readWalkData()`, the same function used by the page, and runs 234 checks with no browser. It also reads `site/data/walk_graph.json` through `prepareGraph()` and runs twenty addresses, one mistyped street name, one click and one point in the lake through `addressPoint()` and `lookupAt()` - so the lookup the page makes is the lookup that is tested - and it ends by drawing one answer against a stand-in for Leaflet: five lines the right way round, three parks drawn as shapes, the five names on the map, the pointer at the address, the box fitted to the answer, a refusal that clears it all, the answer and the filters taking turns to be the one thing on the map, an empty map said out loud when the filters go back to n/a, a walk said in metres under a kilometre and in kilometres past it, and five walks listed. A passing run ends with `all 234 checks passed` and exit code 0; a failure prints what differed and exits 1.
 
 #### Human Tests
 
@@ -230,13 +230,17 @@ The place the address lands on is the city's, not a web service's: the number is
 
 The answer is meant to be looked at and not only read. The five places wear their names on the map, each park is drawn as the city drew it - the parks layer answers to a menu that may well be left on n/a, so the answer brings its own outline, styled apart from the filter's and keeping the park's own card on click - and the map is fitted to the address and its five walks with a 40 px margin. The fit stops at zoom 16, so a click in a dense block gives the neighbourhood rather than a rooftop, and a walk that runs nine kilometres out to Lachine is shown whole.
 
+The point the answer is measured from wears a pointer of its own: a translucent halo with a navy core inside it, labelled `You are here`, both circles under and over the five lines so the point they all leave from is still findable under them. The core keeps the address in its popup, and the label says in words what a shape alone would leave to be interpreted. Walks are said the way a reader would say them - `548 m`, `1.4 km`, `9 km` - because a list of four-figure distances in metres is a list to be converted before it means anything.
+
+The answer and the filters take turns. Both answer the same question, what is within a walk of somewhere, and a map carrying the coloured dots of one and the five named walks of the other reads as one answer contradicting itself. So asking about an address puts the five menus back to n/a and says so under its walks, and setting any menu takes the answer off the map and says so in the box the address was typed into, with what to do to bring it back. Putting the filters back to n/a leaves nothing drawn at all, and the box says the map is empty rather than letting the note about filters stand over filters that show nothing. The menus are put back rather than the drawing being hidden behind them, because everywhere else on this page the menus are the only record of what is asked: a menu left saying `Within 15 min` over a map that draws no dots would be a control lying about the map under it.
+
 ### How to try it
 
 `python -m http.server 8000 --directory site`, then open `http://localhost:8000` and type an address. These four cover the cases worth seeing:
 
 | Typed | What should happen |
 | --- | --- |
-| `4250 Rue Sherbrooke Est` | Jardin Botanique 22 m, Olympic Park 125 m, the Golf municipal 223 m, Pie-IX metro 548 m, Joliette metro 1369 m - five lines drawn down the streets |
+| `4250 Rue Sherbrooke Est` | Jardin Botanique 22 m, Olympic Park 125 m, the Golf municipal 223 m, Pie-IX metro 548 m, Joliette metro 1.4 km - five lines drawn down the streets |
 | `1435 Rue Saint-Denis` | Berri-UQAM under a minute (34 m), Pasteur Plaza 15 m, then Émilie-Gamelin and the Grande Bibliothèque |
 | `4250 rue Sherbrook est` | the same answer, with the popup saying the name was re-spelt by Photon |
 | `1000 Boulevard Curé-Labelle` | a refusal: the street is Laval's, and this map measures nothing there |

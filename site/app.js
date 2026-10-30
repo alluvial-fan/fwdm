@@ -310,7 +310,7 @@ const EDGE_STYLE = { color: '#1F2D5A', weight: 1.5, opacity: 0.8,
 // and metro layers the filters show and hide, the dots' group, and the mask.
 const page = { dots: null, metro: null, parks: null, parkLayer: null,
                metros: null, walkGroup: null, mask: null, graph: null,
-               lookupGroup: null, rings: null };
+               lookupGroup: null, rings: null, answered: false, cleared: false };
 
 // The build's own answers, read from the intersections file: the layers it
 // measured, each layer's walk in a corner's list, its counts per time, the
@@ -524,6 +524,17 @@ function formatWalk(seconds) {
   const hours = Math.floor(minutes / 60);
   const rest = minutes - hours * 60;
   return hours + ' h ' + (rest < 10 ? '0' + rest : rest) + ' min';
+}
+
+// A walk's length as a reader would say it: whole metres up to a kilometre, then
+// kilometres - to one decimal up to ten of them, and whole above that. A person
+// can picture 1.4 km; nobody pictures 1369 m.
+function formatMetres(metres) {
+  const stepped = Math.round(metres);
+  if (stepped < 1000) { return stepped + ' m'; }
+  const kilometres = stepped / 1000;
+  return kilometres < 9.95 ? kilometres.toFixed(1) + ' km'
+                           : String(Math.round(kilometres)) + ' km';
 }
 
 // --- The question, asked of one corner ------------------------------------
@@ -824,6 +835,18 @@ function wireFilters() {
 function afterChange() {
   try {
     walk.asked = askFilters();
+    // A filter asks the page a different question from one address's five walks,
+    // and the two are not drawn together: asking a filter takes the answer off
+    // the map rather than leaving a reader to work out which is which. Putting the
+    // filters back to n/a leaves the map empty, which the box says rather than
+    // leaving the note about filters showing over filters that show nothing.
+    if (Object.keys(walk.asked).length) {
+      clearAnswer();
+    } else if (page.cleared) {
+      page.cleared = false;
+      sayLookup('Nothing is drawn: the filters are back on n/a. Ask about an ' +
+        'address, or set a filter, to draw again.');
+    }
     redraw();
   } catch (error) {
     walk.asked = {};
@@ -831,6 +854,48 @@ function afterChange() {
     say('The walk times could not be read: ' + error.message);
     console.error(error);
   }
+}
+
+// An answer and a filter are two answers to the same question - what is within a
+// walk of somewhere - and a map carrying both reads as one answer that
+// contradicts itself: the dots say what is within reach of every corner, the
+// answer says what is within reach of one. So they take turns, both ways round.
+// A filter set to anything but n/a takes the answer off the map and says so in
+// the box the answer was asked from; an answer takes the map from the filters,
+// puts the menus back to n/a and says so under its own five walks (drawLookup).
+//
+// The menus are put back rather than the drawing being hidden behind them: the
+// menus are the only record of what is asked, everywhere else on this page, and
+// a menu left saying "within 15 min" over a map that draws no dots would be a
+// control that lies about the map under it.
+function clearAnswer() {
+  if (!page.answered) { return false; }
+  page.cleared = true;
+  sayLookup('The answer was taken off the map: the filters are showing instead. ' +
+    'Ask about that address again to bring it back.');
+  return true;
+}
+
+// The five menus and the state they call "don't care", which is the state they
+// open in and the state an answer needs them in.
+const FILTER_NONE = { 'park-minutes': 'none', 'metro-minutes': 'none',
+                      'park-kind': 'any', 'park-band': 'any', 'metro-kind': 'any' };
+
+// A filter was not asked after all, or an answer needs the map to itself: put
+// every menu back to n/a and redraw from them. What comes back is how many had to
+// be put back, which is 0 on a map with nothing asked, so the common case costs
+// nothing.
+function resetFilters() {
+  let cleared = 0;
+  Object.keys(FILTER_NONE).forEach(function (id) {
+    const menu = document.getElementById(id);
+    if (menu && menu.value !== FILTER_NONE[id]) {
+      menu.value = FILTER_NONE[id];
+      cleared += 1;
+    }
+  });
+  if (cleared) { afterChange(); }
+  return cleared;
 }
 
 // The build's own count for the time asked, compared with the five shades'
@@ -1441,8 +1506,14 @@ const LOOKUP_STYLE = {
   park: { color: WALK_RAMPS.park[0], weight: 4, opacity: 0.95 },
   metro: { color: WALK_RAMPS.metro[0], weight: 4, opacity: 0.95 }
 };
-const LOOKUP_START = { radius: 6, color: '#ffffff', weight: 2,
-                       fillColor: '#DCBD23', fillOpacity: 1 };
+// The reader's own point, marked the way a map marks the place its reader is
+// standing on: a soft halo with a dark core inside it, both in the panel's navy,
+// so "here I am" reads at a glance and does not look like a third kind of
+// destination beside the brown parks and the blue stations.
+const LOOKUP_HALO = { radius: 17, stroke: false, fillColor: '#1F2D5A',
+                      fillOpacity: 0.16 };
+const LOOKUP_START = { radius: 7, color: '#ffffff', weight: 2.5,
+                       fillColor: '#1F2D5A', fillOpacity: 1 };
 // A park the answer names is drawn as the city drew it, in a green dark enough to
 // read over the grey mask: the parks layer answers to a menu that may well be left
 // on n/a, and a walk that ends "in Parc La Fontaine" is only useful if the shape
@@ -1705,6 +1776,7 @@ function waitForGraph() {
 // longer the one being asked about.
 function sayLookup(message) {
   if (page.lookupGroup) { page.lookupGroup.clearLayers(); }
+  page.answered = false;
   document.getElementById('lookup-body').innerHTML =
     '<p class="said">' + escapeHtml(message) + '</p>';
 }
@@ -1730,14 +1802,15 @@ function listOf(words) {
 // metres from the pavement to the park's edge or the station, which is the stub
 // the build measured and the search counted as covered.
 function drawLookup(point, found, label, how) {
+  // An answer and a filter are not drawn together: an answer takes the map from
+  // the filters, and says so under its five walks when it had to. See clearAnswer.
+  const cleared = resetFilters();
   page.lookupGroup.clearLayers();
   const at = [point[1], point[0]];
 
-  const start = L.circleMarker(at, LOOKUP_START);
-  const note = LOOKUP_NOTE[how];
-  start.bindPopup('<strong>' + escapeHtml(label) + '</strong>' +
-    (note ? '<br><span class="dim">' + escapeHtml(note) + '</span>' : ''));
-  page.lookupGroup.addLayer(start);
+  // The halo of the reader's own point, under everything: the five lines all
+  // leave from here, and the point has to be findable under them.
+  page.lookupGroup.addLayer(L.circleMarker(at, LOOKUP_HALO));
 
   const walks = found.walks.slice().sort(function (one, other) {
     return one.seconds - other.seconds;
@@ -1758,7 +1831,7 @@ function drawLookup(point, found, label, how) {
             fillOpacity: 1 });
       mark.bindPopup('<strong>' + escapeHtml(name) + '</strong><br>' +
         escapeHtml(formatWalk(walk.seconds)) + ' on foot, ' +
-        Math.round(walk.metres) + ' m');
+        formatMetres(walk.metres));
       // The name goes on the map as well as in the list under the box: a reader
       // who asked what is near them should not have to open five popups to learn
       // which dot is which park. It is the arrival dot that wears it, because that
@@ -1771,6 +1844,18 @@ function drawLookup(point, found, label, how) {
       addParkOutline(walk.destination);
     }
   });
+
+  // The core of the reader's own point, over the lines it starts: five lines
+  // leaving one point would otherwise cover the dot they leave from. It keeps the
+  // address in its popup, and says in words what the two circles mean, because a
+  // shape alone has to be interpreted and a label does not.
+  const here = L.circleMarker(at, LOOKUP_START);
+  const note = LOOKUP_NOTE[how];
+  here.bindPopup('<strong>' + escapeHtml(label) + '</strong>' +
+    (note ? '<br><span class="dim">' + escapeHtml(note) + '</span>' : ''));
+  here.bindTooltip('You are here', { permanent: true, direction: 'top',
+                                     className: 'here-tag' });
+  page.lookupGroup.addLayer(here);
 
   // The map is taken to the answer: the address and the five places it leads to,
   // fitted with a margin. A lookup typed while the map was somewhere else, and a
@@ -1787,10 +1872,14 @@ function drawLookup(point, found, label, how) {
                          maxZoom: LOOKUP_ZOOM });
   }
 
+  page.answered = true;
+  page.cleared = false;
   document.getElementById('lookup-body').innerHTML = [
     '<p class="asked">' + escapeHtml(label) + '</p>',
     walkList(walks),
-    shortNote(walks)
+    shortNote(walks),
+    cleared ? '<p class="short">The filters were set back to n/a: an answer and ' +
+      'a filter are not shown together.</p>' : ''
   ].join('');
 }
 
@@ -1856,7 +1945,7 @@ function walkList(walks) {
     return '<li>' + (walk.family === 'metro' ? 'Metro' : 'Park') + ': ' +
       '<b>' + escapeHtml(formatWalk(walk.seconds)) + '</b> &mdash; ' +
       escapeHtml(destinationName(walk.family, walk.destination)) +
-      ' <span class="far">' + Math.round(walk.metres) + ' m</span></li>';
+      ' <span class="far">' + escapeHtml(formatMetres(walk.metres)) + '</span></li>';
   });
   return '<ol>' + items.join('') + '</ol>';
 }
@@ -2310,6 +2399,16 @@ async function checkWithoutBrowser() {
   check('a point two kilometres from every street is refused, not snapped',
     nowhere.kind === 'no-street', nowhere.kind);
 
+  // A walk is said the way a reader would say it: whole metres while it is still
+  // metres, then kilometres - because nobody pictures 1369 m, and a list of them
+  // in metres is a list of numbers to be converted before they mean anything.
+  const said = [0, 35, 548, 999, 1000, 1369, 4200, 9950, 15500].map(function (metres) {
+    return formatMetres(metres);
+  });
+  check('a walk under a kilometre is said in metres, and past it in kilometres',
+    said.join(' / ') === '0 m / 35 m / 548 m / 999 m / 1.0 km / 1.4 km / ' +
+      '4.2 km / 10 km / 16 km', said.join(' / '));
+
   // Photon's answer, as the page reads it: a name counts only when it is a
   // street inside Montreal, and a name the answer repeats counts once. The
   // coordinates in the same answer are never read at all - which is the whole of
@@ -2352,7 +2451,7 @@ async function checkWithoutBrowser() {
     probe.found.walks.forEach(function (walk) {
       console.log('     ' + pad(walk.family === 'metro' ? 'metro' : 'park', 6) +
         pad(formatWalk(walk.seconds), 15) +
-        pad(Math.round(walk.metres) + ' m', 9) +
+        pad(formatMetres(walk.metres), 9) +
         nameOf(walk.family, walk.destination));
     });
   }
@@ -2389,15 +2488,33 @@ async function checkWithoutBrowser() {
   (function () {
     const drawn = [];
     const box = { innerHTML: '' };
+    // The five menus, holding what a reader had chosen before they asked about
+    // an address: an answer puts them back to n/a, which is a change only a page
+    // with a document can see. The redraw that follows writes to the legend and
+    // the status line; what they say is checked elsewhere, so they only have to
+    // be there.
+    const menus = {
+      'park-minutes': { value: '15' }, 'metro-minutes': { value: '5' },
+      'park-kind': { value: 'city' }, 'park-band': { value: '1to5' },
+      'metro-kind': { value: 'stepfree' }
+    };
+    const quiet = { innerHTML: '', textContent: '' };
     const realDocument = global.document;
     global.document = {
-      getElementById: function (id) { return id === 'lookup-body' ? box : null; }
+      getElementById: function (id) {
+        if (id === 'lookup-body') { return box; }
+        return menus[id] || quiet;
+      }
     };
     global.L = {
       circleMarker: function (at, style) {
         const dot = { kind: 'dot', at: at, style: style, popup: '', tooltip: '',
+                      tag: null,
                       bindPopup: function (html) { dot.popup = html; },
-                      bindTooltip: function (text) { dot.tooltip = text; } };
+                      bindTooltip: function (text, options) {
+                        dot.tooltip = text;
+                        dot.tag = options && options.className;
+                      } };
         return dot;
       },
       polyline: function (line, style) {
@@ -2424,7 +2541,7 @@ async function checkWithoutBrowser() {
     const fits = [];
     map = { fitBounds: function (bounds, options) {
       fits.push({ points: bounds.points, options: options });
-    } };
+    }, hasLayer: function () { return false; } };
     const realMetro = page.metro;
     const realParks = page.parks;
     const realGroup = page.lookupGroup;
@@ -2432,7 +2549,8 @@ async function checkWithoutBrowser() {
     page.parks = { features: places.park };
     page.lookupGroup = {
       clearLayers: function () { drawn.length = 0; },
-      addLayer: function (layer) { drawn.push(layer); }
+      addLayer: function (layer) { drawn.push(layer); },
+      eachLayer: function (visit) { drawn.forEach(visit); }
     };
 
     const probe = probes.filter(function (each) {
@@ -2451,15 +2569,19 @@ async function checkWithoutBrowser() {
         return layer.line[0][0] === origin[0] && layer.line[0][1] === origin[1];
       }), JSON.stringify(lines.length ? lines[0].line[0] : null) + ' against ' +
       JSON.stringify(origin));
+    // A dot the reader can click is a dot with a card on it. The pointer at the
+    // address is two marks - a halo and a core - and only the core carries one.
+    const clickable = dots.filter(function (dot) { return dot.popup; });
     check('every line ends on a dot the reader can click',
       lines.length > 0
-      && dots.length === 1 + DESTINATION_PARKS + DESTINATION_STATIONS
+      && clickable.length === 1 + DESTINATION_PARKS + DESTINATION_STATIONS
       && lines.every(function (layer) {
         const end = layer.line[layer.line.length - 1];
-        return dots.some(function (dot) {
+        return clickable.some(function (dot) {
           return dot.at[0] === end[0] && dot.at[1] === end[1];
         });
-      }), lines.length + ' lines, ' + dots.length + ' dots');
+      }), lines.length + ' lines, ' + clickable.length + ' clickable dots of ' +
+      dots.length + ' marks');
     check('the box under the field lists the same five walks',
       (box.innerHTML.match(/<li>/g) || []).length ===
         DESTINATION_PARKS + DESTINATION_STATIONS
@@ -2479,12 +2601,33 @@ async function checkWithoutBrowser() {
     const tags = drawn.reduce(function (all, layer) {
       const each = layer.kind === 'outline' ? layer.pieces : [layer];
       return all.concat(each.filter(function (one) {
-        return one.tooltip && one.tooltip.length > 0;
+        return one.tooltip && one.tag === 'walk-tag';
       }).map(function (one) { return one.tooltip; }));
     }, []);
     check('the five destinations wear their names on the map, and no name twice',
       tags.length === DESTINATION_PARKS + DESTINATION_STATIONS
       && new Set(tags).size === tags.length, tags.join(' / '));
+
+    // The point the answer is measured from wears a map's "you are here": a halo
+    // under the five lines with a dark core over them, both at the address, and
+    // the core says in words what the two circles mean, because a shape on its own
+    // has to be interpreted.
+    const pointers = dots.filter(function (dot) {
+      return dot.at[0] === origin[0] && dot.at[1] === origin[1];
+    });
+    const cores = pointers.filter(function (dot) {
+      return dot.tooltip === 'You are here';
+    });
+    const haloes = pointers.filter(function (dot) {
+      return dot.style.radius > LOOKUP_START.radius;
+    });
+    check('the address wears a pointer of its own, saying where the reader is',
+      cores.length === 1 && haloes.length === 1
+      && cores[0].style.fillColor === LOOKUP_START.fillColor
+      && cores[0].tag === 'here-tag'
+      && String(cores[0].popup).indexOf('1435 Rue Saint-Denis') >= 0,
+      cores.length + ' cores and ' + haloes.length + ' haloes at the address, ' +
+      'named ' + (cores.length ? cores[0].tooltip : 'nothing'));
 
     check('the map is fitted to the address and its five walks, no closer than ' +
       'LOOKUP_ZOOM',
@@ -2496,6 +2639,19 @@ async function checkWithoutBrowser() {
       }), JSON.stringify(fits.length ? fits[0].options : null) + ' on ' +
       (fits.length ? fits[0].points.length : 0) + ' points');
 
+    // Asking a filter and asking an address are not drawn together. The answer
+    // put the five menus back to n/a, and says so under its own five walks: the
+    // dots and five named walks on one map would read as one answer that
+    // contradicts itself.
+    const held = Object.keys(menus).filter(function (id) {
+      return menus[id].value !== FILTER_NONE[id];
+    });
+    check('an answer takes the map from the filters, and puts the menus back',
+      held.length === 0 && box.innerHTML.indexOf('set back to n/a') >= 0,
+      held.length ? 'still held: ' + held.join(', ')
+                  : 'the menus read ' + Object.keys(menus).map(function (id) {
+                      return menus[id].value; }).join(', '));
+
     // A refusal has to take the last answer off the map as well as say why: a
     // reader who then asks about a street that does not exist must not be left
     // with five lines to parks they asked about a moment before.
@@ -2506,6 +2662,34 @@ async function checkWithoutBrowser() {
       && box.innerHTML.indexOf('No street by that name') >= 0,
       before + ' layers drawn, ' + drawn.length + ' left, and the box says ' +
       (box.innerHTML.indexOf('No street by that name') >= 0 ? 'why' : 'nothing'));
+
+    // The other way round: a filter asked of the map takes the answer off it and
+    // says so, rather than leaving the dots and the five walks to be read as one
+    // answer. The corners are stood aside for this call - the dots are not what
+    // the check is about, and there are a quarter of a million of them.
+    drawLookup(probe.placed.point, probe.found, '1435 Rue Saint-Denis', 'exact');
+    const stood = walk.corners;
+    walk.corners = [];
+    menus['park-minutes'].value = '15';
+    afterChange();
+    check('a filter asked of the map clears the answer off it, and says why',
+      drawn.length === 0 && page.answered === false
+      && box.innerHTML.indexOf('filters are showing instead') >= 0,
+      drawn.length + ' layers left, and the box says ' +
+      (box.innerHTML.indexOf('filters are showing instead') >= 0 ? 'why'
+                                                                : 'nothing'));
+
+    // Putting the filters back to n/a leaves nothing drawn at all, and the box has
+    // to say that rather than leaving the note about filters showing over filters
+    // that show nothing.
+    menus['park-minutes'].value = 'none';
+    afterChange();
+    walk.corners = stood;
+    check('putting the filters back to n/a says the map is empty, and it is',
+      drawn.length === 0 && page.answered === false
+      && box.innerHTML.indexOf('filters are back on n/a') >= 0,
+      drawn.length + ' layers drawn, and the box says ' +
+      (box.innerHTML.indexOf('filters are back on n/a') >= 0 ? 'so' : 'otherwise'));
 
     global.document = realDocument;
     global.L = undefined;

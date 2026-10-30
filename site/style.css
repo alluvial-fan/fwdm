@@ -83,6 +83,14 @@ body { margin: 0; font-family: Arial, Helvetica, sans-serif; }
             background: rgba(255, 255, 255, 0.92); }
 .walk-tag::before { display: none; }
 
+/* Where the reader is: the one label on the map that is not a destination, so it
+   is not white like the five names but navy on white, the panels' own colour, and
+   it sits above the core of the pointer it names. */
+.here-tag { font: inherit; font-size: 11px; font-weight: bold; padding: 1px 6px;
+            border: 0; box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+            color: #1F2D5A; background: rgba(255, 255, 255, 0.95); }
+.here-tag::before { display: none; }
+
 /* The legend: a box of the filters' own make - the same border, radius and
    padding, and a title in bold white on its first line - so a key with nothing
    in it yet reads as a key rather than as a dark patch under them. In it the key
