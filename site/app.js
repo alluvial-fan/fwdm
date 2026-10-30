@@ -1,14 +1,24 @@
-// BEHAVIOUR: fetch the four GeoJSON files, draw the map of the 19 boroughs on
-// OpenStreetMap tiles, and answer the two filters from walk times already in
-// the intersections file. Under node it checks that data instead.
+// The page's behaviour, in one file: fetch the four data files, draw the map of
+// the 19 boroughs over OpenStreetMap tiles, and answer the two filters out of
+// the walk times already written beside each corner. Nothing is measured in the
+// browser; the build did that, and this file only reads it.
+//
+// The data files are GeoJSON, a text format for map shapes that a browser can
+// read as it stands, and the map is drawn with Leaflet, a small library that
+// turns those files into tiles, shapes and dots.
+//
+// Run under node, the same file does no drawing at all: it checks the data
+// instead, which is what makes `node site/app.js` a test.
 
 let map = null;
 
-// Make the map and add the OpenStreetMap tiles. Every layer is drawn on its one
-// canvas, and zoom animation is off: Leaflet would scale that canvas while the
-// tiles move, lifting the grey mask off the map for the length of the zoom.
-// The bounds set in start() are solid to a drag: at a viscosity of 1 the drag
-// stops at the edge instead of overshooting and springing back.
+// Make the map and put the OpenStreetMap tiles on it. With preferCanvas set,
+// Leaflet draws all of the map's own shapes on a single canvas rather than as
+// one element each. Zoom animation is turned off, because Leaflet scales that
+// canvas while the tiles move, which lifts the grey mask off the map for the
+// length of the zoom. The bounds set in start() are made solid under a drag:
+// at a viscosity of 1 the drag stops at the edge instead of overshooting and
+// springing back.
 function buildMap() {
   map = L.map('map', {
     preferCanvas: true,
@@ -22,7 +32,9 @@ function buildMap() {
   }).addTo(map);
 }
 
-// Fetch a GeoJSON file and parse it; a response that is not ok is an error.
+// Fetch one of the data files and read it as JSON. A reply that is not ok stops
+// here, naming the address that failed, rather than handing a page of HTML back
+// as though it were shapes.
 function loadGeojson(url) {
   return fetch(url)
     .then(function (response) {
@@ -42,8 +54,10 @@ function parkPopup(properties) {
     'Size: ' + escapeHtml(properties.popup_size);
 }
 
-// Escape data for popup markup: &, <, > and ". A ' is safe, because every
-// attribute these values land in is double-quoted.
+// Make a value safe to put inside a popup: &, <, > and " each
+// become their written-out code, so a park or street name can hold any
+// character and still not break the markup round it. A ' needs nothing,
+// because every attribute these values land in is written with double quotes.
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -110,8 +124,10 @@ function namesOf(features) {
 // Leaflet can draw, so the mask covers it at every zoom the page offers.
 const WORLD_RING = [[85, -180], [85, 180], [-85, 180], [-85, -180]];
 
-// An outline's rings as [north, east] pairs: GeoJSON writes [east, north].
-// Every ring is taken, so holes and separate pieces of a borough come too.
+// An outline's rings as [north, east] pairs, which is the order Leaflet puts a
+// point in. GeoJSON writes every point the other way round, as [east, north],
+// so each pair is turned round here. Every ring is taken, so holes in a borough
+// and separate pieces of one come with it.
 function ringsOf(geometry) {
   const polygons = geometry.type === 'Polygon' ? [geometry.coordinates]
     : geometry.type === 'MultiPolygon' ? geometry.coordinates : [];
@@ -142,6 +158,11 @@ function focusBounds(windows) {
   return box.isValid() ? box : null;
 }
 
+// The page, once: make the map, load the four files, draw what no filter can
+// change - the borough edges, the parks, the metro points and the grey mask -
+// then read the walk times out of the intersections file that has just loaded
+// and wire the controls. Each step hands its result to the next through page or
+// walk, so nothing here holds a value for long.
 function start() {
   buildMap();
   Promise.all([
@@ -367,8 +388,10 @@ function readWalkData(dots) {
     walk.places[layer.id] = at;
     walk.byChoice[[layer.family, layer.kind, layer.band].join(' ')] = layer;
   });
-  // The file's snake_case statements, renamed: a missed key would be a
-  // NaN-second walk.
+  // The file's statements, gathered here under the names this file uses: the
+  // file says "no_street", the page reads walk.board.noStreet. A key that did
+  // not arrive would leave every walk compared against nothing, which reads as
+  // NaN - a value that is not a number, and is false against everything.
   walk.board = { outside: dots.statements.outside,
                  noStreet: dots.statements.no_street,
                  unreachable: dots.statements.unreachable };
@@ -492,6 +515,10 @@ function formatWalk(seconds) {
 }
 
 // --- The question, asked of one corner ------------------------------------
+//
+// One corner at a time: does it pass every filter that was asked, and if it
+// does, which colour does it wear? The answer is one small record, and it is
+// what both the dot and its popup are drawn from.
 
 // What one corner is, with the filters as they stand: each walk, its shade,
 // and the colour to draw. 'drawn', 'beyond' and 'nothing' separate a corner
@@ -525,6 +552,11 @@ function lookOf(number, wanted) {
 
 // --- Drawing the corners the filters pass ---------------------------------
 //
+// The corners that pass the filters, as dots on the map, with a popup each and
+// the tally the legend is built from. What comes in is the choices, the minutes
+// asked for and the walks already written on each corner; what goes out is a
+// dot for every corner the page may colour, and the counts a legend can read.
+
 function newCounts() {
   const zeros = function () { return [0, 0, 0, 0, 0]; };
   return {
@@ -746,6 +778,12 @@ function axisNote(wanted) {
 }
 
 // --- Reading the header, and answering it ---------------------------------
+//
+// The controls are the only record of what is asked, so a change reads them
+// again rather than remembering what the last change was; a reload that
+// restores a menu's last choice therefore answers that choice straight away.
+// What comes out is walk.asked - one entry per menu not left on n/a - and a
+// redraw from it.
 
 // Wire the controls once the base map has loaded, then answer whatever they
 // hold: a reload restores a menu's last choice without firing a change, so the
@@ -795,9 +833,10 @@ function checkAgainstBuild(counts, wanted) {
 
 // --- Running this file without a browser ----------------------------------
 //
-// `node site/app.js` checks the intersections file without a map: numbering,
-// one walk per layer per corner, the build's counts, and lookOf() on all 22.
-// A failure sets a non-zero exit code, so a script can run this as a test.
+// `node site/app.js` reads the intersections file off the disk and checks it
+// without a map: the numbering, one walk per layer per corner, the build's own
+// counts, and lookOf() on all 22 layers. Every check prints a line, and a
+// failure sets a non-zero exit code, so a script can run this file as a test.
 
 async function checkWithoutBrowser() {
   const fs = require('fs');

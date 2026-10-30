@@ -7,21 +7,30 @@ network.py, build_geojson.py and build_walk_times.py - and the steps, and the
 order they run in, are the same; what changed is that they are one script now,
 in four parts, run by one command.
 
-The steps, in the order they have to run:
+A GeoJSON file, wherever this file says GeoJSON, is a text file of map shapes
+that a browser can read as it stands. It is the only kind of file the page
+loads, and every file the build writes is one.
 
-  check     the projection this file measures in, MTM zone 8 (EPSG:32188),
-            held against the city's own two copies of its 34 outlines, point
-            for point, in both directions. Nothing in site/data is read or
-            written: if this fails, every distance below would be the wrong
-            distance.
-  geojson   step 2. The metro stops out of the STM's GTFS zip, the city's
-            green spaces, and the street corners the map is drawn from -
-            three files: site/data/metro_stops.geojson, city_parks.geojson
-            and intersections.geojson.
-  walks     step 3. Step 2's corners, each one given the 22 walks the page's
-            two questions can ask for, and the 34 outlines the page's mask is
-            cut round: site/data/intersections.geojson (rewritten in place)
-            and site/data/boroughs.geojson.
+The build runs in three steps, and each step needs what the one before it left
+behind.
+
+Step 1, `check`, is the self-check. It takes the flat grid of metres this file
+measures everything on - MTM zone 8, the grid the city publishes its own street
+files in, which map software knows as EPSG:32188 - and holds it against the
+city's two copies of its 34 neighbourhood outlines, point for point, in both
+directions. Nothing in site/data is read or written: if this step fails, every
+distance measured below would be the wrong distance.
+
+Step 2, `geojson`, reads the three source files and writes the three files the
+page draws: the metro stops out of the STM's GTFS zip (GTFS is the file format
+transit agencies publish their schedules in), the city's green spaces, and the
+street corners the map is drawn from - site/data/metro_stops.geojson,
+city_parks.geojson and intersections.geojson.
+
+Step 3, `walks`, takes those corners and gives each one the 22 walks the page's
+two questions can ask about, and writes the 34 outlines the page's mask is cut
+round: site/data/intersections.geojson, rewritten in place, and
+site/data/boroughs.geojson.
 
 Run it from the project folder:
 
@@ -31,32 +40,38 @@ Run it from the project folder:
     python site/build.py walks      # only step 3
 
 The steps always run in the order above, whatever order they are named in,
-and naming one runs only that one. After changing a step 3 knob - a walking
-speed, a park band, a size - `python site/build.py walks` is enough, because
-step 2's files have not changed. After changing a step 2 knob, step 3 has to
-run again: a corner step 2 has just rewritten carries no walks on it at all.
+and naming one runs only that one. After changing a setting that only step 3
+reads - a walking speed, a park band, a size - `python site/build.py walks` is
+enough, because step 2's files have not changed. After changing something step
+2 reads, step 3 has to run again: a corner step 2 has just rewritten carries no
+walks on it at all.
 
 Every file is written to a temporary name, read back off the disk, checked as
 it was written, and only then moved into place, so a run that fails leaves the
 page with the files it already had. Nothing is fetched over the network and
 nothing outside site/data is written.
 
-What is where:
+The file comes in four parts, and each one hands the next what it measured.
 
-  Part 1  degrees, metres, streets, and walking
-          the projection (MTM zone 8), the flat geometry the snapping and the
-          checks use, the street graph built out of the city's troncons, the
-          walk over it, and the self-check on the projection.
-  Part 2  step 2, the city's files into GeoJSON
-          the metro stops, the green spaces, the street corners, the checks
-          on each of the three, and the writer both steps share.
-  Part 3  step 3, the walk from every corner
-          the readers, the 22 layers, the measurements and the checks on
-          them, and the two files this step writes.
-  Part 4  running the build
-          the command above, and nothing else.
+Part 1 puts the city's longitudes and latitudes onto the flat grid of metres
+this project measures on, and builds what the walks run over: every place where
+streets meet, joined to each of its neighbours by the stretch of street between
+them. Nothing is written here. What it leaves behind is the network step 3
+walks, the geometry the checks use to decide whether a point is inside an
+outline, and the self-check on the grid itself.
 
-The reasoning - which layers exist and why, what a corner's numbers mean,
+Part 2 reads the three source files and writes the three files the page draws:
+the metro stops, the green spaces, and the street corners. It also holds the
+one writer both steps share, so every file the build writes is written,
+checked and moved into place in the same way.
+
+Part 3 takes those corners and gives each one the walks the page can ask about,
+then writes them onto the corners, beside the 34 outlines the page's mask is
+cut round.
+
+Part 4 is the command above, and nothing else.
+
+The reasoning - which questions exist and why, what a corner's numbers mean,
 what the page does and does not know - is in the README, once, for the whole
 project. What is here is the code and, beside it, the comment for each
 decision that the code does not show by itself.
@@ -77,12 +92,21 @@ from array import array
 from pathlib import Path
 
 
+# Python can be told to drop this file's built-in checks and run a little
+# faster: -O on the command line, or PYTHONOPTIMIZE in the environment. Those
+# checks are the reason a run's files can be trusted, so the build stops before
+# writing anything rather than write files it cannot vouch for.
+if not __debug__:
+    raise SystemExit('site/build.py checks itself with assert statements: run '
+                     'it without -O or PYTHONOPTIMIZE')
+
+
 # --- Paths and files ------------------------------------------------------
 #
-# Paths are worked out from this file's own location, so it does not matter
+# Every path is worked out from where this file sits, so it does not matter
 # which folder the build is started from. The inputs sit in the project's data/
-# folder and are only ever read; everything written lands in site/data/, beside
-# the page that loads it.
+# folder and are only ever read. Everything the build writes lands in
+# site/data/, beside the page that loads it, so a run changes nothing else.
 
 SITE_DIR = Path(__file__).resolve().parent          # .../project/site
 PROJECT_DIR = SITE_DIR.parent                       # .../project
@@ -108,92 +132,134 @@ BOUNDARIES_MTM8 = (PROJECT_DIR / 'data' / 'neighbourhoods'
                    / 'limites-administratives-agglomeration-nad83.geojson')
 
 
+def read_json(path):
+    '''The JSON file at path, or a one-line failure naming the file.
+
+    Every input the build reads comes through here, so a data file that is
+    missing, unreadable or a folder stops the run with the path it wanted
+    rather than with a traceback from inside the json module.
+    '''
+    try:
+        with open(path, encoding='utf-8') as f:
+            return json.load(f)
+    except OSError as error:
+        raise SystemExit(f'cannot read {path}: {error.strerror}') from None
+
+
 # ======== Part 1: degrees, metres, streets, and walking ===================
 #
-# Everything the other parts measure with: the projection into metres, the
-# flat geometry the snapping and the checks use, the street graph built out
-# of the city's troncons, the walk over it, and the self-check that holds
-# the projection against the city's own metres.
+# Everything the two steps after this one measure with, in the order it is
+# needed: the conversion from degrees to metres, the flat shapes and short cuts
+# the joining and the checks use, the network of streets built out of the city's
+# lines, the walk over that network, and the self-check that holds the
+# conversion against the city's own metres.
 
 
-# --- The knobs: the projection, the streets, the walk ---------------------
+# --- The settings: the projection, the streets, the walk ------------------
+#
+# The numbers the rest of the file is written against. Changing one of them
+# changes what the build measures, so a run after a change here writes a new set
+# of files rather than correcting the old ones.
 
-# Two line ends closer together than this are the same corner.
+# Two street ends closer together than this are the same corner. The city draws
+# each street as its own line, and two lines that meet in real life can stop a
+# hand's width apart.
 SNAP_METRES = 0.1
 
-# The city's CLASSE column, filtered to the classes a pedestrian may walk:
-# class 8 is the motorways, the expressway in its trench (the file calls it
-# Route 136), the bridges a motorway crosses on, and the unnamed service ways
-# beside them. Every other class - rues, avenues, boulevards, the bridges that
-# carry people - is kept as it stands. The corner file and the walks are both
-# filtered on this one tuple, so they agree about what a street is.
+# The city grades every street in a column it calls CLASSE, and one grade is not
+# for walking: class 8, the motorways - the expressway in its trench (the file
+# calls it Route 136), the bridges a motorway crosses on, and the unnamed
+# service ways beside them. Everything else - rues, avenues, boulevards, the
+# bridges that carry people - is kept as it stands. The corner file and the
+# walks both drop their streets from this one list, so the two always agree
+# about which streets a person can use.
 UNWALKABLE_CLASSES = ('8',)
 
-# A line end this close to the side of another line is taken to join it: the
-# corner is moved onto that line and the line is split there.
+# A street end this close to the side of another street is taken to join it: the
+# end is moved onto the other line and that line is split there.
 CROSSING_METRES = 0.3
 
-# Walking speed on the flat, in metres per second: 1.35 m/s is 4.9 km/h, the
+# Walking speed on the flat, in metres per second. 1.35 m/s is 4.9 km/h, the
 # usual planning figure for an average pedestrian. Every time on the page is
-# this figure applied to a distance measured here, and the page repeats the
-# number so that minutes can be read back as metres.
+# this figure applied to a distance measured here, and the page reads the same
+# number out of the file, so a walk held in seconds can be read back as metres.
 WALK_SPEED_MPS = 1.35
 
-# Side of the little squares the lookups use to skip most of the work. It is a
-# lookup size, not a measurement: nothing measured is ever rounded to it.
+# The side of the small squares the map is cut into for the lookups that follow.
+# A point is only ever compared with the streets in its own square and the eight
+# around it, which is what keeps the joining and the search from comparing
+# everything with everything. It is a size for looking things up, not a
+# measurement: nothing measured is ever rounded to it.
 CELL_METRES = 25.0
+
+# What the search leaves on a corner it never reached: a distance so long that
+# no walk can beat it. A measurement reads it as "there is no walk to put here",
+# which is how a corner with no answer stays clear of the colouring.
+UNWALKED = float('inf')
 
 
 # --- Degrees to metres: MTM zone 8 (EPSG:32188) ---------------------------
 
-# Every distance measured here is metres on the ground. The city's files are in
-# longitudes and latitudes instead, where a centimetre is "0.0000002 degrees"
-# and a degree is a different length east-west than it is north-south, so the
-# first thing anything flat needs is this conversion.
+# Everything measured in this project is metres on the ground, and the city's
+# files do not come in metres: they come in longitudes and latitudes, where a
+# centimetre is seven decimal places and a degree is a different length east to
+# west than it is north to south. Turning those into metres is what makes two
+# distances on the map comparable, so it is the first job in the file.
 #
-# Montreal sits in Quebec's MTM zone 8, a Transverse Mercator projection, and
-# the parameters below are copied from the city's own file:
-# data/street_network/geobase.zip holds geobase_mtl.prj, which reads
+# The rule for turning a round earth into a flat grid is called a projection.
+# This one is the city's own: MTM zone 8, the grid its street files are
+# published in. Montreal sits inside that zone, so the conversion is accurate to
+# a fraction of a millimetre across the whole city. The numbers it needs are
+# copied from the city's file - data/street_network/geobase.zip holds
+# geobase_mtl.prj, which reads
 #
 #     PROJCS["NAD_1983_MTM_8", ... SPHEROID["GRS_1980",6378137.0,298.257222101]
 #     ... PARAMETER["False_Easting",304800.0] PARAMETER["False_Northing",0.0]
 #     PARAMETER["Central_Meridian",-73.5] PARAMETER["Scale_Factor",0.9999]
 #     PARAMETER["Latitude_Of_Origin",0.0] ... UNIT["Meter",1.0]]
 #
-# That is EPSG code 32188. Python's own library is all that is used: no pyproj,
-# no geopandas, nothing to install. The formulas are the standard Transverse
-# Mercator series (Snyder, "Map Projections - A Working Manual", USGS 1987,
-# pages 61-64), which are accurate to well under a millimetre this close to the
-# central meridian, and Montreal is at most 1.75 degrees from it.
+# Map software knows this grid as EPSG code 32188. The arithmetic below is done
+# with Python's own maths library - no pyproj, no geopandas, nothing to install
+# - using the standard published form of the conversion (Snyder, "Map
+# Projections - A Working Manual", USGS 1987, pages 61-64), which is accurate to
+# well under a millimetre this close to the middle of the zone. Montreal is at
+# most 1.75 degrees from that middle.
 #
-# to_wgs84 is the way back, and it is here for one reason: it lets this
-# projection be held against the city's own metres, which the bottom of this
-# file does. Nothing in the build walks on it.
+# to_wgs84 is the same conversion read backwards, playing it back the other way
+# from metres to degrees, and it is here for one reason: it lets this grid be
+# held against the city's own file of metres, which the self-check at the end of
+# Part 1 does. Nothing in the walks uses it.
 
-# GRS 1980: the shape of the earth the city's file uses, as its two numbers.
-ELLIPSOID_A = 6378137.0                 # semi-major axis, in metres
-ELLIPSOID_INV_F = 298.257222101         # inverse flattening
+# The shape of the earth the city's file assumes (GRS 1980), as its two numbers:
+# how wide the earth is at its middle, in metres, and how much it is squashed at
+# the poles.
+ELLIPSOID_A = 6378137.0                 # width at the middle, in metres
+ELLIPSOID_INV_F = 298.257222101         # how much it is squashed at the poles
 
-# The rest of the Transverse Mercator recipe, from the same .prj file. Zone 8's
-# central meridian is 73.5 degrees west; the false easting puts that meridian
-# at 304800 metres, so no coordinate in the province comes out negative.
+# The rest of what the projection needs, from the same file. The middle line of
+# zone 8 runs down 73.5 degrees west, and the grid is stretched by a factor of
+# 0.9999 there so that it matches the ground on either side of it. The false
+# easting slides the whole grid sideways, putting that middle line at 304800
+# metres, so no coordinate in the province comes out negative.
 CENTRAL_MERIDIAN = math.radians(-73.5)
 SCALE_FACTOR = 0.9999
 FALSE_EASTING = 304800.0
 FALSE_NORTHING = 0.0
 
-# Derived once from the two ellipsoid numbers: the first and second
-# eccentricity squared, which every formula below needs.
+# How far the earth's surface sits from a perfect sphere, as two numbers worked
+# out once from the two above. Every formula below needs them, so they are
+# worked out here rather than over and over.
 _FLATTENING = 1.0 / ELLIPSOID_INV_F
 ECCENTRICITY2 = _FLATTENING * (2.0 - _FLATTENING)
 _ECCENTRICITY_PRIME2 = ECCENTRICITY2 / (1.0 - ECCENTRICITY2)
 
 
 def _meridian_arc(phi):
-    '''How far along the meridian, in metres, a latitude sits from the equator.
+    '''How far a latitude sits from the equator, in metres, along the meridian.
 
-    This is the M of the series: an elliptic integral the series expands into
-    sines of 2, 4 and 6 times the latitude.
+    The exact answer is an integral, and in practice that is worked out as a
+    short sum of a few terms: the sines of two, four and six times the latitude,
+    each with its own weight. The weights below are the published ones.
     '''
     e2 = ECCENTRICITY2
     e4 = e2 * e2
@@ -207,7 +273,13 @@ def _meridian_arc(phi):
 
 
 def to_metres(lon, lat):
-    '''Longitude and latitude in degrees -> easting and northing in metres.'''
+    '''A point given in degrees, turned into metres on the city's flat grid.
+
+    Longitude becomes the easting - how far the point sits east of the grid's
+    middle line - and latitude becomes the northing, how far north of the
+    equator. This is the conversion every distance in the project is measured
+    on; step 2 calls it for every point it writes.
+    '''
     phi = math.radians(lat)
     lam = math.radians(lon)
 
@@ -245,8 +317,11 @@ def to_metres(lon, lat):
 def to_wgs84(easting, northing):
     '''Easting and northing in metres -> longitude and latitude in degrees.
 
-    The way back needs the footpoint latitude first: the latitude whose
-    meridian arc is the northing we were given.
+    Reading the grid backwards takes one extra step. There is no direct formula
+    for the latitude, so the first thing found is the latitude whose distance
+    from the equator along its meridian is the northing that was given - the
+    point straight west or east of the one asked for - and the sideways offset,
+    the easting, is then used to correct it.
     '''
     m = (northing - FALSE_NORTHING) / SCALE_FACTOR
     mu = m / (ELLIPSOID_A * (1 - ECCENTRICITY2 / 4
@@ -294,12 +369,20 @@ def to_wgs84(easting, northing):
 
 
 # --- Flat geometry --------------------------------------------------------
+#
+# The handful of questions the rest of the build asks of a shape on the flat
+# map: how far this point is from that line, whether this point is inside that
+# outline, and how close two outlines come to each other. Every answer is in
+# metres, on the grid set up just above, and this is the whole of the geometry
+# the project needs.
 
 def point_segment_distance(point, start, end):
-    '''How far a point is from a segment, and where along it it lands.
+    '''How far a point is from a stretch of line, and where along it it lands.
 
-    The answer is (distance in metres, position 0..1 along start->end), the
-    position being a clamped foot of the perpendicular.
+    Two answers come back: the distance in metres, and how far along the stretch
+    the closest spot sits, as a fraction running from 0 at the start to 1 at the
+    end. A point beyond either end is measured to that end, so the fraction
+    never leaves the range 0 to 1.
     '''
     px, py = point
     ax, ay = start
@@ -319,12 +402,15 @@ def point_segment_distance(point, start, end):
 
 
 def point_in_ring(point, ring):
-    '''True when the point is inside the ring, by counting side crossings.
+    '''True when the point is inside the ring, by counting the sides it crosses.
 
-    A ray is sent to the right and the sides it crosses are counted; an odd
-    count means inside. Only sides that straddle the ray's height count, and a
-    side that ends exactly at that height counts once rather than twice, which
-    is what the half-open comparison below does.
+    A line is drawn from the point straight out to the right, and the sides of
+    the ring that line passes through are counted: one crossing means inside,
+    two means outside, three inside again, so an odd count is the answer. Only
+    sides with one end above the point and one below can be crossed at all, and
+    a side that ends exactly at the point's height has to be counted once rather
+    than twice - which is what the odd-looking comparison below is for: it
+    counts one end of a side and not the other.
     '''
     px, py = point
     inside = False
@@ -338,18 +424,31 @@ def point_in_ring(point, ring):
     return inside
 
 
-def point_in_rings(point, rings):
+def point_in_rings(point, rings, boxes):
     '''True when the point is inside an odd number of the given rings.
 
-    A shape is one or more polygons, and those can have holes in them. This
-    treats every ring the same way: an outer ring and a hole inside it cancel
-    out, which is what a point must do to be inside the shape.
+    A shape can be several separate pieces, and any of those pieces can have a
+    hole cut out of it. Every ring is treated the same way, so a piece and a
+    hole inside it cancel each other out: the point is inside the shape when the
+    number of rings it is inside is odd, which is the same thing as being inside
+    a piece and not inside one of that piece's holes.
+
+    boxes holds each ring's own box, in the same order (ring_bounds makes them).
+    A point outside a ring's box is certainly outside the ring too, so such a
+    ring is skipped without looking at its sides at all: the answer is the same,
+    and a borough drawn with thousands of points then costs only what is near
+    the point rather than all of it.
     '''
-    return sum(1 for ring in rings if point_in_ring(point, ring)) % 2 == 1
+    inside = 0
+    for ring, (west, south, east, north) in zip(rings, boxes):
+        if west <= point[0] <= east and south <= point[1] <= north:
+            if point_in_ring(point, ring):
+                inside += 1
+    return inside % 2 == 1
 
 
 def ring_bounds(ring):
-    '''The smallest box around a ring: (min x, min y, max x, max y).'''
+    '''The smallest box that holds a ring: (west, south, east, north).'''
     xs = [p[0] for p in ring]
     ys = [p[1] for p in ring]
     return min(xs), min(ys), max(xs), max(ys)
@@ -363,7 +462,13 @@ def bounds_of_rings(rings):
 
 
 def point_box_distance(point, bounds):
-    '''How far a point is from a box, or zero when the point is inside it.'''
+    '''How far a point is from a box, and zero when the point is inside it.
+
+    This is the cheap question the lookups ask before the expensive one: a point
+    further from a box than the distance being looked for cannot be within that
+    distance of anything inside the box either, so the shape inside it never has
+    to be opened.
+    '''
     px, py = point
     west, south, east, north = bounds
     dx = max(west - px, px - east, 0.0)
@@ -372,12 +477,13 @@ def point_box_distance(point, bounds):
 
 
 def point_ring_distance(point, ring):
-    '''How far a point is on the map from the edge of a ring of points.
+    '''How far a point is from the edge of a ring of points, side by side.
 
     Zero when the point is inside the ring. Otherwise every side of the ring is
-    walked and the nearest one wins, so a park drawn with thousands of points
-    along a river costs that many steps. This is only ever used on the rings of
-    the one space a check is about, never once per square of the map.
+    measured and the nearest one wins, so a park drawn with thousands of points
+    along a river costs that many steps. It is only ever asked about the one
+    space a check is about, never once per square of the map, because that is
+    the only place the cost is worth paying.
     '''
     if point_in_ring(point, ring):
         return 0.0
@@ -390,21 +496,35 @@ def point_ring_distance(point, ring):
     return best
 
 
-# --- Building the graph out of the troncons -------------------------------
+# --- Building the network out of the city's lines -------------------------
+#
+# The city describes its streets as lines: one line per stretch of street, each
+# a list of points, and the city's own word for one stretch is a troncon. The
+# walks do not run along those lines, though, they run from corner to corner, so
+# the first thing needed is the same streets described the other way round: a
+# list of the corners where streets meet, and a list of the short link between
+# two corners, with each link remembering the line it was cut from.
+#
+# The functions below build that, mend the places where two lines almost touch,
+# and leave behind the network that step 3's search walks over.
 
 def merge_endpoints(polylines, snap=SNAP_METRES):
-    '''Give every shared corner one number.
+    '''Give every shared corner one number, and join the points that meet.
 
-    Returns (nodes, edges): nodes is a list of (x, y) metre points, and edges
-    is a list of (start node, end node, polyline number, points the same way
-    round). The polylines handed in are lists of points, one per troncon, in
-    metres; the last flag records whether a link runs the same way round as the
-    troncon it came from, which the build uses to read a troncon's columns back
-    off the links that replaced it.
+    Two lists come back. The first is the corners: metre points, each with a
+    number that is simply its place in the list. The second is the links, one
+    for each step along one of the lines: the corner it starts at, the corner it
+    ends at, the number of the line it was cut from, and whether it runs the
+    same way round as that line - which the build uses to read a line's columns
+    back off the links that replaced it.
 
-    The lookup is by square, so a corner is only compared with the handful of
-    corners in its own square and the eight around it rather than with all of
-    them.
+    The lines handed in are lists of points, one per troncon, already in metres.
+    Two points closer together than `snap` are taken to be the same corner, and
+    the first one read is the one that decides where that corner sits.
+
+    The lookup is by square: a point is only compared with the corners in its
+    own 25-metre square and the eight around it, never with all of them, which
+    is what lets the whole city be read in a couple of seconds.
     '''
     nodes = []
     squares = {}
@@ -438,8 +558,9 @@ def merge_endpoints(polylines, snap=SNAP_METRES):
 def _edge_squares(nodes, edges):
     '''Which square each link is in, for the lookups that follow.
 
-    A link is filed under every square its box touches, so a point on the edge
-    of one square still finds the link that ends just across the line.
+    A link is filed under every square its box touches, not only the one its
+    middle falls in, so a point standing on the line between two squares still
+    finds the link that ends just across that line.
     '''
     squares = {}
     for index, (u, v, _, _) in enumerate(edges):
@@ -453,8 +574,28 @@ def _edge_squares(nodes, edges):
     return squares
 
 
+def _edge_boxes(nodes, edges):
+    '''The box round each link, as (west, south, east, north), in link order.
+
+    The callers below keep asking things like "is this point near this link?",
+    and a box answers most of that without any arithmetic on the link itself: a
+    point more than the distance being asked about, outside a link's box, is
+    certainly further than that from the link.
+    '''
+    boxes = []
+    for u, v, _, _ in edges:
+        ux, uy = nodes[u]
+        vx, vy = nodes[v]
+        boxes.append((min(ux, vx), min(uy, vy), max(ux, vx), max(uy, vy)))
+    return boxes
+
+
 def _squares_around(point, rings=1):
-    '''The square a point is in, and the rings of squares around it.'''
+    '''The square a point falls in, and the squares around it.
+
+    With the default of one, that is the nine squares a lookup has to look in to
+    be sure that nothing close by has been missed.
+    '''
     cx = math.floor(point[0] / CELL_METRES)
     cy = math.floor(point[1] / CELL_METRES)
     return [(cx + dx, cy + dy)
@@ -463,9 +604,12 @@ def _squares_around(point, rings=1):
 
 
 def segment_crossing(a, b, c, d):
-    '''Where two segments cross, as (point, along a-b, along c-d), or None.
+    '''Where two stretches of line cross, and nothing at all when they do not.
 
-    Neither end of either segment counts: a crossing is strictly inside both.
+    Three things come back when they cross: the point itself, how far along the
+    first stretch it sits, and how far along the second. The ends do not count
+    as crossings, so two lines that merely touch at a shared end are not
+    crossing here.
     '''
     ax, ay = a
     bx, by = b
@@ -484,12 +628,14 @@ def segment_crossing(a, b, c, d):
 
 
 def _split_links(nodes, edges, wanted):
-    '''Rebuild the links that have picked up new corners.
+    '''Rebuild the links that have picked up new corners along their length.
 
-    wanted maps a link number to the corners now on it, as (position, corner),
-    and each link is replaced by the chain of links between those corners. The
-    source troncon and its direction are carried over, so a link can still be
-    read back to the troncon it came from afterwards.
+    wanted maps a link's number to the corners now sitting on it, each given as
+    its place along the link and its number. Each such link is replaced by the
+    chain of shorter links between those corners, which is how a street gains a
+    junction part-way along it. The line it was cut from, and the direction it
+    runs in, are carried over, so a link can still be read back to its line
+    afterwards.
     '''
     rebuilt = 0
     kept = []
@@ -508,19 +654,22 @@ def _split_links(nodes, edges, wanted):
 
 
 def split_crossings(nodes, edges, snap=CROSSING_METRES):
-    '''Join the troncon ends that land on the side of another troncon.
+    '''Join the street ends that land on the side of another street.
 
-    A street that ends on another street should meet it, but the file can
-    leave the end a few centimetres short of, or past, the line it meets, and
-    without this the two streets never join and a walk has to go the long way
-    round. The corner is moved onto the line and the line is split at it. Only
-    corners that land on the inside of a link count, and a link is not split
-    within `snap` of its own ends, so a link is never cut into two pieces a
+    A street that ends on another street should meet it, but the city's file can
+    leave the end a few centimetres short of the line it meets, or a little past
+    it. Without this the two streets never join, and a walk that should turn a
+    corner has to go right round the block instead. The end is moved onto the
+    line and the line is split at that point, so the search sees a corner there.
+
+    Only ends that land on the inside of a link count, and a link is not split
+    within `snap` of its own two ends, so a link is never cut into two pieces a
     centimetre long.
 
     Returns (links that were split, links rebuilt).
     '''
     squares = _edge_squares(nodes, edges)
+    boxes = _edge_boxes(nodes, edges)
     wanted = {}
     moved = {}
 
@@ -530,6 +679,13 @@ def split_crossings(nodes, edges, snap=CROSSING_METRES):
             for index in squares.get(square, ()):
                 u, v, _, _ = edges[index]
                 if node == u or node == v:
+                    continue
+                # A link whose box is further than `snap` from this corner is
+                # further than `snap` from it everywhere, so it cannot be the
+                # link the corner lands on, and its line is never measured.
+                west, south, east, north = boxes[index]
+                if (point[0] < west - snap or point[0] > east + snap
+                        or point[1] < south - snap or point[1] > north + snap):
                     continue
                 start = nodes[u]
                 end = nodes[v]
@@ -558,26 +714,27 @@ def split_crossings(nodes, edges, snap=CROSSING_METRES):
 
 
 def join_crossing_links(nodes, edges, snap=0.01):
-    '''Join two troncons that cross in mid air with no corner on either.
+    '''Join two streets that cross with no corner where they meet.
 
-    The file leaves the odd junction unsplit, and it also holds a few streets
-    twice, slightly out of line with each other, so the two copies cross. In
-    both cases two lines cross where there is no corner, and a walk cannot be
-    turned there: it has to go round a corner that is not on its way. So both
-    lines are cut at the crossing point and a corner is put there where the two
-    now meet.
+    The city's file leaves the odd junction undrawn, and it also holds a few
+    streets twice, slightly out of line with each other, so the two copies
+    cross. In both cases two lines cross where there is no corner, and a walk
+    cannot be turned there: it has to go round a corner that is not on its way.
+    So both lines are cut at the point where they cross, and a corner is put
+    there where the two now meet.
 
-    The price is that a real viaduct, one street passing over another, is
-    joined as though the two met, and the join offers a pedestrian a way the map
-    does not have: a route through such a spot comes out a few metres shorter
-    than the ground really covered, and never longer. That is rare (the build
-    reports how rare), and the crow-flies check in the build is what catches a
-    walk shortened by more than the seconds it is written in and the file's
-    rounding allow.
+    The price is that a real viaduct, one street passing over another, is joined
+    as though the two met, and that join offers a walker a way the map does not
+    have: a route through such a spot comes out a few metres shorter than the
+    ground really covered, and never longer. It is rare - the build reports how
+    rare - and the check that no walk is shorter than the straight line between
+    its ends is what catches a walk shortened by more than the seconds it is
+    written in and the file's rounding allow.
 
     Returns the number of crossings joined.
     '''
     squares = _edge_squares(nodes, edges)
+    boxes = _edge_boxes(nodes, edges)
     wanted = {}
     corners = {}
     pairs = set()
@@ -597,6 +754,13 @@ def join_crossing_links(nodes, edges, snap=0.01):
                 au, av, _, _ = edges[a]
                 bu, bv, _, _ = edges[b]
                 if au == bu or au == bv or av == bu or av == bv:
+                    continue
+                # Two links whose boxes do not overlap have no crossing point
+                # to look for.
+                awest, asouth, aeast, anorth = boxes[a]
+                bwest, bsouth, beast, bnorth = boxes[b]
+                if (aeast < bwest or beast < awest
+                        or anorth < bsouth or bnorth < asouth):
                     continue
                 met = segment_crossing(nodes[au], nodes[av],
                                        nodes[bu], nodes[bv])
@@ -622,10 +786,13 @@ def join_crossing_links(nodes, edges, snap=0.01):
 def drop_duplicate_edges(edges):
     '''Keep one copy of each link, and drop links from a corner to itself.
 
-    The city's file holds a good number of troncons twice - once per side of
-    the street, or once per direction. For walking they are the same pavement,
-    and a link counted twice would count its length twice as well, so the
-    second copy goes. Returns (links kept, copies dropped, stubs dropped).
+    The city's file holds a good number of streets twice - once per side of the
+    street, or once per direction - and for walking they are the same pavement.
+    A link counted twice would have its length counted twice with it, so the
+    second copy goes. A link that starts and ends at the same corner is a speck
+    with no length, and goes with them.
+
+    Returns (links kept, copies dropped, specks dropped).
     '''
     seen = set()
     kept = []
@@ -652,7 +819,7 @@ def edge_length(nodes, edge):
 
 
 def count_components(nodes, edges):
-    '''How many separate pieces of network there are, and which corner is in which.
+    '''The network's separate pieces, and which piece each corner is in.
 
     A piece of network is a set of corners joined by links, so a walk can only
     ever reach what its own piece reaches. Two corners in the same borough can
@@ -686,7 +853,11 @@ def count_components(nodes, edges):
 
 
 def build_adjacency(nodes, edges):
-    '''For each corner, the links that leave it: (other end, link, length).'''
+    '''For each corner, the links that leave it.
+
+    Each one is given as the corner at the other end, the link's number, and the
+    link's length in metres.
+    '''
     adjacency = [[] for _ in nodes]
     for index, (u, v, _, _) in enumerate(edges):
         length = edge_length(nodes, edges[index])
@@ -698,7 +869,7 @@ def build_adjacency(nodes, edges):
 # --- Putting the destinations onto the network ----------------------------
 
 def attach_points(nodes, edges, points, reach=40.0):
-    '''Put a corner of the network at each of a set of points.
+    '''Put a corner of the network at each of a set of places.
 
     Metro entrances and green-space gateways have to be somewhere on the
     network before a walk can end at them, so each point is pulled onto the
@@ -719,13 +890,14 @@ def attach_points(nodes, edges, points, reach=40.0):
     the build hands it to the search as the distance already covered, so a walk
     is never shorter than the straight line it is a chain of.
 
-    A point that no link comes within `reach` of gets None in place of a
+    A point that no link comes within `reach` of gets nothing in place of a
     corner, so the corners always line up with the points handed in and a
     caller can read back which corner belongs to which point. A point lands on
     a corner of its link instead when it falls within half a metre of one, so
     the network does not pick up specks of link.
     '''
     squares = _edge_squares(nodes, edges)
+    boxes = _edge_boxes(nodes, edges)
     rings = int(math.ceil(reach / CELL_METRES))
     wanted = {}
     made = {}
@@ -738,6 +910,14 @@ def attach_points(nodes, edges, points, reach=40.0):
         for square in _squares_around(point, rings):
             for index in squares.get(square, ()):
                 u, v, _, _ = edges[index]
+                # A link whose box is further than `reach` from the point is
+                # further than `reach` from it everywhere, so it cannot be the
+                # link the point is pulled onto.
+                west, south, east, north = boxes[index]
+                if (point[0] < west - reach or point[0] > east + reach
+                        or point[1] < south - reach
+                        or point[1] > north + reach):
+                    continue
                 start = nodes[u]
                 end = nodes[v]
                 distance, t = point_segment_distance(point, start, end)
@@ -778,25 +958,33 @@ def attach_points(nodes, edges, points, reach=40.0):
 def walk_metres(adjacency, sources):
     '''How far every corner is, on foot, from the nearest of a set of corners.
 
-    sources maps a corner to the name of what is reached from it and the metres
-    already walked to get there: nought where a corner is the destination
-    itself, and otherwise the short line from the corner to the destination's
-    own door or edge. One Dijkstra search spreads out from all of them at once,
-    so each corner ends up with the distance to the nearest destination and the
-    name of that destination.
+    sources maps a corner to the name of the thing reached from it, and the
+    metres already walked to get there: nought where the corner is the
+    destination itself, and otherwise the short line from the corner to the
+    destination's door or edge. One search then spreads out from all of them at
+    once, always dealing with the nearest corner not yet dealt with, so each
+    corner ends up with the distance to the nearest destination and the name of
+    that destination. Spreading out in that order is the standard way of finding
+    the shortest route to everything at once, and it is known as Dijkstra's.
 
-    A corner is one key, so it can only hold one name: where two destinations
-    both arrive at the same corner, the caller decides which one that corner is
-    listed under. The build lists the spaces in the order the city's file puts
-    them, biggest first, so a corner shared by two of them is named after the
-    bigger one - which is the one a person walking there was most likely
-    heading for.
+    A corner is one number, so it can only hold one name: where two destinations
+    share a corner, the caller decides which name that corner is listed under.
+    The build lists the spaces in the order the city's file puts them, biggest
+    first, so a corner shared by two of them is named after the bigger one -
+    the one a person walking there was more likely heading for.
 
-    Returns (metres to each corner, name reached at each corner). Corners in a
-    separate piece of network are simply not in the answers.
+    Both answers come back as one entry per corner, in the corners' own
+    numbering and in their own order, with no gaps in it. Because the numbering
+    runs from nought with nothing missing, a plain numbered list is the whole of
+    the lookup: cheaper and smaller than a record keyed by corner number, and
+    holding exactly the same numbers.
+
+    A corner no walk reached keeps UNWALKED, and its name stays NO_DESTINATION.
+
+    Returns (metres to each corner, name reached at each corner).
     '''
-    metres = {}
-    reached = {}
+    metres = array('d', [UNWALKED]) * len(adjacency)
+    reached = array('H', [NO_DESTINATION]) * len(adjacency)
     queue = []
     for corner, (name, already) in sources.items():
         metres[corner] = already
@@ -808,22 +996,23 @@ def walk_metres(adjacency, sources):
         distance, corner = heapq.heappop(queue)
         if distance > metres[corner]:
             continue
+        name = reached[corner]
         for other, _, length in adjacency[corner]:
             step = distance + length
-            if step < metres.get(other, float('inf')):
+            if step < metres[other]:
                 metres[other] = step
-                reached[other] = reached[corner]
+                reached[other] = name
                 heapq.heappush(queue, (step, other))
     return metres, reached
 
 
 def sample_ring(ring, step):
-    '''Points along a ring, no two of them closer than step metres.
+    '''Points spaced along a ring, no two of them closer than `step` metres.
 
-    The ring is walked segment by segment with a point laid down every step
-    metres measured along the ring, not from each corner, so the points do not
-    bunch up wherever the edge is irregular. A closed ring, whose last point
-    simply repeats its first, comes out with nothing on its last segment.
+    The ring is walked side by side, with a point laid down every `step` metres
+    measured along the ring rather than from each corner, so the points do not
+    bunch up wherever the outline is irregular. A ring whose last point simply
+    repeats its first comes out with nothing laid on its last side.
     '''
     points = []
     carried = 0.0
@@ -854,7 +1043,9 @@ def sample_ring(ring, step):
 
 
 def _rings(geometry):
-    '''Every ring of a polygon or multipolygon, as lists of points.'''
+    '''Every ring of a shape, as lists of points, whether the shape is drawn as
+    one piece or as several.
+    '''
     if geometry['type'] == 'Polygon':
         return geometry['coordinates']
     return [ring for polygon in geometry['coordinates'] for ring in polygon]
@@ -864,14 +1055,14 @@ def check_against_city_files():
     '''Project the city's outlines and compare them with the city's own metres.
 
     The two files hold the same 34 outlines, point for point, one in degrees
-    and one in metres. Matching them by their CODEID and walking both at once
-    is the strongest available test: two independent files, one centre, and
-    neither is ours.
+    and one in metres. Matching them up by the identifier the city gives each
+    outline, and walking all of them at once, is the strongest test available:
+    two independent files, one comparison, and neither of them ours.
     '''
-    with open(OUTLINES_JSON, encoding='utf-8') as f:
-        degrees = {feat['properties']['CODEID']: feat for feat in json.load(f)['features']}
-    with open(BOUNDARIES_MTM8, encoding='utf-8') as f:
-        metres = {feat['properties']['CODEID']: feat for feat in json.load(f)['features']}
+    degrees = {feat['properties']['CODEID']: feat
+               for feat in read_json(OUTLINES_JSON)['features']}
+    metres = {feat['properties']['CODEID']: feat
+              for feat in read_json(BOUNDARIES_MTM8)['features']}
 
     assert set(degrees) == set(metres), 'the two files cover different areas'
 
@@ -913,12 +1104,29 @@ def check_against_city_files():
 
 # ======== Part 2: step 2, the city's files into GeoJSON ===================
 #
-# The metro stops, the green spaces, and the street corners the map is
-# drawn from. Each file is written to a temporary name, read back, checked,
-# and only then moved into place.
+# Three files in, three files out. The metro stops come out of the STM's zip,
+# the green spaces out of the city's green-space file, and the corners out of
+# the city's street file, and each of the three leaves as a GeoJSON file the
+# page can draw: site/data/metro_stops.geojson, city_parks.geojson and
+# intersections.geojson.
+#
+# Each one is checked as it is built, written to a temporary name, read back off
+# the disk and checked again as it was written, and only then moved into place.
+# The one writer that does that is at the end of this part, and step 3 uses it
+# too.
+#
+# What this part hands on is those three files. Step 3 reads the corners back
+# and adds the walks to them; the other two are finished once written.
 
 
 # --- The metro stops: the words the page shows ----------------------------
+#
+# The metro stops file is the STM's own list of stations and their entrances,
+# and the wording the page shows in a stop's popup is worked out from it here:
+# the station name, how many entrances there are, whether each one is
+# wheelchair accessible, and which lines call at the station. The city's
+# spelling is French, so the words the popup shows are English and are decided
+# in this section.
 
 # A metro stop_code is five digits starting with 10 (10118 = Angrignon).
 METRO_CODE = re.compile(r'10[0-9]{3}')
@@ -1069,8 +1277,12 @@ def read_metro_rows():
 
 
 def build_metro_features(rows):
-    '''One GeoJSON Point per station or entrance row. Coordinates that cannot be
-    read are skipped and counted, rather than silently kept.'''
+    '''One point per station or entrance row, ready to be written out.
+
+    A row whose coordinates cannot be read is counted and left out, so the run
+    says what it dropped rather than writing a station with no place on the map.
+    Returns (the points, how many rows were skipped).
+    '''
     features = []
     skipped = 0
     for row in rows:
@@ -1170,11 +1382,13 @@ def add_metro_popup_fields(features, platforms):
 
 
 def check_metro(rows, skipped, out_path):
-    '''Test the metro output before we trust it: count, world bounds, codes.
+    '''Test the metro file as it was written, before it is moved into place.
 
-    The file is read back from disk and tested as it was written, rather than
-    tested in memory, so anything JSON cannot round-trip fails here. out_path
-    is the file just written, which is a temporary one until it has passed.
+    The file is read back off the disk and tested there, rather than tested in
+    memory, so anything that cannot survive being written as JSON fails here.
+    out_path is the file just written, which keeps its temporary name until it
+    has passed. The numbers below are what the STM's feed holds today, so a feed
+    that changes fails this check instead of quietly changing the page.
     '''
     with open(out_path, encoding='utf-8') as f:
         data = json.load(f)
@@ -1280,15 +1494,20 @@ def check_metro(rows, skipped, out_path):
 
 
 # --- Green spaces: the city file is already GeoJSON, so we keep it as is ---
+#
+# The city's green-space file arrives in the shape the page wants, so this
+# section does three things and no more: it reads the file, it copies each
+# space across with every column the city wrote still on it, and it works out
+# the wording a popup shows. Nothing is rounded, filtered or simplified.
 
 def read_parks():
     '''Read the city's green-space export.
 
-    This file is already GeoJSON in WGS84 (longitude, latitude), so reading
-    it takes one line: there is nothing to convert and nothing to reproject.
+    The city publishes this one already as GeoJSON in plain degrees - longitude
+    and latitude, the form the page draws in - so reading it takes one line:
+    there is nothing to convert and nothing to put onto a grid.
     '''
-    with open(PARKS_JSON, encoding='utf-8') as f:
-        data = json.load(f)
+    data = read_json(PARKS_JSON)
     features = data['features']
     print(f'{len(features)} features in {PARKS_JSON.name}')
     return data
@@ -1583,13 +1802,13 @@ def check_parks(source, out_path):
 
 # --- Street intersections --------------------------------------------------
 
-# The city draws its streets as troncons: one LineString for each stretch of
-# street between two corners, 48031 of them, in degrees. CLASSE says what kind
-# of road each one is, and that column is the one filter here, the same one
-# step 3 uses (Part 1's UNWALKABLE_CLASSES). The motorways and the service
-# ways beside them go first, before anything else is done, because nobody walks
+# The city draws its streets as troncons: one line for each stretch of street
+# between two corners, 48031 of them, written in degrees. CLASSE says what kind
+# of road each one is, and that column is the only filter here - the same one
+# step 3 uses, Part 1's UNWALKABLE_CLASSES. The motorways, and the service ways
+# beside them, go first, before anything else is done, because nobody walks
 # there. So no point in this file is an intersection a person cannot stand on,
-# and the points and the walks measured from them agree about what a street is.
+# and the corners and the walks measured from them agree about what a street is.
 
 # The file draws one corner once for every street that touches it, a
 # centimetre or two apart. Two ends this close together are the same corner,
@@ -1604,10 +1823,10 @@ def check_parks(source, out_path):
 MIN_DEGREE = 3
 
 # Coordinates are written rounded to this many decimals. Seven decimals of a
-# degree is about 1.1 cm on the ground, finer than the 10 cm the snapping above
-# is done in, so two corners the network keeps apart stay apart in the file.
-# Six would be 11 cm, which would let the snapping's own tolerance through and
-# put two neighbouring corners on the same point.
+# degree is about 1.1 cm on the ground, finer than the 10 cm within which two
+# street ends above are called one corner, so two corners the network keeps
+# apart stay apart in the file. Six would be 11 cm, which would let that tenth
+# of a metre through and put two neighbouring corners on the same point.
 COORD_DIGITS = 7
 
 # The city's own placeholder for a way it has not named, which is 1079 of the
@@ -1631,19 +1850,32 @@ UNNAMED_WAY_TITLE = 'Unnamed way'
 
 # --- Reading the streets, and finding the corners -------------------------
 
+_STREETS = None     # the troncons, once read, for the second step's sake
+
+
 def read_streets():
-    '''The troncons a pedestrian may walk, each one projected into metres.
+    '''The troncons a pedestrian may walk, each one put onto the grid in metres.
 
     Every troncon is kept with its own columns and with both copies of its
-    shape: the points as the file wrote them, in degrees, and the same points
-    in metres. The degrees are what a corner's own position is written out
-    from, so a point on the map is a place the city drew rather than one
-    worked backwards out of metres; the metres are what the snapping below is
-    measured in. The length of what the one filter drops is printed, so the
-    size of that decision is on the record.
+    shape: the points as the file wrote them, in degrees, and the same points in
+    metres. The degrees are what a corner's own position is written out from, so
+    a point on the map is a place the city drew rather than one worked backwards
+    out of metres; the metres are what the joining in Part 1 is measured in.
+    What the one filter drops, and how many kilometres that is, is printed, so
+    the size of that decision is on the record.
+
+    The file is read once per run. Step 3 walks the corners step 2 numbered, in
+    the same run, and the file cannot have changed in between, so the second
+    reading is the first one: the same lines, put onto the grid the same way,
+    and the same report printed again so that each step still says what it read.
     '''
-    with open(STREETS_JSON, encoding='utf-8') as f:
-        source = json.load(f)
+    global _STREETS
+    if _STREETS is not None:
+        for line in _STREETS[1]:
+            print(line)
+        return _STREETS[0]
+
+    source = read_json(STREETS_JSON)
 
     lines = []
     points = 0
@@ -1661,10 +1893,13 @@ def read_streets():
         lines.append({'props': props, 'metres': metres, 'degrees': degrees})
 
     walked_metres = sum(line_length(line['metres']) for line in lines)
-    print(f'{len(lines)} troncons read and projected to metres, '
-          f'{points} points, {walked_metres / 1000.0:.0f} km of street')
-    print(f'{dropped} troncons dropped as motorway or motorway service, '
-          f'{dropped_metres / 1000.0:.0f} km not walked')
+    report = (f'{len(lines)} troncons read and projected to metres, '
+              f'{points} points, {walked_metres / 1000.0:.0f} km of street',
+              f'{dropped} troncons dropped as motorway or motorway service, '
+              f'{dropped_metres / 1000.0:.0f} km not walked')
+    for line in report:
+        print(line)
+    _STREETS = (lines, report)
     return lines
 
 
@@ -1681,20 +1916,20 @@ def line_length(shape):
 def build_corners(lines):
     '''Give every shared corner one number, and keep the ones that are corners.
 
-    Every vertex of every troncon is walked, and a vertex within SNAP_METRES of
+    Every point of every troncon is walked, and a point within SNAP_METRES of
     one already read becomes that corner: the first one read decides where the
     corner sits, and the degrees it was read in are kept with it. The lookup is
-    by square, so a vertex is only compared with the corners in its own square
-    and the eight around it rather than with all 216,000 of them.
+    by square, so a point is only compared with the corners in its own square
+    and the eight around it, rather than with all 216,000 of them.
 
     The links between those corners are built at the same time, and it is the
-    links that say what a corner's degree is, since the degree is how many of
-    them leave it. A vertex in the middle of a troncon has two links; a corner
-    where two troncon ends meet and a third street crosses has four.
+    links that say a corner's degree, since the degree is how many of them leave
+    it. A point part-way along a troncon has two links; a corner where two
+    troncon ends meet and a third street crosses has four.
 
-    What comes back is the corners kept, one dict each (its metres, the degrees
-    the file wrote it in, its degree, and the troncons that met there), and the
-    size of the whole network those corners were picked out of.
+    What comes back is the corners kept, one record each (its metres, the
+    degrees the file wrote it in, its degree, and the troncons that met there),
+    and the size of the whole network those corners were picked out of.
     '''
     nodes = []          # [easting, northing] in metres
     node_wgs = []       # the same corner as the file wrote it, [lon, lat]
@@ -1758,11 +1993,11 @@ def sort_corners(corners):
     first, then longitude, both rounded the way they are written - so the file
     runs south to north and, along each line of latitude, west to east.
 
-    Not by the metres, though the metres are what the corners were found in: a
-    transverse Mercator bends its lines of latitude, by about 110 m across this
-    city, so ordering by projected northing would put corners 28 km apart next
-    to each other in the file. The written degrees are the order a reader can
-    see, and the check tests exactly that.
+    Not by the metres, though the metres are what the corners were found in:
+    the grid the city's streets are drawn on is bent across this city by about
+    110 m, so ordering by metres north would put corners 28 km apart next to
+    each other in the file. The written degrees are the order a reader can see,
+    and the check tests exactly that.
     '''
     corners.sort(key=lambda corner: (round(corner['wgs'][1], COORD_DIGITS),
                                      round(corner['wgs'][0], COORD_DIGITS)))
@@ -1833,10 +2068,10 @@ def check_intersections(corners, graph, rows, out_path):
     '''Test the intersections output before we trust it.
 
     As with the other two files, what is tested is what landed on disk, read
-    back, so anything JSON cannot round-trip or that was dropped on the way out
-    fails here. The corners still in memory are the yardstick for the count,
-    the numbering, the degrees and the places, and the network they were picked
-    out of is the yardstick for the snapping.
+    back, so anything JSON cannot round-trip, or that was lost on the way out,
+    fails here. The corners still in memory are the yardstick for the count, the
+    numbering, the degrees and the places, and the network they were picked out
+    of is the yardstick for the joining.
 
     The last check is against a second source, the STM's own points: they are
     surveyed, the corners here are drawn from the city's streets, and neither
@@ -1958,53 +2193,70 @@ def check_intersections(corners, graph, rows, out_path):
 
 
 # --- Writing --------------------------------------------------------------
+#
+# One writer for all four files. Each is written to a temporary name beside
+# itself, read back off the disk, checked as what landed, and only then moved
+# into place, so a run that fails leaves the page with the files it already had.
+# A check that fails deletes the temporary file as well: what a failed run
+# leaves behind is the folder as it found it.
 
-def write_geojson(features, out_path, indent=2):
-    '''Write a FeatureCollection to out_path, and nothing else.
+def collection(features):
+    '''The FeatureCollection GeoJSON document around a list of features.'''
+    return {'type': 'FeatureCollection', 'features': features}
 
-    The metro file is small, so it is written pretty-printed and easy to read
-    by eye. The green spaces hold about 159,000 coordinate pairs and the street
-    intersections 24,669 points, and the same indenting would add roughly 9 MB
-    and 1 MB of blank space for nothing, so main() passes indent=None for those
-    two and they are written compact instead.
+
+def write_checked(document, out_path, check, indent=None, report=None):
+    '''Write a whole GeoJSON document and check it, without leaving a bad file.
+
+    The checks read the file back and test what actually landed on disk, so the
+    writing has to come first. It goes to a temporary name beside the real file,
+    and only moves into place once the checks have passed: a run that fails then
+    leaves the file the page loads exactly as it was, rather than half updated
+    and dirtying git status. The temporary name sits in the same folder, so the
+    move is a single step, and a failed check takes the temporary file away
+    rather than leaving it in site/data.
+
+    indent=None writes the document compact. The metro file is small and is
+    written with an indent of 2, easy to read by eye; the green spaces hold
+    about 159,000 coordinate pairs, the street intersections 24,669 points and
+    the walk file the two of them together, so the same indenting would add
+    megabytes of blank space for nothing.
+
+    report, when given, is called with the path once the file is in place, and
+    returns the line to print. The default is the file and its size in KB.
     '''
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    geojson = {'type': 'FeatureCollection', 'features': features}
-
     if indent is None:
-        text = json.dumps(geojson, ensure_ascii=False, separators=(',', ':'))
+        text = json.dumps(document, ensure_ascii=False, separators=(',', ':'))
     else:
-        text = json.dumps(geojson, ensure_ascii=False, indent=indent)
+        text = json.dumps(document, ensure_ascii=False, indent=indent)
 
-    with open(out_path, 'w', encoding='utf-8') as f:
-        f.write(text)
-
-
-def write_checked(features, out_path, check, indent=2):
-    '''Write a file and check it, without ever leaving a bad file behind.
-
-    The checks read the file back and test what actually landed on disk, so
-    the write has to come first. It goes to a temporary name beside the real
-    file, and only moves into place once the checks have passed: a run that
-    fails then leaves the file the page loads exactly as it was, instead of
-    half updated and dirtying git status. The temporary name sits in the same
-    folder, so the move is a single step.
-    '''
     temp_path = out_path.with_name(out_path.name + '.new')
-    write_geojson(features, temp_path, indent=indent)
-    check(temp_path)
+    temp_path.write_text(text, encoding='utf-8')
+    try:
+        check(temp_path)
+    except BaseException:
+        temp_path.unlink(missing_ok=True)
+        raise
     temp_path.replace(out_path)
-    print(f'Written to {out_path} ({out_path.stat().st_size // 1024} KB)')
+    print(report(out_path) if report else
+          f'Written to {out_path} ({out_path.stat().st_size // 1024} KB)')
 
 
 def build_geojson():
-    '''Read the city's three files in, write the three the page loads.'''
+    '''Step 2: read the city's three files in, write the three the page loads.
+
+    The metro stops, the green spaces and the street corners are each built,
+    given their popup wording, checked and written, in that order. What this
+    leaves on disk is what step 3 reads: the corners, with their numbers, are
+    the places a walk can start from.
+    '''
     # Metro stops: the points are the stations and their entrances; the
     # platform rows are read for each station's name and STM page and dropped.
     rows, platforms = read_metro_rows()
     metro_features, skipped = build_metro_features(rows)
     add_metro_popup_fields(metro_features, platforms)
-    write_checked(metro_features, METRO_GEOJSON, indent=2,
+    write_checked(collection(metro_features), METRO_GEOJSON, indent=2,
                   check=lambda path: check_metro(rows, skipped, path))
 
     # Green spaces.
@@ -2012,7 +2264,7 @@ def build_geojson():
     park_features = build_park_features(source)
     add_park_popup_fields(park_features)
     sort_park_features(park_features)
-    write_checked(park_features, PARKS_GEOJSON, indent=None,
+    write_checked(collection(park_features), PARKS_GEOJSON,
                   check=lambda path: check_parks(source, path))
 
     # Street intersections: one point per place three or more street ends meet.
@@ -2021,17 +2273,31 @@ def build_geojson():
     sort_corners(corners)
     features = build_intersection_features(corners, lines)
     add_intersection_popup_fields(features, corners, lines)
-    write_checked(features, INTERSECTIONS_GEOJSON, indent=None,
-                  check=lambda path: check_intersections(corners, graph, rows, path))
+    write_checked(collection(features), INTERSECTIONS_GEOJSON,
+                  check=lambda path: check_intersections(corners, graph, rows,
+                                                         path))
 
 
 # ======== Part 3: step 3, the walk from every corner ======================
 #
-# Step 2's corners, each one given the 22 walks the page can ask for, and
-# the 34 outlines the page's mask is cut round.
+# What comes in is step 2's corner file and the city's street lines; what goes
+# out is that same corner file with three numbers added to every corner - how
+# long the walk is to the nearest green space of each size and kind, and to the
+# nearest metro entrance, with and without steps - and one new file, the 34
+# outlines the page's mask is cut round.
+#
+# The work is done once per destination rather than once per corner: a single
+# search out from every green space of a band, and every metro entrance, gives
+# every corner its distance at the same time. That is 22 searches, which is why
+# the file can be rebuilt in a couple of minutes.
 
 
-# --- The knobs: what step 3 asks about ------------------------------------
+# --- The settings: what step 3 asks about ---------------------------------
+#
+# What counts as a destination, which corners are asking, and the numbers the
+# file's own format limits the answers to. The first few are distances and times
+# and can be changed freely; the last group is the file's ceiling, and the
+# comments beside it say why each one sits where it does.
 
 # How far a gateway or a metro entrance may sit from the nearest street and
 # still be taken to be beside it. The file draws no paths inside parks, so a
@@ -2050,7 +2316,7 @@ ATTACH_METRES = 100.0
 GATEWAY_METRES = 20.0
 
 # How far a dot may be from the corner of the network it is matched with. Both
-# files come out of the same vertices, so the distance is the rounding in the
+# files come out of the same points, so the distance is the rounding in the
 # intersections file (seven decimals, about a centimetre) and nothing else. The
 # limit is here to fail loudly if the two files ever stop being the same
 # corners, rather than to allow a slack.
@@ -2128,10 +2394,10 @@ MAX_SECONDS = 65532      # the longest walk that fits in a dot's number
 # against, without repeating any of this work in the browser.
 TICK_MINUTES = (5, 15, 30)
 
-# Dots walked through at a fixed stride for the crow-flies check, per layer
-# measured. The check is a bound rather than an equality, so a sample is
-# enough, and it is the one check that reads the city's own geometry rather
-# than this build's.
+# Dots walked through at a fixed stride for the check that no walk is shorter
+# than the straight line between its ends, per layer measured. The check is a
+# bound rather than an exact answer, so a sample is enough, and it is the one
+# check that reads the city's own geometry rather than this build's.
 CHECK_DOTS = 25
 
 
@@ -2151,8 +2417,7 @@ def read_dots():
     and step 2's geometry - the same seven decimals, the same separators - is
     what the page reads afterwards.
     '''
-    with open(INTERSECTIONS_GEOJSON, encoding='utf-8') as f:
-        source = json.load(f)
+    source = read_json(INTERSECTIONS_GEOJSON)
 
     dots = []
     degrees = {}
@@ -2194,8 +2459,7 @@ def read_entrances():
     would be a station nobody could walk to, which would mean the entrance rows
     of the file had been misread.
     '''
-    with open(METRO_GEOJSON, encoding='utf-8') as f:
-        source = json.load(f)
+    source = read_json(METRO_GEOJSON)
 
     stations = set()
     served = set()
@@ -2237,8 +2501,7 @@ def read_spaces():
     it is also the order the searches read: where two spaces share a street
     corner, the bigger one is the one a walk there is named after.
     '''
-    with open(PARKS_GEOJSON, encoding='utf-8') as f:
-        source = json.load(f)
+    source = read_json(PARKS_GEOJSON)
 
     spaces = []
     kinds = {}
@@ -2251,11 +2514,13 @@ def read_spaces():
         band = band_of(hectares)
         kinds[kind_key] = kinds.get(kind_key, 0) + 1
         bands[band] = bands.get(band, 0) + 1
+        rings = outer_rings(feature['geometry'])
         spaces.append({
             'id': number, 'label': 'P%d' % number,
             'name': props['popup_title'], 'city_kind': kind_key,
             'kind': PARK_KIND_OF_KEY[kind_key], 'ha': hectares, 'band': band,
-            'rings': outer_rings(feature['geometry']),
+            'rings': rings,
+            'ring_bounds': [ring_bounds(ring) for ring in rings],
         })
 
     print(f'{len(spaces)} green spaces read: '
@@ -2319,8 +2584,7 @@ def read_outlines():
     way round (outer rings only, in outer_rings): a hole in a park is not part of
     the park.
     '''
-    with open(OUTLINES_JSON, encoding='utf-8') as f:
-        source = json.load(f)
+    source = read_json(OUTLINES_JSON)
 
     outlines = []
     for feature in source['features']:
@@ -2332,6 +2596,7 @@ def read_outlines():
             'name': feature['properties']['NOM'],
             'type': feature['properties']['TYPE'],
             'rings': rings,
+            'ring_bounds': [ring_bounds(ring) for ring in rings],
             'bounds': bounds_of_rings(rings),
             'degrees': [[[[round(lon, COORD_DIGITS), round(lat, COORD_DIGITS)]
                           for lon, lat in ring] for ring in polygon]
@@ -2350,7 +2615,7 @@ def in_city(point, outlines):
         west, south, east, north = outline['bounds']
         if not (west <= point[0] <= east and south <= point[1] <= north):
             continue
-        if point_in_rings(point, outline['rings']):
+        if point_in_rings(point, outline['rings'], outline['ring_bounds']):
             return True
     return False
 
@@ -2393,7 +2658,8 @@ def mark_focus(dots, outlines):
             west, south, east, north = outline['bounds']
             if not (west <= x <= east and south <= y <= north):
                 continue
-            if point_in_rings(dot['point'], outline['rings']):
+            if point_in_rings(dot['point'], outline['rings'],
+                              outline['ring_bounds']):
                 here = outline['name']
                 break
         borough.append(here)
@@ -2417,21 +2683,20 @@ def mark_focus(dots, outlines):
 # --- Building the network, and putting the destinations on it -------------
 
 def build_network(lines):
-    '''The street network as a graph, plus a report of what was done to it.
+    '''The street network as the walks use it, plus a report of what was done.
 
-    The four steps are the ones Part 1 sets out: snap the troncons that
-    share a corner onto one corner, join the troncon ends that land a few
-    centimetres off the side of another troncon, join the crossings that have
-    no corner on either line, and drop the links the file holds twice. What is
-    left is a network whose corners meet where the map meets, which is the
-    whole of what walking needs.
+    The four steps are the ones Part 1 sets out: put the troncons that share a
+    corner on one corner, join the street ends that stop a few centimetres short
+    of another street, join the crossings that have no corner on either line,
+    and drop the links the file holds twice. What is left is a network whose
+    corners meet where the map meets, which is the whole of what walking needs.
 
     The corners' positions are also kept as they were before the second and
     third steps moved any of them, because a dot from step 2 stands where the
-    vertex was read, and that is where its own corner of the network is found.
-    Those two steps only ever nudge a corner by a few centimetres onto a line
-    it already ends on, so this is bookkeeping about which corner is which
-    rather than a second network.
+    point was read, and that is where its own corner of the network is found.
+    Those two steps only ever nudge a corner by a few centimetres onto a line it
+    already ends on, so this is bookkeeping about which corner is which, not a
+    second network.
 
     Returns (first positions, corners, links, corners carrying no link, report).
     '''
@@ -2459,14 +2724,14 @@ def build_network(lines):
 def corner_nodes(first, dots):
     '''Which corner of the network each dot is, and the check that it is one.
 
-    Both files come out of the same vertices in the same order: step 2 walked
+    Both files come out of the same points in the same order: step 2 walked
     every troncon's points, kept the ones within a tenth of a metre of a corner
     it had already seen, and wrote out the ones three or more street ends meet
-    at. This build reads the same troncons the same way, so a dot and its
-    corner of the network are the same point to within the rounding in the file
-    - a centimetre or so - and the match is made by distance rather than by
-    assuming an order, which would quietly tie the wrong walk to every dot the
-    day either file changed.
+    at. This build reads the same troncons the same way, so a dot and its corner
+    of the network are the same point to within the rounding in the file - a
+    centimetre or so - and the match is made by distance rather than by assuming
+    an order, which would quietly tie the wrong walk to every dot the day either
+    file changed.
 
     The lookup is by 25 m square, as the network's own lookups are, so a dot is
     compared with the handful of corners around it rather than with all of
@@ -2574,6 +2839,13 @@ def attach_destinations(nodes, edges, spaces, entrances, outlines):
 
 
 # --- What the layers are --------------------------------------------------
+#
+# A layer is one question the page can ask, kept as the answer to it: one
+# number for every corner on the map. "A borough park under 1 ha" is one layer
+# and "any metro entrance at all" is another, and the page's own menus are what
+# pick between them. This section says which layers exist and what each one is
+# called, since the page's menus and its legend are built from the wording
+# here; the measuring comes next.
 
 def plan_layers():
     '''Every layer the page can ask for, in the order they are built.
@@ -2727,7 +2999,6 @@ def measure_layer(dots, nodes_of, inside, lonely, metres, reached):
     seconds = array('H', [OUTSIDE]) * len(dots)
     destination = array('H', [NO_DESTINATION]) * len(dots)
     speed = WALK_SPEED_MPS
-    to_metres = metres.get
 
     for number in range(len(dots)):
         if not inside[number]:
@@ -2736,8 +3007,8 @@ def measure_layer(dots, nodes_of, inside, lonely, metres, reached):
         if node in lonely:
             seconds[number] = NO_STREET
             continue
-        value = to_metres(node)
-        if value is None:
+        value = metres[node]
+        if value == UNWALKED:
             # the dot is on the network, but its piece of it reaches none of
             # this layer's destinations
             seconds[number] = UNREACHABLE
@@ -2846,12 +3117,14 @@ def check_derived(layers, by_id, plan):
 
 
 def crow_flies_distance(point, layer, destination, spaces, entrances):
-    '''The shortest line on the map from a point to the destination reached.
+    '''The straight line on the map from a point to the destination it reached.
 
-    For a metro entrance that is the line to the doorway itself. For a green
-    space it is the line to the nearest point of its edge, and zero when the
-    point is inside the space - which is the distance the walk would find if
-    walking through a park were modelled, and on this map it is not.
+    This is the distance as the crow flies - the line a bird would take, with no
+    streets to go round - and it is the shortest any walk to that destination
+    could possibly be. For a metro entrance it is the line to the doorway
+    itself. For a green space it is the line to the nearest point of its edge,
+    and zero when the point is inside the space, which is the distance a walk
+    would find if walking through a park were modelled; on this map it is not.
 
     Spaces and entrances are looked up by their number, which is the number
     their own file gives them, and not by their place in a list: a number in a
@@ -2863,28 +3136,29 @@ def crow_flies_distance(point, layer, destination, spaces, entrances):
         return math.hypot(x - point[0], y - point[1])
 
     best = float('inf')
-    for ring in spaces[destination]['rings']:
-        if point_box_distance(point, ring_bounds(ring)) >= best:
+    for ring, box in zip(spaces[destination]['rings'],
+                         spaces[destination]['ring_bounds']):
+        if point_box_distance(point, box) >= best:
             continue
         best = min(best, point_ring_distance(point, ring))
     return best
 
 
 def check_crow_flies(dots, layers, plan, spaces, entrances):
-    '''Every walk beats the crow-flies distance to what it reached.
+    '''Every walk beats the straight line to what it reached.
 
     The one check that reads the city's own geometry rather than this build's.
     A walk here is a chain of lines: along the streets from the dot to whatever
     it reached, and the last stretch from the street to that destination's own
     door or edge. A chain of lines is never shorter than the straight line
-    between its ends, so a walk can never be shorter than the crow-flies
-    distance to the thing it reached. The comparison is made with a metre of
+    between its ends, so a walk can never be shorter than the distance to the
+    thing it reached as the crow flies. The comparison is made with a metre of
     room in it, and that metre is the whole of the slack there is: half a second
     at the walking speed, 0.675 m, can be missing from a walk that is written in
     whole seconds, and the corner the dot stands for is read here out of a file
     that rounds it to seven decimals, about a centimetre. A walk more than that
     shorter than the crow flies would mean the network had been joined somewhere
-    the map does not join, which is the mistake the mid-air crossing joins can
+    the map does not join, which is the mistake joining a mid-air crossing can
     make.
 
     The dots are taken with a fixed stride, so the sample is the same on every
@@ -3031,8 +3305,8 @@ def write_boroughs(outlines):
                          for ring in polygon)
             assert points == wanted, (outline['name'], points, wanted)
 
-    write_checked(borough_features(outlines), BOROUGHS_GEOJSON,
-                                indent=None, check=check)
+    write_checked(collection(borough_features(outlines)), BOROUGHS_GEOJSON,
+                  check=check)
 
 
 def build_walk_file(features, plan, readings, borough, names, counts, coverage):
@@ -3085,7 +3359,7 @@ def build_walk_file(features, plan, readings, borough, names, counts, coverage):
 
     return {
         'type': 'FeatureCollection',
-        'built_by': 'site/build_walk_times.py, step 3',
+        'built_by': 'site/build.py, step 3',
         'measured_from': 'data/intersections.geojson (step 2)',
         'walk_speed_mps': WALK_SPEED_MPS,
         'reach_m': ATTACH_METRES,
@@ -3151,7 +3425,7 @@ def check_walk_file(built, read_back):
           f'({layers[last]["id"]}) counts the same corners again')
 
 
-def write_walk_geojson(collection):
+def write_walk_geojson(written):
     '''Write the intersections file, and check it by reading it back.
 
     Compact, and in step 2's own separators, which is what makes the file the
@@ -3160,16 +3434,19 @@ def write_walk_geojson(collection):
     rewritten from scratch. It goes to a temporary name, is read back and
     checked, and only then replaces what is there, so a run that fails leaves
     the page with the file it already had.
+
+    The line printed is this file's own: its size in megabytes, and how many
+    walks every corner in it carries.
     '''
-    temp = INTERSECTIONS_GEOJSON.with_name(INTERSECTIONS_GEOJSON.name + '.new')
-    text = json.dumps(collection, ensure_ascii=False, separators=(',', ':'))
-    temp.write_text(text, encoding='utf-8')
-    with open(temp, encoding='utf-8') as f:
-        check_walk_file(collection, json.load(f))
-    temp.replace(INTERSECTIONS_GEOJSON)
-    print(f'{INTERSECTIONS_GEOJSON.name} written '
-          f'({INTERSECTIONS_GEOJSON.stat().st_size / 1048576.0:.1f} MB), '
-          f'{len(collection["walk_layers"])} walks on every corner')
+    def check(path):
+        check_walk_file(written, read_json(path))
+
+    def report(path):
+        size = path.stat().st_size / 1048576.0
+        return (f'{path.name} written ({size:.1f} MB), '
+                f'{len(written["walk_layers"])} walks on every corner')
+
+    write_checked(written, INTERSECTIONS_GEOJSON, check, report=report)
 
 
 def summarise(layers, plan):
@@ -3195,9 +3472,22 @@ def summarise(layers, plan):
 
 
 # --- Putting step 3 together ----------------------------------------------
+#
+# The order this step runs its own parts in: read, put the destinations onto the
+# network, search once per layer that needs a search of its own, work out the
+# eight that are a minimum of others, check all of it, then write. Every one of
+# those is a function above that does its own work and its own checking; what is
+# here is the order and the running commentary.
 
 def build_walk_times():
-    '''Read the five files, measure every layer, check them, write them out.'''
+    '''Step 3: read what step 2 wrote, measure every layer, write the two files.
+
+    Five files go in: step 2's three, and the city's street and outline files,
+    the first for the network to walk and the second for the outlines. Two come
+    out: the corner file, with its walks written onto every corner, and the file
+    of 34 outlines. In between, every layer is measured and every measurement is
+    checked. This is what `python site/build.py walks` calls.
+    '''
     started = time.perf_counter()
 
     dots, corner_features = read_dots()
@@ -3239,8 +3529,8 @@ def build_walk_times():
     by_id = {layer['id']: layer for layer in plan}
     layers = {}
 
-    # The fourteen layers that need a search of their own: one Dijkstra per
-    # layer, spreading out from every corner its destinations arrive at.
+    # The fourteen layers that need a search of their own: one search per
+    # layer, spreading out from every corner its own destinations arrive at.
     for layer in plan:
         if layer['parents']:
             continue
@@ -3286,15 +3576,19 @@ def build_walk_times():
 
 # ======== Part 4: running the build =======================================
 #
-# The one command, and the order it runs the steps in. Each step is a function
-# above that does its own work and its own checking; nothing is shared between
-# them here except the order.
+# The command from the top of this file. It works out which steps were asked
+# for, runs them in the only order that works, and runs all three when none was
+# named. Each step does its own work and its own checking; nothing is shared
+# between them here except the order and the clock that times the whole run.
 
 STEPS = ('check', 'geojson', 'walks')
 
 
 def main():
-    """Run the steps asked for, in the order they have to run in."""
+    """Run the steps asked for, in the order they have to run in.
+
+    Naming no step means all three; naming one runs only that one.
+    """
     parser = argparse.ArgumentParser(
         prog='build.py',
         description='Build the four GeoJSON files the page loads.')

@@ -2,3 +2,4 @@
 /reference
 __pycache__/
 *.pyc
+/site/data/*.new

@@ -157,9 +157,11 @@ node site/app.js
 
 Naming a step runs only that one, always in the order above: `python site/build.py walks` is enough after changing a walking speed, a park band or a size (about a minute), because step 2's files are unchanged. Step 3 reads the intersections file step 2 writes, so a step 2 change needs `python site/build.py geojson` and then `walks`.
 
+The build's checks are `assert` statements, so it refuses to start under `python -O` or with `PYTHONOPTIMIZE` set: a run that cannot check itself writes nothing.
+
 ### Checks
 
-`site/build.py` checks each file it writes before that file takes the place of the one the page loads: every output is written to a temporary name, read back off the disk, checked as it was written, and only then moved into place, so a failed run leaves the page with the files it already had.
+`site/build.py` checks each file it writes before that file takes the place of the one the page loads: every output is written to a temporary name, read back off the disk, checked as it was written, and only then moved into place; a check that fails deletes the temporary file, so a failed run leaves the folder exactly as it found it.
 
 - Every question the page's filters can ask has a layer of its own (22 layers: 20 green-space combinations and 2 metro ones), so the page can never ask for something the build did not measure.
 - A corner is either given a walk or marked with the reason it has none. The build writes four statements (outside the 34 outlines, no network link, no reachable destination, unreachable); `check_statements()` checks the first two dot by dot and by count. On this run 0 corners were outside and 0 had no link, in all 22 layers.
