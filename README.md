@@ -203,3 +203,17 @@ The one thing I want to fix with my code is simplifying it. It works and I can "
 _For context, the map was open on the metro-only layer._
 
 "Map (based on title) talks about looking at walking distance to green spaces. From looking at it in 5 seconds, I cannot tell what the different colours mean."
+
+## A3 feature: Address Lookup
+For A3, I will add the ability to lookup addresses in the city, so that my reader can upon lookup, see the 3 closest parks and 2 closest metro stations with a drawn walking path on the map.
+It has depth because compared to the existing point data, it live computes distances for a new feature, which the MVP version didn't.
+I will know it works when I'm able to either click on the map or lookup an address, and it shows me the closest metro stations and parks with a line drawn on the streets.
+
+My edge case is when the address is either not recognized, or no calculations for walking distances can be calculated map.
+
+Test 1. I enter an address in the search bar.
+  Expected: It selects it and maps the closest metro/parks(1 for each type/size) and it maps the walking path.
+Test 2. I choose the "selector mode" and I click somewhere on the map.
+  Expected: It identifies the closest physical address, and maps the closest metro/parks and walking paths.
+Test 3. I choose an address which isn't on the island of Montreal/out of bounds.
+  Expected: An error message lets me know the address was not found/out of bounds.
