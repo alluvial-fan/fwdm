@@ -214,40 +214,8 @@ I will know it works when I'm able to either click on the map or lookup an addre
 My edge case is when the address is either not recognized, or no calculations for walking distances can be calculated map.
 
 Test 1. I enter an address in the search bar.
-- Expected: It selects it and maps the closest metro/parks(1 for each type/size) and it maps the walking path.
+  Expected: It selects it and maps the closest metro/parks(1 for each type/size) and it maps the walking path.
 Test 2. I choose the "selector mode" and I click somewhere on the map.
-- Expected: It identifies the closest physical address, and maps the closest metro/parks and walking paths.
+  Expected: It identifies the closest physical address, and maps the closest metro/parks and walking paths.
 Test 3. I choose an address which isn't on the island of Montreal/out of bounds.
-- Expected: An error message lets me know the address was not found/out of bounds.
-
-### What was built
-
-A box above the filters, and the map itself as the second way in. Type `4250 Rue Sherbrooke Est`, or click anywhere in one of the 19 boroughs, and the page places the address on the city's own street numbers, searches the street network from there, and draws the way to the nearest three green spaces and two nearest stations, with the five walks listed under the box shortest first.
-
-The search is not precomputed, which is the depth this feature adds: the filters read a walk time that step 3 measured for every corner before anybody visited the page, and an address has no such answer until it is typed. So step 3 also writes `site/data/walk_graph.json` - the network itself, the street names and their civic ranges - and `app.js` runs Dijkstra's search over it in the browser, seeded from both ends of the link the address sits on. One search answers both families, and 23 whole-network searches take about two and a half seconds on this machine, so a single lookup is tens of milliseconds.
-
-The place the address lands on is the city's, not a web service's: the number is interpolated along the troncon whose range holds it, on the side of the street that range belongs to, using the troncon's own direction so that 4250 cannot land at the other end of its block. `Photon` is asked one thing only - how Montreal spells a street whose name the city's file does not have - and every coordinate it returns is discarded.
-
-The answer is meant to be looked at and not only read. The five places wear their names on the map, each park is drawn as the city drew it - the parks layer answers to a menu that may well be left on n/a, so the answer brings its own outline, styled apart from the filter's and keeping the park's own card on click - and the map is fitted to the address and its five walks with a 40 px margin. The fit stops at zoom 16, so a click in a dense block gives the neighbourhood rather than a rooftop, and a walk that runs nine kilometres out to Lachine is shown whole.
-
-The point the answer is measured from wears a pointer of its own: a translucent halo with a navy core inside it, labelled `You are here`, both circles under and over the five lines so the point they all leave from is still findable under them. The core keeps the address in its popup, and the label says in words what a shape alone would leave to be interpreted. Walks are said the way a reader would say them - `548 m`, `1.4 km`, `9 km` - because a list of four-figure distances in metres is a list to be converted before it means anything.
-
-The answer and the filters take turns. Both answer the same question, what is within a walk of somewhere, and a map carrying the coloured dots of one and the five named walks of the other reads as one answer contradicting itself. So asking about an address puts the five menus back to n/a and says so under its walks, and setting any menu takes the answer off the map and says so in the box the address was typed into, with what to do to bring it back. Putting the filters back to n/a leaves nothing drawn at all, and the box says the map is empty rather than letting the note about filters stand over filters that show nothing. The menus are put back rather than the drawing being hidden behind them, because everywhere else on this page the menus are the only record of what is asked: a menu left saying `Within 15 min` over a map that draws no dots would be a control lying about the map under it.
-
-### How to try it
-
-`python -m http.server 8000 --directory site`, then open `http://localhost:8000` and type an address. These four cover the cases worth seeing:
-
-| Typed | What should happen |
-| --- | --- |
-| `4250 Rue Sherbrooke Est` | Jardin Botanique 22 m, Olympic Park 125 m, the Golf municipal 223 m, Pie-IX metro 548 m, Joliette metro 1.4 km - five lines drawn down the streets |
-| `1435 Rue Saint-Denis` | Berri-UQAM under a minute (34 m), Pasteur Plaza 15 m, then Émilie-Gamelin and the Grande Bibliothèque |
-| `4250 rue Sherbrook est` | the same answer, with the popup saying the name was re-spelt by Photon |
-| `1000 Boulevard Curé-Labelle` | a refusal: the street is Laval's, and this map measures nothing there |
-
-### What it cannot do
-
-- A number the city's file does not hold is refused, not guessed: Pie-IX has no ranges at all between 2727 and 4101, so a real 3600 Pie-IX cannot be placed and the page says so. 14,449 troncons carry no numbers.
-- 59 green spaces have no street within 100 m (Grand parc de l'Est, Bois-de-Saraguay), and four stations - Cartier, De la Concorde, Montmorency, Longueuil-Université-de-Sherbrooke - have no gateway, all four being off the island. A lookup near one of them lists what it could reach, and says how many it could not.
-- `Rue Sherbrooke` with no Est or Ouest is an exact match for a real, short street in Lachine, not a guess between the two halves of the long one - so the page prints the street it chose. The nearest metro from Lachine really is Angrignon, 9 km away.
-- A number is placed on the straight line between its troncon's two ends, and the street may bend between them: on the worst of the twenty test addresses the point stood 4.1 m off the pavement, and the snap takes it back before any walking is counted.
+  Expected: An error message lets me know the address was not found/out of bounds.
