@@ -223,14 +223,14 @@ Test 3. I choose an address which isn't on the island of Montreal/out of bounds.
 ## Lab 7
 
 Test 1. I enter an address in the search bar.
-  Expected: It selects it and maps the closest metro/parks(1 for each type/size) and it maps the walking path.
-  What actually happens: It selects that point, draws the paths to the closest 3 parks and metro stations with information in the sidebar on how long it takes to get to each of these points.
+- Expected: It selects it and maps the closest metro/parks(1 for each type/size) and it maps the walking path.
+- What actually happens: It selects that point, draws the paths to the closest 3 parks and metro stations with information in the sidebar on how long it takes to get to each of these points.
 Test 2. I choose the "selector mode" and I click somewhere on the map.
-  Expected: It identifies the closest physical address, and maps the closest metro/parks and walking paths.
-  What actually happens: There is no selector mode, but you can just click anywhere and it will calculate the closest parks and points based on where you clicked. It does not tell you the closest address to where you are since it does not need that.
+- Expected: It identifies the closest physical address, and maps the closest metro/parks and walking paths.
+- What actually happens: There is no selector mode, but you can just click anywhere and it will calculate the closest parks and points based on where you clicked. It does not tell you the closest address to where you are since it does not need that.
 Test 3. I choose an address which isn't on the island of Montreal/out of bounds.
-  Expected: An error message lets me know the address was not found/out of bounds.
-  What actually happens: I get this error message: That spot is outside the 19 boroughs this map covers, so the page measures nothing there.
+- Expected: An error message lets me know the address was not found/out of bounds.
+- What actually happens: I get this error message: That spot is outside the 19 boroughs this map covers, so the page measures nothing there.
 
 ## Pre-flight report (Lab 7)
 | Check | Result | What I did |
