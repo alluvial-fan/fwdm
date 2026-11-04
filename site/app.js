@@ -32,14 +32,84 @@ function buildMap() {
   }).addTo(map);
 }
 
+// The column on a phone, where it has no room beside the map: the button in the
+// bar folds it away and the same button brings it back. Folding it changes how
+// much of the window the map fills, and Leaflet measures its box once and keeps
+// what it found, so the map is told to measure again - without that it goes on
+// drawing into the box it had while the column was open, and the height it
+// gained is left blank grey.
+//
+// Above 760px the column is always shown, in the place style.css keeps for it: a
+// fold made on a phone must not follow the reader to a wide window, where the
+// button that would undo it is not there. Nothing here runs under node, which has
+// no window to fold.
+function wirePanelToggle() {
+  const button = document.getElementById('panel-toggle');
+  if (!button) { return; }
+
+  function measure() { if (map) { map.invalidateSize(); } }
+
+  function fold(want) {
+    document.body.classList.toggle('folded', want);
+    button.setAttribute('aria-expanded', want ? 'false' : 'true');
+    measure();
+  }
+
+  button.addEventListener('click', function () {
+    fold(!document.body.classList.contains('folded'));
+  });
+
+  // A window resized, or a phone turned, moves the seam between the column and
+  // the map as well, and crossing 760px changes which of the two is folded.
+  let waiting = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(waiting);
+    waiting = setTimeout(function () {
+      if (window.innerWidth > 760) {
+        fold(false);
+      } else {
+        measure();
+      }
+    }, 150);
+  });
+}
+
+// Open the column if it was folded away, and tell the map it has shrunk back. An
+// answer is written in the column, so a reader who folded it away to see the map
+// and then asked about an address would otherwise be printing five walks into a
+// box nobody can see. A page with no document - the checks under node - has no
+// column to open and nothing to do.
+function showPanel() {
+  if (typeof document === 'undefined' || !document.body ||
+      !document.body.classList ||
+      !document.body.classList.contains('folded')) {
+    return;
+  }
+  document.body.classList.remove('folded');
+  const button = document.getElementById('panel-toggle');
+  if (button) { button.setAttribute('aria-expanded', 'true'); }
+  if (map) { map.invalidateSize(); }
+}
+
 // Fetch one of the data files and read it as JSON. A reply that is not ok stops
 // here, naming the address that failed, rather than handing a page of HTML back
-// as though it were shapes.
+// as though it were shapes. The file's name goes in front of whatever went
+// wrong, because a fetch that never reaches the server rejects with nothing but
+// "Failed to fetch", and a body that is not JSON goes on about a token: neither
+// says which of the four files did not come, and the line under the title has to
+// say it.
 function loadGeojson(url) {
+  const name = url.replace(/^data\//, '');
   return fetch(url)
     .then(function (response) {
-      if (!response.ok) { throw new Error('HTTP ' + response.status + ' loading ' + url); }
+      if (!response.ok) { throw new Error(name + ' (HTTP ' + response.status + ')'); }
       return response.json();
+    })
+    .catch(function (error) {
+      // The refusal above already names the file; only a failure arriving with no
+      // name to it is given one here.
+      if (error.message.indexOf(name) === 0) { throw error; }
+      throw new Error(name + ' (' + error.message + ')');
     });
 }
 
@@ -165,6 +235,9 @@ function focusBounds(windows) {
 // walk, so nothing here holds a value for long.
 function start() {
   buildMap();
+  // The fold is wired before the files come, so a phone that folds the column
+  // while the page is loading gets a map that already fills the window.
+  wirePanelToggle();
   Promise.all([
     loadGeojson('data/city_parks.geojson'),
     loadGeojson('data/intersections.geojson'),
@@ -281,8 +354,16 @@ function start() {
       wireLookup();
     })
     .catch(function (err) {
-      document.getElementById('status').textContent =
-        'Could not load the GeoJSON files. Open the console (F12) for details.';
+      // The line under the title, and not only the console: a reader without the
+      // console open still has to know that the page is empty because a file did
+      // not come, and which one. The colour tells the failure apart from the load
+      // status it replaces, and the tooltip carries the same words where the bar
+      // is too narrow to show them. The full error, with its stack, stays in the
+      // console.
+      const status = document.getElementById('status');
+      status.textContent = 'Could not load ' + err.message;
+      status.title = err.message;
+      status.classList.add('failed');
       console.error(err);
     });
 }
@@ -307,10 +388,12 @@ const EDGE_STYLE = { color: '#1F2D5A', weight: 1.5, opacity: 0.8,
 
 // What the page is drawn from, once the four files have loaded: the
 // intersections features, the two files a destination is named from, the park
-// and metro layers the filters show and hide, the dots' group, and the mask.
+// and metro layers the filters show and hide, the dots' group, the mask, and the
+// token that tells the draw now being built from the one it replaced.
 const page = { dots: null, metro: null, parks: null, parkLayer: null,
                metros: null, walkGroup: null, mask: null, graph: null,
-               lookupGroup: null, rings: null, answered: false, cleared: false };
+               lookupGroup: null, rings: null, answered: false, cleared: false,
+               drawToken: 0 };
 
 // The build's own answers, read from the intersections file: the layers it
 // measured, each layer's walk in a corner's list, its counts per time, the
@@ -589,38 +672,67 @@ function newCounts() {
   };
 }
 
+// How many corners are turned into dots before the browser is given the page
+// back. A question that colours nineteen thousand corners builds nineteen
+// thousand markers, each with its own popup, and building them in one loop held
+// the main thread for a fifth of a second: long enough for the browser to report
+// one long task, and long enough for a tap to be counted late. The dots are the
+// same dots - the work did not change - but it is done in slices now, so a slice
+// is short and the page answers between one slice and the next.
+const SLICE_CORNERS = 2000;
+
+// Run a slice on the next frame, or now when there are no frames to wait for.
+// Under node there is no page to keep responsive and no drawing to do, so the
+// slices run back to back and a check sees the finished draw the moment redraw()
+// returns, exactly as it did when the loop was whole.
+function nextFrame(run) {
+  if (typeof requestAnimationFrame === 'function') { requestAnimationFrame(run); }
+  else { run(); }
+}
+
 // The corners the filters pass, drawn at their own positions with their own
 // popups, plus the tally the legend is built from. Only corners the build
-// measured, inside the 19, are drawn at all.
-function drawDots(wanted, counts) {
+// measured, inside the 19, are drawn at all. The last slice calls finished, so
+// whatever reads the whole tally waits for it; a token that no longer matches
+// page.drawToken means a new question was asked and this draw is the old one.
+function drawDots(wanted, counts, token, finished) {
   const features = page.dots.features;
   const ids = walk.corners;
-  for (let at = 0; at < ids.length; at += 1) {
-    const number = ids[at];
-    const look = lookOf(number, wanted);
-    if (look.kind === 'nothing') {
-      counts.gaps[look.gap] = (counts.gaps[look.gap] || 0) + 1;
-      continue;
-    }
-    if (look.kind === 'beyond') { counts.beyond += 1; continue; }
+  let at = 0;
 
-    const feature = features[number];
-    const marker = L.circleMarker(
-      [feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
-        radius: WALK_RADII[feature.properties.degree] || WALK_RADII.other,
-        color: WALK_RING, weight: 1, fillColor: look.colour, fillOpacity: 0.95
-      });
-    // Bound as a function, so the markup is built only when a popup opens.
-    marker.bindPopup(function () { return cornerPopup(number, look); });
-    page.walkGroup.addLayer(marker);
+  function slice() {
+    if (token !== page.drawToken) { return; }
+    const stop = Math.min(at + SLICE_CORNERS, ids.length);
+    for (; at < stop; at += 1) {
+      const number = ids[at];
+      const look = lookOf(number, wanted);
+      if (look.kind === 'nothing') {
+        counts.gaps[look.gap] = (counts.gaps[look.gap] || 0) + 1;
+        continue;
+      }
+      if (look.kind === 'beyond') { counts.beyond += 1; continue; }
 
-    counts.drawn += 1;
-    if (wanted.length === 2) {
-      counts.cells[look.walks.park.shade][look.walks.metro.shade] += 1;
-    } else {
-      counts[wanted[0]][look.walks[wanted[0]].shade] += 1;
+      const feature = features[number];
+      const marker = L.circleMarker(
+        [feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
+          radius: WALK_RADII[feature.properties.degree] || WALK_RADII.other,
+          color: WALK_RING, weight: 1, fillColor: look.colour, fillOpacity: 0.95
+        });
+      // Bound as a function, so the markup is built only when a popup opens.
+      marker.bindPopup(function () { return cornerPopup(number, look); });
+      page.walkGroup.addLayer(marker);
+
+      counts.drawn += 1;
+      if (wanted.length === 2) {
+        counts.cells[look.walks.park.shade][look.walks.metro.shade] += 1;
+      } else {
+        counts[wanted[0]][look.walks[wanted[0]].shade] += 1;
+      }
     }
+    if (at < ids.length) { nextFrame(slice); } else { finished(); }
   }
+
+  slice();
 }
 
 // --- Which features are drawn ---------------------------------------------
@@ -638,25 +750,39 @@ function showFeature(layer, asked) {
 // Everything a filter changes goes through here: the dots, the path order and
 // the legend, from one tally. Order: borough edges at the back, then parks,
 // dots, the mask, and the metro points on top.
+//
+// The dots arrive in slices, so everything that reads the finished tally waits
+// for the last one: the stack order, the legend, and the count the build is
+// checked against. A question asked while the last one is still being built takes
+// over - page.drawToken is what stops the old draw's slices, whose dots have
+// already been cleared off the map.
 function redraw() {
   const wanted = Object.keys(walk.asked);
   const counts = newCounts();
   showFeature(page.parkLayer, walk.asked.park);
   showFeature(page.metros, walk.asked.metro);
   if (page.walkGroup) { page.walkGroup.clearLayers(); }
-  if (wanted.length) { drawDots(wanted, counts); }
-  if (page.metros && map.hasLayer(page.metros)) { page.metros.bringToFront(); }
-  if (page.mask) { page.mask.bringToFront(); }
-  // The lookup's lines go over the mask as well: they are drawn from an address
-  // the reader chose, and a walk that ends at a dot must not pass under a dot.
-  if (page.lookupGroup) {
-    page.lookupGroup.eachLayer(function (layer) {
-      if (layer.bringToFront) { layer.bringToFront(); }
-    });
+  page.drawToken += 1;
+  const token = page.drawToken;
+
+  function settle() {
+    if (token !== page.drawToken) { return; }
+    if (page.metros && map.hasLayer(page.metros)) { page.metros.bringToFront(); }
+    if (page.mask) { page.mask.bringToFront(); }
+    // The lookup's lines go over the mask as well: they are drawn from an address
+    // the reader chose, and a walk that ends at a dot must not pass under a dot.
+    if (page.lookupGroup) {
+      page.lookupGroup.eachLayer(function (layer) {
+        if (layer.bringToFront) { layer.bringToFront(); }
+      });
+    }
+    if (walk.edges) { walk.edges.bringToBack(); }
+    drawLegend(counts, wanted);
+    checkAgainstBuild(counts, wanted);
   }
-  if (walk.edges) { walk.edges.bringToBack(); }
-  drawLegend(counts, wanted);
-  checkAgainstBuild(counts, wanted);
+
+  if (wanted.length) { drawDots(wanted, counts, token, settle); }
+  else { settle(); }
 }
 
 // What a click on a coloured dot says: the corner's name, its borough, then a
@@ -1802,6 +1928,10 @@ function listOf(words) {
 // metres from the pavement to the park's edge or the station, which is the stub
 // the build measured and the search counted as covered.
 function drawLookup(point, found, label, how) {
+  // A phone's column is where the answer is written, so it is opened before the
+  // map is fitted to the answer: the fit is measured against the map as it will
+  // be, not as it was while the column was folded away.
+  showPanel();
   // An answer and a filter are not drawn together: an answer takes the map from
   // the filters, and says so under its five walks when it had to. See clearAnswer.
   const cleared = resetFilters();

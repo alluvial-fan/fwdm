@@ -26,6 +26,11 @@ body { margin: 0; font-family: Arial, Helvetica, sans-serif; }
    is a sentence, and the bar must not push the title aside to hold it. */
 #status { margin: 0 0 0 auto; max-width: 42ch; text-align: right;
           font-size: 13px; color: #C7D3EE; }
+/* A status that is a failure rather than a step: a quiet red, so a file that did
+   not come is not read as the load status it replaces. The line is one sentence
+   of the same measure as the rest, because it names the file, and the bar must
+   not grow to hold it. */
+#status.failed { color: #FFC9C9; }
 /* The source, as its mark rather than a word: white on the bar's blue, dimmed
    until pointed at or reached by the keyboard, and filled from the bar's own
    colour so the mark and the title cannot drift apart. The link is labelled in
@@ -34,10 +39,31 @@ body { margin: 0; font-family: Arial, Helvetica, sans-serif; }
              color: #fff; opacity: 0.85; }
 .bar .repo:hover, .bar .repo:focus { opacity: 1; }
 .bar .repo svg { display: block; width: 20px; height: 20px; fill: currentColor; }
+/* The column's fold, which only a phone needs. The button sits in the bar, above
+   the column it folds, so folding the column cannot hide the way to open it
+   again. Above 760px it is not drawn at all - the column has a place of its own
+   beside the map there, and nothing to fold - so the rule that shows it is inside
+   the media query below, beside the fold itself. */
+#panel-toggle { display: none; }
+#panel-toggle:focus-visible { outline: 2px solid #9FC3FF; outline-offset: 2px; }
 @media (max-width: 760px) {
   .page { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr;
           grid-template-areas: 'bar' 'panel' 'map'; }
   .panel { max-height: 45vh; border-right: 0; border-bottom: 1px solid #47568A; }
+  /* Drawn here and nowhere else: this is the one width at which the column stands
+     on top of the map instead of beside it, and so the one width at which a
+     reader may want it out of the way. */
+  #panel-toggle { display: inline-flex; align-items: center; padding: 3px 10px;
+                  font: inherit; font-size: 13px; cursor: pointer;
+                  color: #fff; background: transparent;
+                  border: 1px solid #C7D3EE; border-radius: 3px; }
+  #panel-toggle:hover { background: #2E3F73; }
+  /* Folded: the column is gone and the map has the window. This rule is inside
+     the media query on purpose - a window widened while the column is folded has
+     to give the column back, and a fold left standing at a width with no button
+     to undo it would be a column nobody can reach. app.js takes the fold off as
+     well, then tells the map to measure its new box. */
+  body.folded .panel { display: none; }
 }
 
 /* The two filters: two blocks one above the other, each one question - how

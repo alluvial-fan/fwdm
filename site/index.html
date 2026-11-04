@@ -11,12 +11,21 @@
 </head>
 <body>
   <div class='page'>
-    <!-- The bar across the top: the page's name, and at its far end what the
-         page is doing and where it comes from - the load status, whose tooltip
-         carries the counts, and the link to the source. -->
+    <!-- The bar across the top: the page's name, the button that folds the column
+         away on a phone, and at its far end what the page is doing and where it
+         comes from - the load status, whose tooltip carries the counts, and the
+         link to the source. -->
     <header class='bar'>
       <h1>Walking distance to Montreal's parks and metro stations</h1>
-      <p id='status'>Loading data...</p>
+      <!-- On a phone the column stands on top of the map and takes 45% of the
+           window, so it folds away: this is the one thing that brings it back,
+           and aria-expanded says which way it is. style.css draws it at no other
+           width, where the column has a place of its own. -->
+      <button id='panel-toggle' type='button' aria-expanded='true'
+              aria-controls='panel'>Filters</button>
+      <!-- What the page is doing, said aloud as it changes: a page that has
+           stopped loading has to say so where it is not being looked at. -->
+      <p id='status' aria-live='polite'>Loading data...</p>
       <!-- The source, as its mark alone. The link is labelled here because
            nothing in it is text, and the mark is drawn in the bar's own colour
            by style.css rather than carrying a fill of its own. -->
@@ -29,8 +38,10 @@
     <!-- The column down the left of the map: the story, the two filters, the
          legend and the caveats. The bar above it carries the title, the status
          and the link to the source, and the map takes whatever of the window is
-         left. -->
-    <aside class='panel'>
+         left. It is the page's main landmark rather than an aside, because this
+         is where the page asks its questions and writes its answers, and the map
+         shows what it was asked. The id is what the fold's aria-controls names. -->
+    <main class='panel' id='panel'>
       <!-- The story: who this map is for, why it matters, and the one thing they
            can do. Kept to three sentences so a stranger reading only the page
            knows what the map is for before they touch a filter. -->
@@ -68,23 +79,28 @@
            first visit opens with nothing asked and nothing drawn. A reload is the
            other case: the browser can bring a choice back, and the page then
            draws the question its menus hold rather than a blank map under a menu
-           that says otherwise. -->
+           that says otherwise.
+           Each menu names itself with an aria-label: the word above it is the
+           box's heading, shared by every menu in the box, and a heading is not a
+           label, so a menu left to itself reaches a screen reader as "combo box"
+           with no question attached. The name repeats the heading and says which
+           of the box's questions this one is. -->
       <div id='filters'>
         <section class='filter' id='park-filter'>
           <span class='switch'>Green spaces</span>
-          <select id='park-minutes'>
+          <select id='park-minutes' aria-label='Green space: walking time'>
             <option value='none'>n/a</option>
             <option value='5'>Within 5 min</option>
             <option value='15'>Within 15 min</option>
             <option value='30'>Within 30 min</option>
           </select>
-          <select id='park-kind'>
+          <select id='park-kind' aria-label='Green space: type'>
             <option value='any'>Any type (n/a)</option>
             <option value='city'>City parks</option>
             <option value='borough'>Borough parks</option>
             <option value='other'>Other green spaces</option>
           </select>
-          <select id='park-band'>
+          <select id='park-band' aria-label='Green space: size'>
             <option value='any'>Any size</option>
             <option value='0to1'>Under 1 ha</option>
             <option value='1to5'>1 to 5 ha</option>
@@ -94,13 +110,13 @@
         </section>
         <section class='filter' id='metro-filter'>
           <span class='switch'>Metro stations</span>
-          <select id='metro-minutes'>
+          <select id='metro-minutes' aria-label='Metro: walking time'>
             <option value='none'>n/a</option>
             <option value='5'>Within 5 min</option>
             <option value='15'>Within 15 min</option>
             <option value='30'>Within 30 min</option>
           </select>
-          <select id='metro-kind'>
+          <select id='metro-kind' aria-label='Metro: entrance type'>
             <option value='any'>Any entrance</option>
             <option value='stepfree'>Accessible only</option>
           </select>
@@ -135,7 +151,7 @@
         <p>Walking calculations are done by calculating distance using the length of streets, corner to corner, and is measured at 1.35m/s (4.9km/h).</p>
         <p>Because of this, walking distances should be taken with a grain of salt, as it doesn't account for shortcuts (e.g. walking through a park or public space), or for construction and stop lights.</p>
       </details>
-    </aside>
+    </main>
     <div id='map'></div>
   </div>
   <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>

@@ -219,3 +219,27 @@ Test 2. I choose the "selector mode" and I click somewhere on the map.
   Expected: It identifies the closest physical address, and maps the closest metro/parks and walking paths.
 Test 3. I choose an address which isn't on the island of Montreal/out of bounds.
   Expected: An error message lets me know the address was not found/out of bounds.
+
+## Lab 7
+
+Test 1. I enter an address in the search bar.
+  Expected: It selects it and maps the closest metro/parks(1 for each type/size) and it maps the walking path.
+  What actually happens: It selects that point, draws the paths to the closest 3 parks and metro stations with information in the sidebar on how long it takes to get to each of these points.
+Test 2. I choose the "selector mode" and I click somewhere on the map.
+  Expected: It identifies the closest physical address, and maps the closest metro/parks and walking paths.
+  What actually happens: There is no selector mode, but you can just click anywhere and it will calculate the closest parks and points based on where you clicked. It does not tell you the closest address to where you are since it does not need that.
+Test 3. I choose an address which isn't on the island of Montreal/out of bounds.
+  Expected: An error message lets me know the address was not found/out of bounds.
+  What actually happens: I get this error message: That spot is outside the 19 boroughs this map covers, so the page measures nothing there.
+
+## Pre-flight report (Lab 7)
+| Check | Result | What I did |
+| --- | --- | --- |
+| 1. Cold start | Pass. | n/a |
+| 2. Read every label | Fail: I had the following errors: `app.js:835 [Violation] 'change' handler took 183ms` | Currently every street corner is it's own marker and the page was loading all of them so the handler didn't return until all 19k were drawn. Changed the dot drawing behavior so dots appear 2k at a time and handler returns immediately. |
+| 3. Ask twice | Pass. Works. | n/a |
+| 4. The edge | Pass. Message appears saying "That spot is outside the 19 boroughs this map covers, so the page measures nothing there." |  |
+| 5. The data does not come | Pass/Fail. | Nothing happened and an error message appeared but it was ambiguous as to what was failing. Made it so that the error message is specific about what is missing. |
+| 6. On a phone (size view and my phone) | Fail. Works but the sidebar which on mobile is at the top doesn't hide and takes most of the screen | Made it so that when you're on phone mode (when the sidebar becomes the top bar), it ads a "Filters" button that toggles view on the filters. |
+| 7. Mouse in my pocket | Pass. | n/a |
+| 8. Accessibility audit | Fail. | Added accessible names to the filters, made the left bar the page's main landmark so it stops complaining we don't have a main landmark. |
