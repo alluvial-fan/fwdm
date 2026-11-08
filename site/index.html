@@ -3,6 +3,11 @@
 <head>
   <meta charset='utf-8'>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <!-- The browser's own chrome takes the window's colour, so a phone's address bar and
+       the page's header read as one surface rather than two. It is the column's sage,
+       not white: a white address bar over a sage page is the brightest edge on the
+       screen. -->
+  <meta name='theme-color' content='#BFC2B4'>
   <title>Montreal Feature Distance Map</title>
   <!-- What the page is, for a search result or a link preview: the one sentence
        that is read where the page itself is not. Kept under 160 characters,
@@ -64,10 +69,18 @@
 
       <!-- The address lookup: the one question this page cannot answer from a
            file, because the answer depends on what the reader types. A street
-           number and a street, or a click on the map, and the page searches the
+           number and a street, or a point on the map, and the page searches the
            street network itself for the nearest three green spaces and two
            stations, drawing the way it found to each. The box above the filters
-           because it is the other way to ask the same kind of question. -->
+           because it is the other way to ask the same kind of question.
+           The two ways in are not the same kind of act. Words are typed and then
+           submitted, so the button in the row submits them; a point on the map has
+           to be aimed at, and a click meant for nothing would still take the filters
+           off the map - so the map is armed by a button of its own first, and the
+           click that answers puts the arm down. The hint under it is the line that
+           says what the box wants next, and it carries a live region of its own:
+           arming the map is announced there rather than in the status line, which is
+           the bar's report on the files and nothing else. -->
       <section class='filter' id='lookup'>
         <span class='switch'>Address lookup</span>
         <form id='lookup-form'>
@@ -76,7 +89,9 @@
                  aria-label='Street number and street'>
           <button type='submit'>Walk it</button>
         </form>
-        <p class='hint'>Street number first, then the street. Or click the map.</p>
+        <button id='lookup-arm' type='button' aria-pressed='false'>Pick on map</button>
+        <p class='hint' id='lookup-hint' aria-live='polite'>Street number, then the
+          street. Or press Pick on map, then click the map.</p>
         <div id='lookup-body'></div>
       </section>
 
@@ -91,27 +106,34 @@
            other case: the browser can bring a choice back, and the page then
            draws the question its menus hold rather than a blank map under a menu
            that says otherwise.
-           Each menu names itself with an aria-label: the word above it is the
-           box's heading, shared by every menu in the box, and a heading is not a
-           label, so a menu left to itself reaches a screen reader as "combo box"
-           with no question attached. The name repeats the heading and says which
-           of the box's questions this one is. -->
+           Each menu is named twice over and neither name is wasted: the box is a
+           group labelled by its heading, so a reader is told "Green spaces" once on
+           stepping into it, and each menu then carries a visible label of its own -
+           Time, Type, Size - in the narrow column those labels share. A menu left to
+           itself reaches a screen reader as "combo box" with no question attached,
+           which is what the labels are for; the heading used to be repeated into
+           every menu's aria-label, and a labelled group is the cheaper way to say it
+           once. -->
       <div id='filters'>
-        <section class='filter' id='park-filter'>
-          <span class='switch'>Green spaces</span>
-          <select id='park-minutes' aria-label='Green space: walking time'>
+        <section class='filter' id='park-filter' role='group'
+                 aria-labelledby='park-head'>
+          <span class='switch' id='park-head'>Green spaces</span>
+          <label class='name' for='park-minutes'>Time</label>
+          <select id='park-minutes'>
             <option value='none'>n/a</option>
             <option value='5'>Within 5 min</option>
             <option value='15'>Within 15 min</option>
             <option value='30'>Within 30 min</option>
           </select>
-          <select id='park-kind' aria-label='Green space: type'>
+          <label class='name' for='park-kind'>Type</label>
+          <select id='park-kind'>
             <option value='any'>Any type (n/a)</option>
             <option value='city'>City parks</option>
             <option value='borough'>Borough parks</option>
             <option value='other'>Other green spaces</option>
           </select>
-          <select id='park-band' aria-label='Green space: size'>
+          <label class='name' for='park-band'>Size</label>
+          <select id='park-band'>
             <option value='any'>Any size</option>
             <option value='0to1'>Under 1 ha</option>
             <option value='1to5'>1 to 5 ha</option>
@@ -119,15 +141,18 @@
             <option value='10up'>10 ha or more</option>
           </select>
         </section>
-        <section class='filter' id='metro-filter'>
-          <span class='switch'>Metro stations</span>
-          <select id='metro-minutes' aria-label='Metro: walking time'>
+        <section class='filter' id='metro-filter' role='group'
+                 aria-labelledby='metro-head'>
+          <span class='switch' id='metro-head'>Metro stations</span>
+          <label class='name' for='metro-minutes'>Time</label>
+          <select id='metro-minutes'>
             <option value='none'>n/a</option>
             <option value='5'>Within 5 min</option>
             <option value='15'>Within 15 min</option>
             <option value='30'>Within 30 min</option>
           </select>
-          <select id='metro-kind' aria-label='Metro: entrance type'>
+          <label class='name' for='metro-kind'>Entrance</label>
+          <select id='metro-kind'>
             <option value='any'>Any entrance</option>
             <option value='stepfree'>Accessible only</option>
           </select>

@@ -144,14 +144,17 @@ function escapeHtml(value) {
 
 // Park polygons by the city's TYPO1 kind: four shades of green, darkest for the
 // large parks, paler for pending and unclassified; each has a darker edge, and
-// pending spaces are dashed.
+// pending spaces are dashed. The fill is at 0.4 rather than the 0.55 it wore on the
+// dark page: these greens now sit on pale tiles rather than under a navy column,
+// and at 0.55 the parks came up through the dots the reader is actually asking
+// about. The edges keep their weight, so a park's shape is still read.
 const PARK_STYLE = {
-  'grand_parc': { color: '#0B3D0F', weight: 1, fillColor: '#1B5E20', fillOpacity: 0.55 },
-  'arrondissement': { color: '#1B5E20', weight: 1, fillColor: '#2E7D32', fillOpacity: 0.55 },
-  'autre': { color: '#2E7D32', weight: 1, fillColor: '#66BB6A', fillOpacity: 0.55 },
-  'jardin': { color: '#558B2F', weight: 1, fillColor: '#8BC34A', fillOpacity: 0.55 },
-  'pending': { color: '#4CAF50', weight: 1, dashArray: '4 3', fillColor: '#A5D6A7', fillOpacity: 0.55 },
-  'unknown': { color: '#81C784', weight: 1, fillColor: '#C8E6C9', fillOpacity: 0.55 }
+  'grand_parc': { color: '#0B3D0F', weight: 1, fillColor: '#1B5E20', fillOpacity: 0.4 },
+  'arrondissement': { color: '#1B5E20', weight: 1, fillColor: '#2E7D32', fillOpacity: 0.4 },
+  'autre': { color: '#2E7D32', weight: 1, fillColor: '#66BB6A', fillOpacity: 0.4 },
+  'jardin': { color: '#558B2F', weight: 1, fillColor: '#8BC34A', fillOpacity: 0.4 },
+  'pending': { color: '#4CAF50', weight: 1, dashArray: '4 3', fillColor: '#A5D6A7', fillOpacity: 0.4 },
+  'unknown': { color: '#81C784', weight: 1, fillColor: '#C8E6C9', fillOpacity: 0.4 }
 };
 
 // How far a park's outline may be thinned as it is drawn, in pixels: Leaflet
@@ -161,7 +164,7 @@ const PARK_STYLE = {
 // eighty points each, all of them in view at the zoom the page opens on, so this
 // thinning is where the page's drawing time goes. Two pixels of a park edge is
 // 27 m at that opening zoom and 0.4 m at the closest one the page offers - the
-// corner of a fenced lawn either way, under a fill of 0.55.
+// corner of a fenced lawn either way, under a fill of 0.4.
 const PARK_SMOOTHING = 2;
 
 // One marker per kind of metro point: stations are the big navy dots, entrances
@@ -189,8 +192,11 @@ function metroPopup(properties) {
 
 // The mask: the world with the 19 drawn boroughs cut out as holes, filled in
 // the grey of the map itself. It dims the linked cities' parks and metro
-// points, and takes their clicks, so nothing outside the 19 opens.
-const MASK_STYLE = { stroke: false, fillColor: '#DDDDDD', fillOpacity: 0.75 };
+// points, and takes their clicks, so nothing outside the 19 opens. The grey is
+// the near-white the map's own box wears in style.css rather than a darker neutral
+// of its own, so the linked cities fade into the page's absent grey instead of
+// reading as a shape laid over the map.
+const MASK_STYLE = { stroke: false, fillColor: '#E5E7EB', fillOpacity: 0.78 };
 
 // The outlines the page draws: the 19 the build flagged from the city's TYPE
 // column. The other 15 are the linked cities, which the mask covers.
@@ -444,17 +450,23 @@ const WALK_RAMPS = {
 const WALK_SHADES = 5;
 const WALK_RING = '#141414';           // the dark edge every coloured dot wears
 const WALK_RADII = { 3: 2.5, 4: 3.5, 5: 4.5, 6: 5.5, 7: 7, 'other': 4 };
-const EDGE_STYLE = { color: '#1F2D5A', weight: 1.5, opacity: 0.8,
-                     dashArray: '6 4', fill: false };
+// The 19 boroughs' own boundaries: a slate line, thin and half-there, dashed so it
+// reads as the edge of what the page measures rather than as another street on the
+// tiles. It was navy at 1.5px, which drew the eye to the least interesting thing in
+// the drawing and competed with the dots it is drawn under.
+const EDGE_STYLE = { color: '#334155', weight: 1, opacity: 0.55,
+                     dashArray: '5 4', fill: false };
 
 // What the page is drawn from: the intersections features, the two files a
 // destination is named from, the park and metro layers the filters show and hide,
 // the dots' group, the mask, the frame the map is held to, and the token that
-// tells the draw now being built from the one it replaced.
+// tells the draw now being built from the one it replaced. `arming` is the one
+// piece of state here that the reader sets by hand rather than by a menu: whether
+// the next click on the map is a question about a point or only a click.
 const page = { dots: null, metro: null, parks: null, parkLayer: null,
                metros: null, walkGroup: null, mask: null, graph: null,
                lookupGroup: null, rings: null, frame: null, answered: false,
-               cleared: false, drawToken: 0 };
+               cleared: false, arming: false, drawToken: 0 };
 
 // The build's own answers, read from the intersections file: the layers it
 // measured, each layer's walk in a corner's list, its counts per time, the
@@ -528,6 +540,25 @@ function mixColour(one, other) {
 
 function count(value) {
   return value === null || value === undefined ? '&hellip;' : String(value);
+}
+
+// Whether a shade wants white print on it or the page's own ink. The park ramp ends
+// in a cream (#F4D2A0) and the metro ramp in a pale blue (#BFE1F2), where white
+// cannot be read, and both begin at a dark colour the ink would disappear into. So
+// the choice is made from the shade rather than fixed in style.css: the three
+// channels are weighted the way the eye weights them - green much the most, blue the
+// least - and the crossover is the point where white and the ink are equally
+// legible, which is a relative luminance of 0.198.
+function inkOn(colour) {
+  const value = parseInt(colour.slice(1), 16);
+  const channels = [16, 8, 0].map(function (shift) {
+    const channel = ((value >> shift) & 255) / 255;
+    return channel <= 0.03928 ? channel / 12.92
+                              : Math.pow((channel + 0.055) / 1.055, 2.4);
+  });
+  const luminance = 0.2126 * channels[0] + 0.7152 * channels[1] +
+    0.0722 * channels[2];
+  return luminance > 0.198 ? '#14181D' : '#FFFFFF';
 }
 
 // --- Reading the walk times off the map's own file ---------------------
@@ -660,9 +691,12 @@ function say(message) {
 
 // Seconds as a reader would say them: minutes under an hour, and hours and
 // minutes beyond it, since a walk of seventy minutes is not helped by being
-// called 70.
+// called 70. A walk inside a minute is given as a bound - "< 1 min" - rather than
+// as the phrase it used to be: three words standing in the middle of a line of
+// figures read as a remark rather than as a measurement, and five walks are read
+// down a column. escapeHtml() sees to the "<", so it reaches the popup as text.
 function formatWalk(seconds) {
-  if (seconds < 60) { return 'under a minute'; }
+  if (seconds < 60) { return '< 1 min'; }
   const minutes = Math.round(seconds / 60);
   if (minutes < 60) { return minutes + ' min'; }
   const hours = Math.floor(minutes / 60);
@@ -964,16 +998,23 @@ function legendTable(counts, wanted) {
 function keyCell(counts, wanted, at, col) {
   if (wanted.length === 2) {
     const here = counts.cells[at][col];
-    const colour = here ? ' style="background:' +
-      mixColour(shadeColour('metro', col), shadeColour('park', at)) + '"' : '';
-    return '<td class="cell' + (here ? '' : ' blank') + '"' + colour + '>' +
-      (here ? count(here) : '&middot;') + '</td>';
+    if (!here) { return '<td class="cell blank">&middot;</td>'; }
+    const mixed = mixColour(shadeColour('metro', col), shadeColour('park', at));
+    return '<td class="cell"' + filled(mixed) + '>' + count(here) + '</td>';
   }
   if (wanted.length === 1 && at === 0) {
-    return '<td class="cell" style="background:' + shadeColour(wanted[0], col) + '">' +
+    const shade = shadeColour(wanted[0], col);
+    return '<td class="cell"' + filled(shade) + '>' +
       count(counts[wanted[0]][col]) + '</td>';
   }
   return '<td class="cell blank"></td>';
+}
+
+// A cell's shade and the colour of the number printed on it, as the one attribute
+// they are: the count is set in whichever of white and the page's ink the shade
+// under it can carry, so no cell needs a halo to be legible.
+function filled(colour) {
+  return ' style="background:' + colour + ';color:' + inkOn(colour) + '"';
 }
 
 // What the key holds, said under it: the grid for two answers at once, the one
@@ -1021,6 +1062,10 @@ function wireFilters() {
 // cannot answer clears the map and names the failure.
 function afterChange() {
   try {
+    // A filter asks the page a different question from the one the arm was for, so
+    // an arm left standing would be about to answer the question the filters have
+    // just taken off the map. It goes down here, before anything is drawn.
+    armOff();
     walk.asked = askFilters();
     // A filter asks the page a different question from one address's five walks,
     // and the two are not drawn together: asking a filter takes the answer off
@@ -1814,6 +1859,73 @@ function loadGraph() {
   return page.graph;
 }
 
+// --- Arming the map --------------------------------------------------------
+//
+// A click on the map used to be a question unconditionally: any press that was not
+// on a dot started a lookup, so a reader could not pan, dismiss a popup or simply
+// touch the map without the page asking about wherever the press landed and taking
+// the filters off the map to answer. The map is armed first now, by the button under
+// the address field, and the click that answers puts the arm down: one arm is good
+// for one answer, and a click meant for nothing means nothing.
+//
+// The rule itself is one function of two facts - whether the map is armed, and what
+// the click landed on - kept apart from the document and from Leaflet so the checks
+// under node can run it. There are three answers:
+//
+//   'layer'    the click landed on something the page draws: its own popup is the
+//              answer, armed or not, and the arm is left as it was. Looking at two
+//              parks in a row should not mean pressing the button twice.
+//   'nothing'  the map was not armed: the click is only a click.
+//   'ask'      the map was armed and the click landed on it, or on the grey mask -
+//              which is a question about a place this map does not measure, and
+//              deserves the sentence in the box rather than silence.
+function clickMeans(event, armed) {
+  if (event.layer && event.layer !== page.mask) { return 'layer'; }
+  return armed ? 'ask' : 'nothing';
+}
+
+// What the hint under the field says, resting and armed. One line replaced rather
+// than appended, so the box keeps its height and a reader is never read two
+// instructions at once.
+const HINT_RESTING = 'Street number, then the street. Or press Pick on map, ' +
+  'then click the map.';
+const HINT_ARMED = 'The map is armed: click a point to ask about it. Escape, or ' +
+  'the button again, puts it down.';
+
+function setHint(text) {
+  if (typeof document === 'undefined') { return; }
+  const hint = document.getElementById('lookup-hint');
+  if (hint) { hint.textContent = text; }
+}
+
+// Everything that says the map is armed, said in one place: the record the click
+// reads, the button's own pressed state, the class that draws the ring round the
+// map, and the hint. A page with no document - the checks under node - has nothing
+// to say it to, and a page stood in for by a stand-in document may have no body, so
+// each write is guarded the way showPanel() guards its own.
+function armMark(on) {
+  if (typeof document === 'undefined') { return; }
+  const button = document.getElementById('lookup-arm');
+  if (button) { button.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  const body = document.body;
+  if (body && body.classList) { body.classList.toggle('arming', on); }
+  setHint(on ? HINT_ARMED : HINT_RESTING);
+}
+
+function armOn() {
+  page.arming = true;
+  armMark(true);
+}
+
+// Putting the arm down when it is already down says nothing: every answer calls
+// this, and a reader who never armed the map must not have the hint rewritten
+// under them by a lookup they asked for in words.
+function armOff() {
+  if (!page.arming) { return; }
+  page.arming = false;
+  armMark(false);
+}
+
 // The box and the map, wired once the base map is up. The form is what catches
 // the button and the Enter key alike; the map's own click is the other way to
 // ask, and both end in the same answer.
@@ -1821,14 +1933,28 @@ function wireLookup() {
   document.getElementById('lookup-form').addEventListener('submit',
     function (event) {
       event.preventDefault();
+      // Words are the same question as a click, and one answer puts the arm down
+      // whichever way it was asked for.
+      armOff();
       lookupTyped(document.getElementById('lookup-text').value);
     });
+  const button = document.getElementById('lookup-arm');
+  if (button) {
+    button.addEventListener('click', function () {
+      if (page.arming) { armOff(); } else { armOn(); }
+    });
+  }
+  // Escape puts it down. The button is the way in and the way out, but a reader who
+  // armed the map and thought better of it must not have to find a button in a
+  // column that may be folded away or scrolled; the whole document listens, and
+  // nothing else on this page answers that key.
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') { armOff(); }
+  });
   map.on('click', function (event) {
-    // A click that has already landed on something the page draws is a click on
-    // that thing: its own popup is the answer, and no lookup starts from it. The
-    // grey mask is the exception, because a click there is a question about a
-    // place this map does not measure, and that deserves a sentence.
-    if (event.layer && event.layer !== page.mask) { return; }
+    const means = clickMeans(event, page.arming);
+    if (means === 'nothing') { return; }
+    if (means === 'ask') { armOff(); }
     lookupPoint(event.latlng.lat, event.latlng.lng);
   });
 }
@@ -1879,7 +2005,7 @@ function lookupTyped(text) {
   const typed = String(text === undefined || text === null ? '' : text).trim();
   if (!typed) {
     return sayLookup('Type a street number and a street, as in 4250 Rue ' +
-      'Sherbrooke Est, or click the map.');
+      'Sherbrooke Est, or press Pick on map and click the map.');
   }
   waitForGraph();
   loadGraph().then(function (graph) {
@@ -1928,7 +2054,10 @@ function showPlaced(graph, placed, typed, asked) {
              placed.asked.number + ' ' + placed.name, placed.how);
 }
 
-// A click on the map: the same answer, asked from a place instead of a name.
+// A click on the map: the same answer, asked from a place instead of a name. This
+// is only ever reached from a click the map was armed for - clickMeans() decides
+// that, and puts the arm down before calling here - so nothing in this function
+// looks at the arm.
 // Somewhere outside the 19 boroughs is refused by name, since the grey mask is a
 // shape rather than a lock and Leaflet passes its clicks on to the map.
 function lookupPoint(lat, lng) {
@@ -2651,17 +2780,19 @@ async function checkWithoutBrowser() {
     show(probes.filter(function (probe) { return probe.text === text; })[0]);
   });
 
-  // The page's markup has to hold the boxes the lookup types into and writes
-  // into: a rename in index.html would otherwise leave a lookup that does
-  // nothing at all, and nothing here would say so.
+  // The page's markup has to hold the boxes the lookup types into and writes into,
+  // and the button and the line that arm the map: a rename in index.html would
+  // otherwise leave a lookup that does nothing at all, and nothing here would say
+  // so.
   const markup = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-  const wanted = ['lookup-form', 'lookup-text', 'lookup-body'];
+  const wanted = ['lookup-form', 'lookup-text', 'lookup-body', 'lookup-arm',
+                  'lookup-hint'];
   const absent = wanted.filter(function (id) {
     return markup.indexOf("id='" + id + "'") < 0
       && markup.indexOf('id="' + id + '"') < 0;
   });
-  check('the page holds the box the lookup is typed into, and the one it writes in',
-    absent.length === 0, absent.join(', '));
+  check('the page holds the box the lookup is typed into, the one it writes in, ' +
+    'and the button that arms the map', absent.length === 0, absent.join(', '));
 
   // --- The answer as drawn --------------------------------------------------
   //
@@ -2889,6 +3020,109 @@ async function checkWithoutBrowser() {
     page.parks = realParks;
     page.lookupGroup = realGroup;
   })();
+
+  // --- The arm on the map ----------------------------------------------------
+  //
+  // A click on the map asks a question only once the reader has said so, and the
+  // rule that decides is one function of two facts - so every case is run here
+  // rather than left to a browser: an unarmed click on the map is nothing, an armed
+  // one on the map is a question, a click on a drawn shape is that shape's own popup
+  // either way, and a click on the mask is a question about a place the page does
+  // not measure. The mask is stood in for, since under node the map never loaded
+  // one.
+  const realMask = page.mask;
+  page.mask = { kind: 'mask' };
+  const shape = { kind: 'park' };
+  const means = [
+    ['unarmed on the map', clickMeans({}, false), 'nothing'],
+    ['armed on the map', clickMeans({}, true), 'ask'],
+    ['armed on the mask', clickMeans({ layer: page.mask }, true), 'ask'],
+    ['unarmed on the mask', clickMeans({ layer: page.mask }, false), 'nothing'],
+    ['armed on a park', clickMeans({ layer: shape }, true), 'layer'],
+    ['unarmed on a park', clickMeans({ layer: shape }, false), 'layer']
+  ];
+  const wrongMeans = means.filter(function (each) { return each[1] !== each[2]; });
+  check('a click asks about a point only once the map has been armed',
+    wrongMeans.length === 0,
+    wrongMeans.length ? wrongMeans.map(function (each) {
+      return each[0] + ' -> ' + each[1];
+    }).join(', ') : means.map(function (each) {
+      return each[0] + ' -> ' + each[1];
+    }).join('; '));
+  page.mask = realMask;
+
+  // Arming shows in three places at once - the button's pressed state, the class
+  // that rings the map, and the line under the field - and disarming puts all three
+  // back. All three are writes to the document, so the document is stood in for; a
+  // page that has none (this one, under node) must not be written to at all, which
+  // is what the first call below shows.
+  (function () {
+    const pressed = { value: null,
+      setAttribute: function (name, value) {
+        if (name === 'aria-pressed') { pressed.value = value; }
+      } };
+    const hint = { textContent: '' };
+    const classes = {};
+    const realDocument = global.document;
+    global.document = {
+      body: { classList: {
+        toggle: function (name, want) { classes[name] = want; },
+        contains: function (name) { return classes[name] === true; }
+      } },
+      getElementById: function (id) {
+        if (id === 'lookup-arm') { return pressed; }
+        if (id === 'lookup-hint') { return hint; }
+        return null;
+      }
+    };
+    armOff();                                  // already down: nothing written
+    const rested = hint.textContent;
+    armOn();
+    const up = { page: page.arming, button: pressed.value,
+                 ring: classes.arming === true, hint: hint.textContent };
+    armOff();
+    const down = { page: page.arming, button: pressed.value,
+                   ring: classes.arming === true, hint: hint.textContent };
+    global.document = realDocument;
+    check('arming the map shows on its button, round its edge and in the hint, ' +
+      'and disarming puts all three back',
+      rested === '' && up.page === true && up.button === 'true' && up.ring === true
+      && up.hint === HINT_ARMED && down.page === false && down.button === 'false'
+      && down.ring === false && down.hint === HINT_RESTING,
+      'armed ' + JSON.stringify(up) + ', down ' + JSON.stringify(down));
+  })();
+
+  // The line under the field is written twice - once in the markup, which is what a
+  // reader sees before touching anything, and once in HINT_RESTING, which is what
+  // they see when the arm goes down - so the two have to say the same words. The
+  // markup's own line breaks are collapsed first, since they are indentation rather
+  // than prose.
+  const hintInMarkup = (markup.match(/id='lookup-hint'[^>]*>([\s\S]*?)<\/p>/) || [])[1];
+  const collapsed = String(hintInMarkup || '').replace(/\s+/g, ' ').trim();
+  check('the hint in the markup says what the page says when the arm goes down',
+    collapsed === HINT_RESTING && HINT_ARMED !== HINT_RESTING,
+    JSON.stringify(collapsed) + ' against ' + JSON.stringify(HINT_RESTING));
+
+  // A walk inside a minute, as the five walks under the field and the popups say
+  // it: a bound rather than the phrase it used to be, and escaped wherever it is
+  // written into a card, since "<" opens a tag in HTML.
+  const inside = formatWalk(59);
+  check('a walk inside a minute is said as a bound, and escaped where it is printed',
+    inside === '< 1 min' && formatWalk(0) === '< 1 min' && formatWalk(60) === '1 min'
+    && escapeHtml(inside) === '&lt; 1 min',
+    JSON.stringify(inside) + ', ' + JSON.stringify(formatWalk(60)) + ', ' +
+    escapeHtml(inside));
+
+  // The key's counts are printed in whichever colour the shade under them can carry:
+  // white at the dark end of either ramp, the page's ink at the pale end, where white
+  // stops being legible.
+  const pale = [shadeColour('park', WALK_SHADES - 1), shadeColour('metro', WALK_SHADES - 1)];
+  const dark = [shadeColour('park', 0), shadeColour('metro', 0)];
+  check('a count on the key is white on the dark end of a ramp and ink on the pale end',
+    pale.every(function (colour) { return inkOn(colour) === '#14181D'; })
+    && dark.every(function (colour) { return inkOn(colour) === '#FFFFFF'; }),
+    pale.map(function (colour) { return colour + ' ' + inkOn(colour); }).join(', ') +
+    '; ' + dark.map(function (colour) { return colour + ' ' + inkOn(colour); }).join(', '));
 
   console.log(failures
     ? failures + ' of ' + checked + ' checks failed'
