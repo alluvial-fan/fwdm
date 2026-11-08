@@ -1,28 +1,42 @@
-# Feature Walking Distance Map
+# Feature Walking Distance Map - Walking distance to Montreal's parks and metro stations
 
-This project takes public data, converts it to GeoJSON, and maps it with LeafletJS.
+While we don't pick where we're born, we later in life get to pick where we'll live; this tool aims to make that process easier.
 
-## About (Story)
+Currently, a prospective homebuyer or renter in the city of Montreal cannot easily have a visualization of the areas within the city that are within a reasonable walking distance of physical features that matters to them. This map tackles that by allowing to look-up addresses to see their proximity to parks and metro stations, along with displaying a proximity dot map for the entirety of the city.
 
-Welcome to the Montreal distance-from-feature locator map.
+## About
 
-While we don't pick where we're born, later in life we get to pick where we will live; this map aims to make that process ever so slightly easier. 
+This site was created in the context of an AI-assisted programming geography class, GEOG 464.
 
-Currently, a prospective homebuyer or renter in Montreal cannot easily get a good idea of which areas of the city are located within reasonable walking distances from physical features of interest to them.
+The map covers all boroughs of the city of Montreal, meaning it excludes the independent municipalities that are greyed out.
 
-This map is for them, and attempts to map areas based on their walking distance proximity to two types of sought after features, metro stations, and green spaces.
+All data comes from public sources, converted to GeoJSONs, and drawn with LeafletJS.
 
-On the site, you can specify which features you care about (metros, parks, or both), and filter according to distance ranges, specific green space types and sizes, and whether or not a metro station is wheelchair friendly or not. Each query will modify the map and narrow it down, attempting to clearly show you how different areas rank.
+The data is first fetched from public sources, after which it is cleaned and turned into GeoJSONs with metro points, green space polygons, borough outlines, and street corners with their walk times.
 
-## State of the project
+## Using the site
 
-This project will not cover the entirety of the island (we are not including independent municipalities), nor will it be adding significantly more features or fine-graining to the filtering options.
+The site is live at <https://alluvial-fan.github.io/fwdm/>. It needs no account and no installation, the page reads its own GeoJSON from `site/data/` and its tiles from OpenStreetMap.
 
-The two datasets I started with are metro stops and parks (with street networks to calculate intersections).
+To run it locally, clone the repository and open [site/index.html](site/index.html) with [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) in VS Code or VSCodium. Running the raw HTML file directly will not open the site's data, and the site must be run online, since it requires data to be loaded in from LeafletJS and OpenStreetMap.
 
-### MoSCoW state
+A reader can do three things:
 
-Core action: a prospective Montreal renter or buyer can see which street corners are within a chosen walking time of the parks and/or metro stations they care about.
+- **Filter.** Parks, metros or both, with walk-time ranges, green spaces by types and size, and whether the metro entrance must be step-free.
+- **Pick on map.** Press the "Pick on Map" button, then click a spot to measure from there.
+- **Type an address.** A house number and a street name; the page finds it and (assuming it's within the boundaries) measures from there.
+
+### Limitations
+
+Distances to metro stations are really distances to the entrance, meaning that actual distance from entrance to the platform will increase distance slightly and in an unequal fashion between each station. The street file only has "real" roads, meaning no shortcuts or pathways through parks or other public land will be calculated. It also assumes a constant walking speed and doesn't take into consideration construction or walking up hills or being stopped at traffic lights. Some street types (class 8, motorways) are ignored across the board as they SHOULD all be expressways pedestrians cannot walk on. Two of Vendôme's four entrances (M70/M71) are not attached to the street network; the station is still reachable through its other two entrances.
+
+
+
+## Timeline
+
+At the start of the project, the goal is for the core action a user, a prospective Montreal renter or buyer, must be able to do, is to be able to see which street corners are within a chosen walking time of the parks and/or metro stations they care about.
+
+### MoSCoW statement (project start)
 
 A user on my site must:
 - Be able to see where parks and metro stations are.
@@ -40,31 +54,88 @@ My project does not, and will not (this term):
 - Cover the whole island (the independent municipalities).
 - Add significantly more feature types or finer filter options.
 
-### Not in this iteration
+### Not in this iteration (before A2)
 
 While I have the data for non-Montreal municipalities on the island of Montreal, and I have data for an additional feature type (food stores), the project as it stands does not, and will not for the foreseeable future, include them. Doing so would require handling data taken from OpenStreetMap, which is user-submitted and would need significantly more checks and validation than the current pre-existing data straight from the source. The one thing I will build next is adding the food stores as a third feature.
 
-### How to run
+### Initial testing (before A2)
 
-The site can be run by running VS Code (or VSCodium)'s "Live Server" extension on [index.html](site/index.html).
+A friend tested the build I was preparing for A2, and they found that when refreshing the page, the map and what was visible on it were reset with exceptiong for the filter selections. This meant the map was now blank but filter had options selected. I resolved this by adding a check which makes sure the map displays what the filters are set at.
 
-Note: running the html directly in browser won't work.
+### Five-second test (during A2 week)
+
+I opened the map to the metro-only layer and had a classmate take 5 seconds to look at it and tell me what they saw and understood. They said 
+```
+The map (based on title) talks about looking at walking distance to green spaces. From looking at it in 5 seconds, I cannot tell what the different colours mean.
+``` 
+Based on this, I worked at improving the legibility and the information which is presented to the user on the screen along with a graphical legend describing the colors.
+
+### Post-demo thoughts
+
+During the MVP demo, the one thing I could accurately explain is how the dots are colored when both the park and metro filters are active.
+
+The one thing I want to fix with my code is simplifying it. It works and I can "understand" what happens, but it's fairly heavy and I think there'd be a way to make it lighter.
+
+### A3 feature: address lookup
+
+For A3, I will add the ability to lookup addresses in the city, so that my reader can upon lookup, see the 3 closest parks and 2 closest metro stations with a drawn walking path on the map. It has depth because compared to the existing point data, it live computes distances for a new feature, which the MVP version didn't. I will know it works when I'm able to either click on the map or lookup an address, and it shows me the closest metro stations and parks with a line drawn on the streets.
+
+My edge case is when the address is either not recognized, or no calculations for walking distances can be calculated map.
+
+#### Lab 7 testing of A3 feature
+
+| Test | Expected | What actually happens |
+| --- | --- | --- |
+| I enter an address in the search bar. | It selects it and maps the closest metro/parks(1 for each type/size) and it maps the walking path. | It selects that point, draws the paths to the closest 3 parks and metro stations with information in the sidebar on how long it takes to get to each of these points. |
+| I choose the "selector mode" and I click somewhere on the map. | It identifies the closest physical address, and maps the closest metro/parks and walking paths. | There is no selector mode, but you can just click anywhere and it will calculate the closest parks and points based on where you clicked. It does not tell you the closest address to where you are since it does not need that. |
+| I choose an address which isn't on the island of Montreal/out of bounds. | An error message lets me know the address was not found/out of bounds. | I get this error message: That spot is outside the 19 boroughs this map covers, so the page measures nothing there. |
+
+### Pre-flight report (Lab 7)
+
+| Check | Result | What I did |
+| --- | --- | --- |
+| 1. Cold start | Pass. | n/a |
+| 2. Read every label | Fail: I had the following errors: `app.js:835 [Violation] 'change' handler took 183ms` | Currently every street corner is it's own marker and the page was loading all of them so the handler didn't return until all 19k were drawn. Changed the dot drawing behavior so dots appear 2k at a time and handler returns immediately. |
+| 3. Ask twice | Pass. Works. | n/a |
+| 4. The edge | Pass. Message appears saying "That spot is outside the 19 boroughs this map covers, so the page measures nothing there." | n/a |
+| 5. The data does not come | Pass/Fail. | Nothing happened and an error message appeared but it was ambiguous as to what was failing. Made it so that the error message is specific about what is missing. |
+| 6. On a phone (size view and my phone) | Fail. Works but the sidebar which on mobile is at the top doesn't hide and takes most of the screen | Made it so that when you're on phone mode (when the sidebar becomes the top bar), it ads a "Filters" button that toggles view on the filters. |
+| 7. Mouse in my pocket | Pass. | n/a |
+| 8. Accessibility audit | Fail. | Added accessible names to the filters, made the left bar the page's main landmark so it stops complaining we don't have a main landmark. |
+
+## AI Disclosure
+
+This project was built with the help of AI coding models. Primiarly, it used DeepSeek's `V4.X Flash` and `V4 Pro` models within my IDE. I used it first as a brainstorming aid for the walk-time calculation, then gave it small, specific steps: turn the raw data into GeoJSON, keep only the fields the map reads, draw the result, repeat.
+
+It often needed several tries to understand the scope I wanted, and it hallucinated instructions when I asked it to limit what it processed. For every answer I checked it was solving the right problem, then opened the page in Live Server to confirm the map did what I expected, and committed each stage I trusted so there was always a fallback. The main dead end was drawing a polygon for every city block; I rejected that for static street corners, which were simpler to calculate and to draw.
+
+The problem, the audience, the core action, and every decision to accept, change or reject what the agent produced stayed mine.
+
+At a lesser level, Github Copilot was used for commit summaries.
 
 ## Data sources
 
-### Metro Stops (data/metro_stops)
+### Metro stops — STM GTFS
 
 Taken from the STM developer homepage ([www.stm.info/en/about/developers](https://www.stm.info/en/about/developers)).
+
+**Licence:** CC BY 4.0 (https://www.stm.info/en/about/developers/terms-use).
+
+<details>
 
 File URL: [www.stm.info/sites/default/files/gtfs/gtfs_stm.zip](https://www.stm.info/sites/default/files/gtfs/gtfs_stm.zip)
 
 Within `gtfs_stm.zip` lies `stops.txt`, a file which contains the location data for the STM's metro and bus stops.
 
-**Licence:** CC BY 4.0 (https://www.stm.info/en/about/developers/terms-use).
+</details>
 
-### Parks (data/city_parks)
+### Green spaces — Ville de Montréal
 
 Taken from the Montreal City's open data portal ([donnees.montreal.ca/fr/dataset/grands-parcs-parcs-d-arrondissements-et-espaces-publics](https://donnees.montreal.ca/fr/dataset/grands-parcs-parcs-d-arrondissements-et-espaces-publics)).
+
+**Licence:** CC BY 4.0 (https://donnees.montreal.ca/pages/licence-d-utilisation).
+
+<details>
 
 Data available as CSV, JSON and SHP files; we'll be using the JSON `espace_vert.json` as it doesn't require extra processing.
 
@@ -72,11 +143,15 @@ Data available as CSV, JSON and SHP files; we'll be using the JSON `espace_vert.
 | --- | --- |
 | JSON | [donnees.montreal.ca/dataset/2e9e4d2f-173a-4c3d-a5e3-565d79baa27d/resource/35796624-15df-4503-a569-797665f8768e/download/espace_vert.json](https://donnees.montreal.ca/dataset/2e9e4d2f-173a-4c3d-a5e3-565d79baa27d/resource/35796624-15df-4503-a569-797665f8768e/download/espace_vert.json) |
 
-**Licence:** CC BY 4.0 (https://donnees.montreal.ca/pages/licence-d-utilisation).
+</details>
 
-### Neighbourhoods (data/neighbourhoods)
+### Borough outlines — Ville de Montréal
 
 Taken from the Montreal City's open data portal ([donnees.montreal.ca/fr/dataset/limites-administratives-agglomeration](https://donnees.montreal.ca/fr/dataset/limites-administratives-agglomeration)).
+
+**Licence:** CC BY 4.0 (https://donnees.montreal.ca/pages/licence-d-utilisation).
+
+<details>
 
 Two formats, GeoJSON and SHP, each in NAD83/MTM zone 8 and WGS 84 (four files).
 
@@ -87,12 +162,33 @@ Two formats, GeoJSON and SHP, each in NAD83/MTM zone 8 and WGS 84 (four files).
 | GeoJSON (WGS84) | [donnees.montreal.ca/dataset/9797a946-9da8-41ec-8815-f6b276dec7e9/resource/e18bfd07-edc8-4ce8-8a5a-3b617662a794/download/limites-administratives-agglomeration.geojson](https://donnees.montreal.ca/dataset/9797a946-9da8-41ec-8815-f6b276dec7e9/resource/e18bfd07-edc8-4ce8-8a5a-3b617662a794/download/limites-administratives-agglomeration.geojson) |
 | SHP (WGS84) | [donnees.montreal.ca/dataset/9797a946-9da8-41ec-8815-f6b276dec7e9/resource/93385165-d849-418f-aaa3-0497ed9e4702/download/limites-administratives-agglomeration.zip](https://donnees.montreal.ca/dataset/9797a946-9da8-41ec-8815-f6b276dec7e9/resource/93385165-d849-418f-aaa3-0497ed9e4702/download/limites-administratives-agglomeration.zip) |
 
+</details>
+
+### Street network — Ville de Montréal (Géobase)
+
+Taken from the Montreal City's open data portal ([donnees.montreal.ca/dataset/geobase](https://donnees.montreal.ca/dataset/geobase)).
 
 **Licence:** CC BY 4.0 (https://donnees.montreal.ca/pages/licence-d-utilisation).
 
-### Food stores (data/food_stores)
+<details>
+
+Three files, a CSV, a ZIP, and a GeoJSON.
+
+| File | URL |
+| --- | --- |
+| CSV | [donnees.montreal.ca/dataset/984f7a68-ab34-4092-9204-4bdfcca767c5/resource/cdf491fa-bf3d-4eb1-8692-c9aa1df462cd/download/geobase.csv](https://donnees.montreal.ca/dataset/984f7a68-ab34-4092-9204-4bdfcca767c5/resource/cdf491fa-bf3d-4eb1-8692-c9aa1df462cd/download/geobase.csv) |
+| ZIP | [donnees.montreal.ca/dataset/984f7a68-ab34-4092-9204-4bdfcca767c5/resource/70c1f8c7-91a0-4553-b602-89c3edb959b5/download/geobase.zip](https://donnees.montreal.ca/dataset/984f7a68-ab34-4092-9204-4bdfcca767c5/resource/70c1f8c7-91a0-4553-b602-89c3edb959b5/download/geobase.zip) |
+| GeoJSON | [donnees.montreal.ca/dataset/984f7a68-ab34-4092-9204-4bdfcca767c5/resource/9d3d60d8-4e7f-493e-8d6a-dcd040319d8d/download/geobase.json](https://donnees.montreal.ca/dataset/984f7a68-ab34-4092-9204-4bdfcca767c5/resource/9d3d60d8-4e7f-493e-8d6a-dcd040319d8d/download/geobase.json) |
+
+</details>
+
+### Food stores — OpenStreetMap (downloaded for a later feature, not used yet)
 
 Taken from OpenStreetMap using the Overpass Turbo API ([overpass-turbo.eu/](https://overpass-turbo.eu/)).
+
+**Licence:** ODbL (https://www.openstreetmap.org/copyright).
+
+<details>
 
 Fetches all `supermarkets`, `convenience stores`, `frozen food` stores, and `greengrocers` within what OSM identifies as Montreal.
 
@@ -116,134 +212,4 @@ The original search was:
 out geom;
 ```
 
-**Licence:** ODbL (https://www.openstreetmap.org/copyright).
-
-### Street Network (data/street_network)
-
-aka Geobase
-
-Taken from the Montreal City's open data portal ([donnees.montreal.ca/dataset/geobase](https://donnees.montreal.ca/dataset/geobase)).
-
-Three files, a CSV, a ZIP, and a GeoJSON.
-
-
-| File | URL |
-| --- | --- |
-| CSV | [donnees.montreal.ca/dataset/984f7a68-ab34-4092-9204-4bdfcca767c5/resource/cdf491fa-bf3d-4eb1-8692-c9aa1df462cd/download/geobase.csv](https://donnees.montreal.ca/dataset/984f7a68-ab34-4092-9204-4bdfcca767c5/resource/cdf491fa-bf3d-4eb1-8692-c9aa1df462cd/download/geobase.csv) |
-| ZIP | [donnees.montreal.ca/dataset/984f7a68-ab34-4092-9204-4bdfcca767c5/resource/70c1f8c7-91a0-4553-b602-89c3edb959b5/download/geobase.zip](https://donnees.montreal.ca/dataset/984f7a68-ab34-4092-9204-4bdfcca767c5/resource/70c1f8c7-91a0-4553-b602-89c3edb959b5/download/geobase.zip) |
-| GeoJSON | [donnees.montreal.ca/dataset/984f7a68-ab34-4092-9204-4bdfcca767c5/resource/9d3d60d8-4e7f-493e-8d6a-dcd040319d8d/download/geobase.json](https://donnees.montreal.ca/dataset/984f7a68-ab34-4092-9204-4bdfcca767c5/resource/9d3d60d8-4e7f-493e-8d6a-dcd040319d8d/download/geobase.json) |
-
-**Licence:** CC BY 4.0 (https://donnees.montreal.ca/pages/licence-d-utilisation).
-
-## Approach
-
-`site/index.html` is a LeafletJS map of the 19 boroughs of the city of Montreal. It reads GeoJSON data files for metro points, green spaces, street corners (with walk times), and borough outlines (for masking). A coloured dot is applied for each intersection with the time requested by the user per feature type.
-
-The page asks for the borough outlines first, on their own, and fits the map to them before asking for anything else: the mask is the map's own shape, and until the map has been fitted it is asking for the tiles of the view it was made with, so the 200 KB of outlines is what puts the right tiles on their way. The parks and metro points come next, and the corners with their walk times after them at a low priority, because no filter is drawn until the reader asks one.
-
-The two files the page draws are written as tightly as it can read them: park outlines to six decimals of a degree, which is 11 cm on the ground and finer than any zoom the page offers, and street corners to seven, where the tenth of a metre is what decides whether two street ends are one corner. The corners file also carries nothing the page does not read: the city's troncon ids and a written-out wording for each corner's degree were dropped, and what is left of the degree is the number, which sizes the corner's dot and is counted on the status line.
-
-### Steps
-
-| Step | Command | Reads | Writes |
-| --- | --- | --- | --- |
-| 1 | n/a | n/a | `data/metro_stops/gtfs_stm.zip`, `data/city_parks/espace_vert.json`, `data/street_network/geobase.json`, `data/neighbourhoods/limites-administratives-agglomeration*.geojson` |
-| 2 | `python site/build.py geojson` | `data/metro_stops/gtfs_stm.zip`, `data/city_parks/espace_vert.json`, `data/street_network/geobase.json` | `site/data/metro_stops.geojson` (68 station points and 134 entrances), `site/data/city_parks.geojson` (1981 green spaces), `site/data/intersections.geojson` (24,669 intersections) |
-| 3 | `python site/build.py walks` | `data/street_network/geobase.json`, `data/neighbourhoods/limites-administratives-agglomeration.geojson.json`, and step 2's three output geojsons| a rewritten `site/data/intersections.geojson` with walk times written into the corners, `site/data/boroughs.geojson` for the visual masking and borough labelling, and `site/data/walk_graph.json` for the address lookup |
-
-Step 3 also writes `site/data/walk_graph.json`: the same street network in the compact form the page searches itself when a reader gives it an address rather than a filter - 257,947 corners, 274,124 links with their lengths in centimetres, 5,996 street names with the 31,455 troncons that carry civic numbers, and the 46,392 gateways where a walk can end at 1,922 green spaces and 64 stations. It is 13.1 MB, so the page fetches it on the first address lookup and not before; a reader who only uses the filters never downloads it.
-
-Before steps 2 and 3, `python site/build.py check` holds the projection every distance in this project is measured in (MTM zone 8, EPSG:32188) against the city's own metres: it projects the city's 34 outlines and compares them with the city's own MTM copy, point for point, in both directions. It reads no built file and writes nothing, so it is the first thing to run when a distance looks wrong.
-
-Within a venv and from the project folder:
-```bash
-python site/build.py # the projection check, step 2 and step 3, in that order
-node site/app.js 
-```
-
-Naming a step runs only that one, always in the order above: `python site/build.py walks` is enough after changing a walking speed, a park band or a size (about a minute), because step 2's files are unchanged. Step 3 reads the intersections file step 2 writes, so a step 2 change needs `python site/build.py geojson` and then `walks`.
-
-The build's checks are `assert` statements, so it refuses to start under `python -O` or with `PYTHONOPTIMIZE` set: a run that cannot check itself writes nothing.
-
-### Checks
-
-`site/build.py` checks each file it writes before that file takes the place of the one the page loads: every output is written to a temporary name, read back off the disk, checked as it was written, and only then moved into place; a check that fails deletes the temporary file, so a failed run leaves the folder exactly as it found it.
-
-- Every question the page's filters can ask has a layer of its own (22 layers: 20 green-space combinations and 2 metro ones), so the page can never ask for something the build did not measure.
-- A corner is either given a walk or marked with the reason it has none. The build writes four statements (outside the 34 outlines, no network link, no reachable destination, unreachable); `check_statements()` checks the first two dot by dot and by count. On this run 0 corners were outside and 0 had no link, in all 22 layers.
-- No corner is quicker to a step-free entrance than to any entrance, at least one corner reaches a step-free entrance, and the any-entrance layer has a walk under an hour (`check_reach()`). On this run 24,438 of 24,669 corners reach a step-free entrance.
-- A derived layer is the minimum of its parents on every 97th corner, and the destination number carried is the parent's. This checks that "Any" is a real minimum across kinds and bands (`check_derived()`).
-- On a fixed sample of 364 walks over the 14 searched layers, no walk is shorter than the crow-flies distance to the park edge or station entrance it reached, less one metre of slack (`check_crow_flies()`); the closest sample was 2 m longer than the crow flies.
-- The two ways of deciding whether a corner is inside the city (one corner at a time in `in_city()`, and all at once in `mark_focus()`) agree about every corner: 24,669 inside, 19,360 in the 19 drawn boroughs and 5,309 in the 15 masked linked cities, with no corner counted twice. The 19 boroughs the page draws and the 19 the build measured are compared by name.
-- Each step 2 output is read back before it is moved into place: 202 metro features (68 stations, 134 entrances), 1,981 parks, and 24,669 corners, with the fields the page reads.
-
-It also prints the nine metro entrances it could not attach to a street within 100 m, with their label and station, instead of guessing a walk for them: two at Vendôme (M70/M71, inside Côte-des-Neiges–NDG), two at Cartier, one at Concorde, one at Montmorency, and three at Longueuil–Université-de-Sherbrooke. The seven outside Vendôme are in Laval and Longueuil, outside the 19 drawn boroughs. A station inside the city with no attached entrance at all stops the build (Vendôme is not one: its other two entrances attach), and both files written are read back and checked before the run ends.
-
-`node site/app.js` reads `site/data/intersections.geojson` through `readWalkData()`, the same function used by the page, and runs 234 checks with no browser. It also reads `site/data/walk_graph.json` through `prepareGraph()` and runs twenty addresses, one mistyped street name, one click and one point in the lake through `addressPoint()` and `lookupAt()` - so the lookup the page makes is the lookup that is tested - and it ends by drawing one answer against a stand-in for Leaflet: five lines the right way round, three parks drawn as shapes, the five names on the map, the pointer at the address, the box fitted to the answer, a refusal that clears it all, the answer and the filters taking turns to be the one thing on the map, an empty map said out loud when the filters go back to n/a, a walk said in metres under a kilometre and in kilometres past it, and five walks listed. A passing run ends with `all 234 checks passed` and exit code 0; a failure prints what differed and exits 1.
-
-#### Human Tests
-
-The notebook's check cell passes (202 metro points, 1,981 parks, 24,669 corners, 22 walk layers) and `node site/app.js` ends with `all 212 checks passed`. On asking a friend to test out the site, I realized that when refreshing the filter labels didn't change, but the data did and reset. Page didn't register the filters until they were changed once again. Following that I implemented a check that will keep the filters active, but ensure they get displayed.
-
-### Limitations
-
-Distances to metro stations are really distances to the entrance, meaning that actual distance from entrance to the platform will increase distance slightly and in an unequal fashion between each station. The street file only has "real" roads, meaning no shortcuts or pathways through parks or other public land will be calculated. It also assumes a constant walking speed and doesn't take into consideration construction or walking up hills or being stopped at traffic lights. Some street types (class 8, motorways) are ignored across the board as they SHOULD all be expressways pedestrians cannot walk on. Two of Vendôme's four entrances (M70/M71) are not attached to the street network; the station is still reachable through its other two entrances.
-
-## A2 AI Disclosure
-
-**Lane:** Blue (bring your own agent).
-
-This project was built with an AI coding agent: `Cline` inside `VSCodium`, using the `DeepSeek` API with the `V4.X Flash` and `V4 Pro` models. I used it first as a brainstorming aid to plan the walk-time calculations, then gave it small, specific steps: turn the raw data into GeoJSON, keep only the fields the map needs, draw the results, and repeat.
-
-The agent often needed several tries to understand the scope I wanted, and it sometimes hallucinated instructions, especially when I asked it to limit what it processed. For every answer I checked it was solving the right problem, then ran a Live Server to confirm any map change did what I expected. I kept the project in git and committed after each stage I trusted, so there was always a fallback.
-
-The main dead end was drawing polygons for every city block; I rejected that for static street-corner points, which were simpler to calculate and display. Throughout, the problem, the audience, the core action, and every decision to accept, change, or reject what the agent produced stayed mine.
-
-## After the demo
-At my demo, the one thing I don't think I could accurately explain is how the dots color themselves when not park green or metro blue.
-
-The one thing I want to fix with my code is simplifying it. It works and I can "understand" what happens, but it's fairly heavy and I think there'd be a way to make it lighter.
-
-### Five-second test
-
-_For context, the map was open on the metro-only layer._
-
-"Map (based on title) talks about looking at walking distance to green spaces. From looking at it in 5 seconds, I cannot tell what the different colours mean."
-
-## A3 feature: Address Lookup
-For A3, I will add the ability to lookup addresses in the city, so that my reader can upon lookup, see the 3 closest parks and 2 closest metro stations with a drawn walking path on the map.
-It has depth because compared to the existing point data, it live computes distances for a new feature, which the MVP version didn't.
-I will know it works when I'm able to either click on the map or lookup an address, and it shows me the closest metro stations and parks with a line drawn on the streets.
-
-My edge case is when the address is either not recognized, or no calculations for walking distances can be calculated map.
-
-Test 1. I enter an address in the search bar.
-  Expected: It selects it and maps the closest metro/parks(1 for each type/size) and it maps the walking path.
-Test 2. I choose the "selector mode" and I click somewhere on the map.
-  Expected: It identifies the closest physical address, and maps the closest metro/parks and walking paths.
-Test 3. I choose an address which isn't on the island of Montreal/out of bounds.
-  Expected: An error message lets me know the address was not found/out of bounds.
-
-## Lab 7
-
-Test 1. I enter an address in the search bar.
-- Expected: It selects it and maps the closest metro/parks(1 for each type/size) and it maps the walking path.
-- What actually happens: It selects that point, draws the paths to the closest 3 parks and metro stations with information in the sidebar on how long it takes to get to each of these points.
-Test 2. I choose the "selector mode" and I click somewhere on the map.
-- Expected: It identifies the closest physical address, and maps the closest metro/parks and walking paths.
-- What actually happens: There is no selector mode, but you can just click anywhere and it will calculate the closest parks and points based on where you clicked. It does not tell you the closest address to where you are since it does not need that.
-Test 3. I choose an address which isn't on the island of Montreal/out of bounds.
-- Expected: An error message lets me know the address was not found/out of bounds.
-- What actually happens: I get this error message: That spot is outside the 19 boroughs this map covers, so the page measures nothing there.
-
-## Pre-flight report (Lab 7)
-| Check | Result | What I did |
-| --- | --- | --- |
-| 1. Cold start | Pass. | n/a |
-| 2. Read every label | Fail: I had the following errors: `app.js:835 [Violation] 'change' handler took 183ms` | Currently every street corner is it's own marker and the page was loading all of them so the handler didn't return until all 19k were drawn. Changed the dot drawing behavior so dots appear 2k at a time and handler returns immediately. |
-| 3. Ask twice | Pass. Works. | n/a |
-| 4. The edge | Pass. Message appears saying "That spot is outside the 19 boroughs this map covers, so the page measures nothing there." |  |
-| 5. The data does not come | Pass/Fail. | Nothing happened and an error message appeared but it was ambiguous as to what was failing. Made it so that the error message is specific about what is missing. |
-| 6. On a phone (size view and my phone) | Fail. Works but the sidebar which on mobile is at the top doesn't hide and takes most of the screen | Made it so that when you're on phone mode (when the sidebar becomes the top bar), it ads a "Filters" button that toggles view on the filters. |
-| 7. Mouse in my pocket | Pass. | n/a |
-| 8. Accessibility audit | Fail. | Added accessible names to the filters, made the left bar the page's main landmark so it stops complaining we don't have a main landmark. |
+</details>
