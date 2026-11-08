@@ -58,29 +58,29 @@
          is where the page asks its questions and writes its answers, and the map
          shows what it was asked. The id is what the fold's aria-controls names. -->
     <main class='panel' id='panel'>
-      <!-- The story: who this map is for, why it matters, and the one thing they
-           can do. Kept to three sentences so a stranger reading only the page
-           knows what the map is for before they touch a filter. -->
+      <!-- The story: who this map is for and the one thing they can do, in two
+           sentences, so a stranger knows what the map is for before touching a
+           filter. -->
       <section id='story'>
-        <p>Choosing where to live in Montreal is hard when you cannot easily tell which areas are a short walk from the things you rely on every day.</p>
-        <p>This map is for renters and buyers who want to know, before they visit, whether a street corner is a comfortable walk from a metro entrance or a green space.</p>
-        <p>Pick a walking time for parks, for metros, or for both, and the map colours every street corner by how close it is. The data comes from the STM and the City of Montreal's open data portal.</p>
+        <p>Renters and buyers in Montreal rarely know, before they visit, whether a street corner is a comfortable walk from a metro entrance or a green space.</p>
+        <p>Choose a walking time for green spaces, for metro stations, or for both: every street corner is coloured by how close it is.</p>
       </section>
 
-      <!-- The address lookup: the one question this page cannot answer from a
-           file, because the answer depends on what the reader types. A street
-           number and a street, or a point on the map, and the page searches the
-           street network itself for the nearest three green spaces and two
-           stations, drawing the way it found to each. The box above the filters
-           because it is the other way to ask the same kind of question.
+      <!-- The address lookup: the one question this page cannot answer from a file,
+           because the answer depends on what the reader types. A street number and a
+           street, or a point on the map, and the page searches the street network
+           itself for the nearest three green spaces and two stations, drawing the way
+           it found to each. It sits above the filters because it is the other way to
+           ask the same kind of question, and the two take turns rather than sharing
+           the map.
            The two ways in are not the same kind of act. Words are typed and then
-           submitted, so the button in the row submits them; a point on the map has
-           to be aimed at, and a click meant for nothing would still take the filters
-           off the map - so the map is armed by a button of its own first, and the
-           click that answers puts the arm down. The hint under it is the line that
-           says what the box wants next, and it carries a live region of its own:
-           arming the map is announced there rather than in the status line, which is
-           the bar's report on the files and nothing else. -->
+           submitted, so the button in the row submits them; a point on the map has to
+           be aimed at, and a click meant for nothing would still take the filters off
+           the map - so the map is armed by a button of its own first, and the click
+           that answers puts the arm down. The hint under it says what the box wants
+           next, and it carries a live region of its own: arming the map is announced
+           there rather than in the status line, which is the bar's report on the files
+           and nothing else. -->
       <section class='filter' id='lookup'>
         <span class='switch'>Address lookup</span>
         <form id='lookup-form'>
@@ -95,25 +95,22 @@
         <div id='lookup-body'></div>
       </section>
 
-      <!-- The two filters, kept apart from each other. The first asks whether
-           there is a green space of a chosen kind and size within so many
-           minutes' walk of a corner; the second whether there is a metro
-           entrance - or a step-free one - within so many minutes'. Either can
-           be asked on its own, and a person who asks about one and not the other
-           is never shown the other: the two walks are never added up.
+      <!-- The two filters, kept apart from each other. The first asks whether there
+           is a green space of a chosen kind and size within so many minutes' walk of
+           a corner, the second whether there is a metro entrance - or a step-free one
+           - within so many minutes'. Either can be asked alone, and the two walks are
+           never added up.
            "Don't care" is the third state of each and the one both start in, so a
            first visit opens with nothing asked and nothing drawn. A reload is the
-           other case: the browser can bring a choice back, and the page then
-           draws the question its menus hold rather than a blank map under a menu
-           that says otherwise.
+           other case: the browser can bring a choice back, and the page then draws
+           the question its menus hold rather than a blank map under a menu that says
+           otherwise.
            Each menu is named twice over and neither name is wasted: the box is a
-           group labelled by its heading, so a reader is told "Green spaces" once on
+           group labelled by its heading, so a reader hears "Green spaces" once on
            stepping into it, and each menu then carries a visible label of its own -
            Time, Type, Size - in the narrow column those labels share. A menu left to
            itself reaches a screen reader as "combo box" with no question attached,
-           which is what the labels are for; the heading used to be repeated into
-           every menu's aria-label, and a labelled group is the cheaper way to say it
-           once. -->
+           which is what the labels are for. -->
       <div id='filters'>
         <section class='filter' id='park-filter' role='group'
                  aria-labelledby='park-head'>
@@ -127,15 +124,15 @@
           </select>
           <label class='name' for='park-kind'>Type</label>
           <select id='park-kind'>
-            <option value='any'>Any type (n/a)</option>
-            <option value='city'>City parks</option>
-            <option value='borough'>Borough parks</option>
-            <option value='other'>Other green spaces</option>
+            <option value='any'>Any green space</option>
+            <option value='city'>City park</option>
+            <option value='borough'>Borough park</option>
+            <option value='other'>Other green space</option>
           </select>
           <label class='name' for='park-band'>Size</label>
           <select id='park-band'>
             <option value='any'>Any size</option>
-            <option value='0to1'>Under 1 ha</option>
+            <option value='0to1'>under 1 ha</option>
             <option value='1to5'>1 to 5 ha</option>
             <option value='5to10'>5 to 10 ha</option>
             <option value='10up'>10 ha or more</option>
@@ -154,38 +151,26 @@
           <label class='name' for='metro-kind'>Entrance</label>
           <select id='metro-kind'>
             <option value='any'>Any entrance</option>
-            <option value='stepfree'>Accessible only</option>
+            <option value='stepfree'>Step-free only</option>
           </select>
         </section>
       </div>
-      <!-- The legend: a box of its own, laid out like the filters above it - the
-           title on the first line, then what app.js builds from the
-           intersections file: the key that answers the filters first, and the
-           question they ask after it, so the table keeps its size and its place
-           and only the words under it change. -->
+      <!-- The legend: a box of its own, laid out like the filters above it - the title
+           on the first line, then what app.js builds from the intersections file: the key
+           that answers the filters first and the question they ask after it, so the table
+           keeps its size and place and only the words under it change. -->
       <section class='filter' id='legend'>
         <span class='switch'>Legend</span>
         <div id='legend-body'></div>
       </section>
-      <!-- The data sources and caveats, folded away under a summary line. -->
+      <!-- The sources and the caveats, folded away under a summary line: the
+           long form of both is the README, which this points at. -->
       <details id='notes'>
-        <summary>Disclaimer about the information provided by this map</summary>
-        <p>The map uses the following data:</p>
-        <p>Metro stops were taken from the <a href='https://www.stm.info/en/about/developers' target='_blank' rel='noopener'>STM developer homepage</a>.</p>
-        <p>Parks were taken from the <a href='https://donnees.montreal.ca/fr/dataset/grands-parcs-parcs-d-arrondissements-et-espaces-publics' target='_blank' rel='noopener'>Montreal City's open data portal</a>.</p>
-        <p>Neighbourhoods were taken from the <a href='https://donnees.montreal.ca/fr/dataset/limites-administratives-agglomeration' target='_blank' rel='noopener'>Montreal City's open data portal</a>.</p>
-        <p>Street network (aka geobase) was taken from the <a href='https://donnees.montreal.ca/dataset/geobase' target='_blank' rel='noopener'>Montreal City's open data portal</a>.</p>
-        <p>The address lookup reads the same street file, and searches it in your browser: the number you type is placed on the city's troncon that holds it, and the nearest three green spaces and two stations are found by walking out from that point at the same 1.35m/s. Nothing about an address is worked out before you ask for it, which is why the page fetches a 13 MB file of the street network the first time you look one up.</p>
-        <p>The answer is drawn on the map as well as listed: the five places wear their names, each park is outlined as the city drew it even when the parks filter is off, the address you asked about wears a pointer of its own - a halo and a dark core labelled "You are here" - and the view is fitted to the address and its five walks, so a lookup you cannot see is not an answer you have to hunt for. Walks are given in whole metres up to a kilometre and in kilometres past it, because a list of four-figure distances in metres is a list to be converted before it means anything.</p>
-        <p>The filters and the lookup are two answers to one question - what is within a walk of somewhere - and the page never draws both: asking about an address sets the five menus back to n/a, setting a menu takes the answer off the map and says so in the box it came from, and putting the filters back to n/a says that the map is empty rather than leaving the note about filters standing over it.</p>
-        <p>A number the city's file does not hold is refused rather than guessed at, and so is a street outside the 19 boroughs. A name spelled differently from the city's own spelling is checked against <a href='https://photon.komoot.io/' target='_blank' rel='noopener'>Photon</a>, which is asked for the spelling alone - no position it returns is ever used, and every walk is measured on the city's own street numbers.</p>
-        <br>
-        <p>On analysis request, coloured dots (representing street corners) will appear to display which areas are within the requested range, and will be coloured based on proximity to said feature(s).</p>
-        <p>Dot sizes are based on the quantity of streets that connect to said intersection. Smaller side streets will have smaller dots than big 4+way intersections.</p>
-        <p>The area this map covers is the 19 boroughs of the city of Montreal. The 15 linked municipalities on the island are visually masked out; their corners are measured but not drawn or clickable.</p>
-        <p>Corners in these linked municipalities are still measured (so walks near the city edge are not cut off), but they are under the grey mask and cannot be selected or interacted with.</p>
-        <p>Walking calculations are done by calculating distance using the length of streets, corner to corner, and is measured at 1.35m/s (4.9km/h).</p>
-        <p>Because of this, walking distances should be taken with a grain of salt, as it doesn't account for shortcuts (e.g. walking through a park or public space), or for construction and stop lights.</p>
+        <summary>Sources and caveats</summary>
+        <p><strong>Sources.</strong> Metro entrances from the <a href='https://www.stm.info/en/about/developers' target='_blank' rel='noopener'>STM</a>; <a href='https://donnees.montreal.ca/fr/dataset/grands-parcs-parcs-d-arrondissements-et-espaces-publics' target='_blank' rel='noopener'>parks</a>, <a href='https://donnees.montreal.ca/fr/dataset/limites-administratives-agglomeration' target='_blank' rel='noopener'>borough boundaries</a> and the <a href='https://donnees.montreal.ca/dataset/geobase' target='_blank' rel='noopener'>street network</a> (Géobase) from the Ville de Montréal open data portal; map tiles from OpenStreetMap. Each file, with its version and its licence, is listed in the <a href='https://github.com/alluvial-fan/fwdm#readme' target='_blank' rel='noopener'>README</a>.</p>
+        <p><strong>Coverage.</strong> All 19 boroughs of the city are drawn; the 15 independent municipalities on the island are greyed out. Their corners are still measured, so a walk near the city edge is not cut short, but they cannot be clicked.</p>
+        <p><strong>Walk times.</strong> Corner to corner along the street network at 1.35 m/s (4.9 km/h), so they ignore shortcuts through parks, hills, construction and stop lights, and a metro walk ends at an entrance rather than a platform. A dot's size is the number of streets that meet at that corner.</p>
+        <p><strong>Address lookup.</strong> The same street file is searched in your browser, so a 13 MB file is fetched the first time you look up an address. A number or a street the file does not hold is refused; a misspelling is checked against <a href='https://photon.komoot.io/' target='_blank' rel='noopener'>Photon</a> for its spelling only, and no position it returns is ever used.</p>
       </details>
     </main>
     <div id='map'></div>

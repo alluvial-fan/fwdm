@@ -1,19 +1,15 @@
 """
 build.py
 
-The whole build, in one file: the raw project data in data/ turned into the
-files site/index.html loads - the four GeoJSON files it draws, and the walking
-graph beside them. It used to be three scripts - network.py,
-build_geojson.py and build_walk_times.py - and the steps, and the order they
-run in, are the same; what changed is that they are one script now, in four
-parts, run by one command.
+The whole build, in one file: the raw project data in data/ turned into the files
+site/index.html loads - the four GeoJSON files it draws and the walking graph beside
+them - in four parts, run by one command.
 
-A GeoJSON file, wherever this file says GeoJSON, is a text file of map shapes
-that a browser can read as it stands. Every file the page draws is one. The
-walking graph is the exception, and it is the one file the page does not draw
-but searches: it is plain JSON, because a browser reads it with code rather
-than handing it to the map library, and because a feature per street corner
-would repeat a property name for every number in it.
+A GeoJSON file, wherever this file says GeoJSON, is a text file of map shapes that a
+browser can read as it stands; every file the page draws is one. The walking graph is
+the exception, and the one file the page does not draw but searches: it is plain JSON,
+because a browser reads it with code rather than handing it to the map library, and
+because a feature per street corner would repeat a property name for every number in it.
 
 The build runs in three steps, and each step needs what the one before it left
 behind.
@@ -110,10 +106,9 @@ if not __debug__:
 
 # --- Paths and files ------------------------------------------------------
 #
-# Every path is worked out from where this file sits, so it does not matter
-# which folder the build is started from. The inputs sit in the project's data/
-# folder and are only ever read. Everything the build writes lands in
-# site/data/, beside the page that loads it, so a run changes nothing else.
+# Every path is worked out from where this file sits, so the folder the build is started
+# from does not matter. Inputs live in the project's data/ and are only read; everything
+# written lands in site/data/, beside the page that loads it.
 
 SITE_DIR = Path(__file__).resolve().parent          # .../project/site
 PROJECT_DIR = SITE_DIR.parent                       # .../project
@@ -162,11 +157,9 @@ def read_json(path):
 
 # ======== Part 1: degrees, metres, streets, and walking ===================
 #
-# Everything the two steps after this one measure with, in the order it is
-# needed: the conversion from degrees to metres, the flat shapes and short cuts
-# the joining and the checks use, the network of streets built out of the city's
-# lines, the walk over that network, and the self-check that holds the
-# conversion against the city's own metres.
+# Everything the two steps after this one measure with: degrees to metres, the flat
+# geometry, the network built out of the city's lines, the walk over it, and the
+# self-check that holds the conversion against the city's own metres.
 
 
 # --- The settings: the projection, the streets, the walk ------------------
@@ -180,12 +173,10 @@ def read_json(path):
 # hand's width apart.
 SNAP_METRES = 0.1
 
-# The city grades every street in a column it calls CLASSE, and one grade is not
-# for walking: class 8, the motorways - the expressway in its trench (the file
-# calls it Route 136), the bridges a motorway crosses on, and the unnamed
-# service ways beside them. Everything else - rues, avenues, boulevards, the
-# bridges that carry people - is kept as it stands. The corner file and the
-# walks both drop their streets from this one list, so the two always agree
+# The city grades every street in a column it calls CLASSE, and one grade is not for
+# walking: class 8, the motorways - the expressway in its trench (Route 136 in the file),
+# the bridges a motorway crosses on, and the unnamed service ways beside them. The corner
+# file and the walks both drop their streets from this one list, so the two always agree
 # about which streets a person can use.
 UNWALKABLE_CLASSES = ('8',)
 
@@ -214,35 +205,22 @@ UNWALKED = float('inf')
 
 # --- Degrees to metres: MTM zone 8 (EPSG:32188) ---------------------------
 
-# Everything measured in this project is metres on the ground, and the city's
-# files do not come in metres: they come in longitudes and latitudes, where a
-# centimetre is seven decimal places and a degree is a different length east to
-# west than it is north to south. Turning those into metres is what makes two
-# distances on the map comparable, so it is the first job in the file.
+# Everything measured in this project is metres on the ground, and the city's files come
+# in longitudes and latitudes, where a centimetre is seven decimal places and a degree is
+# a different length east to west than it is north to south. Turning those into metres is
+# what makes two distances comparable, so it is the first job in the file.
 #
-# The rule for turning a round earth into a flat grid is called a projection.
-# This one is the city's own: MTM zone 8, the grid its street files are
-# published in. Montreal sits inside that zone, so the conversion is accurate to
-# a fraction of a millimetre across the whole city. The numbers it needs are
-# copied from the city's file - data/street_network/geobase.zip holds
-# geobase_mtl.prj, which reads
+# The projection is the city's own: MTM zone 8, EPSG 32188, the grid its street files are
+# published in, whose parameters come from geobase_mtl.prj inside
+# data/street_network/geobase.zip. Montreal sits inside that zone - at most 1.75 degrees
+# from its middle - so the conversion is good to a fraction of a millimetre across the
+# city. The arithmetic is the standard published form (Snyder, "Map Projections - A
+# Working Manual", USGS 1987, pages 61-64) in Python's own maths library: no pyproj, no
+# geopandas, nothing to install.
 #
-#     PROJCS["NAD_1983_MTM_8", ... SPHEROID["GRS_1980",6378137.0,298.257222101]
-#     ... PARAMETER["False_Easting",304800.0] PARAMETER["False_Northing",0.0]
-#     PARAMETER["Central_Meridian",-73.5] PARAMETER["Scale_Factor",0.9999]
-#     PARAMETER["Latitude_Of_Origin",0.0] ... UNIT["Meter",1.0]]
-#
-# Map software knows this grid as EPSG code 32188. The arithmetic below is done
-# with Python's own maths library - no pyproj, no geopandas, nothing to install
-# - using the standard published form of the conversion (Snyder, "Map
-# Projections - A Working Manual", USGS 1987, pages 61-64), which is accurate to
-# well under a millimetre this close to the middle of the zone. Montreal is at
-# most 1.75 degrees from that middle.
-#
-# to_wgs84 is the same conversion read backwards, playing it back the other way
-# from metres to degrees, and it is here for one reason: it lets this grid be
-# held against the city's own file of metres, which the self-check at the end of
-# Part 1 does. Nothing in the walks uses it.
+# to_wgs84() is the same conversion backwards, from metres to degrees. It exists for one
+# reason: it lets this grid be held against the city's own file of metres, which the
+# self-check at the end of Part 1 does. Nothing in the walks uses it.
 
 # The shape of the earth the city's file assumes (GRS 1980), as its two numbers:
 # how wide the earth is at its middle, in metres, and how much it is squashed at
@@ -384,11 +362,9 @@ def to_wgs84(easting, northing):
 
 # --- Flat geometry --------------------------------------------------------
 #
-# The handful of questions the rest of the build asks of a shape on the flat
-# map: how far this point is from that line, whether this point is inside that
-# outline, and how close two outlines come to each other. Every answer is in
-# metres, on the grid set up just above, and this is the whole of the geometry
-# the project needs.
+# The handful of questions the rest of the build asks of a shape on the flat map: how far
+# a point is from a line, whether it is inside an outline, and how close two outlines come
+# to each other. Every answer is in metres, on the grid set up above.
 
 def point_segment_distance(point, start, end):
     '''How far a point is from a stretch of line, and where along it it lands.
@@ -512,15 +488,12 @@ def point_ring_distance(point, ring):
 
 # --- Building the network out of the city's lines -------------------------
 #
-# The city describes its streets as lines: one line per stretch of street, each
-# a list of points, and the city's own word for one stretch is a troncon. The
-# walks do not run along those lines, though, they run from corner to corner, so
-# the first thing needed is the same streets described the other way round: a
-# list of the corners where streets meet, and a list of the short link between
-# two corners, with each link remembering the line it was cut from.
-#
-# The functions below build that, mend the places where two lines almost touch,
-# and leave behind the network that step 3's search walks over.
+# The city describes its streets as lines: one line per stretch, each a list of points, and
+# its own word for one stretch is a troncon. The walks run from corner to corner rather than
+# along those lines, so the first thing needed is the same streets the other way round: the
+# corners where streets meet, and the short link between two corners, each link remembering
+# the line it was cut from. The functions below build that, mend the places where two lines
+# almost touch, and leave behind the network step 3's search walks over.
 
 def merge_endpoints(polylines, snap=SNAP_METRES):
     '''Give every shared corner one number, and join the points that meet.
@@ -1047,13 +1020,11 @@ def sample_ring(ring, step):
 
 # --- The self-test: this file's projection against the city's own ----------
 #
-# A metre is only worth something if it matches the city's. The city publishes
-# the same 34 outlines twice, once in degrees and once in MTM zone 8 metres, so
-# each outline can be projected here and compared with its own twin, point for
-# point, in both directions. Neither copy is this file's, so agreement to a few
-# centimetres is the projection being right, not the two agreeing by
-# construction. It is also the one check that reads no built file and writes
-# nothing, which is why it can run before anything else does.
+# The city publishes the same 34 outlines twice, once in degrees and once in MTM zone 8
+# metres, so each can be projected here and held against its own twin, point for point, in
+# both directions. Neither copy is this file's, so agreement to a few centimetres is the
+# projection being right rather than the two agreeing by construction. It reads no built
+# file and writes nothing, which is why it can run before anything else does.
 
 
 def _rings(geometry):
@@ -1118,29 +1089,23 @@ def check_against_city_files():
 
 # ======== Part 2: step 2, the city's files into GeoJSON ===================
 #
-# Three files in, three files out. The metro stops come out of the STM's zip,
-# the green spaces out of the city's green-space file, and the corners out of
-# the city's street file, and each of the three leaves as a GeoJSON file the
-# page can draw: site/data/metro_stops.geojson, city_parks.geojson and
+# Three files in, three files out: the metro stops out of the STM's zip, the green spaces out
+# of the city's green-space file, the corners out of the city's street file, each leaving as
+# a GeoJSON file the page can draw - site/data/metro_stops.geojson, city_parks.geojson and
 # intersections.geojson.
 #
-# Each one is checked as it is built, written to a temporary name, read back off
-# the disk and checked again as it was written, and only then moved into place.
-# The one writer that does that is at the end of this part, and step 3 uses it
-# too.
-#
-# What this part hands on is those three files. Step 3 reads the corners back
-# and adds the walks to them; the other two are finished once written.
+# Each is checked as it is built, written to a temporary name, read back off the disk and
+# checked again as it was written, and only then moved into place: one writer at the end of
+# this part does that, and step 3 uses it too. Step 3 reads the corners back and adds the
+# walks to them; the other two are finished once written.
 
 
 # --- The metro stops: the words the page shows ----------------------------
 #
-# The metro stops file is the STM's own list of stations and their entrances,
-# and the wording the page shows in a stop's popup is worked out from it here:
-# the station name, how many entrances there are, whether each one is
-# wheelchair accessible, and which lines call at the station. The city's
-# spelling is French, so the words the popup shows are English and are decided
-# in this section.
+# The stops file is the STM's own list of stations and their entrances, and the wording a
+# stop's popup shows is worked out from it here: the station name, how many entrances it
+# has, whether each one is step-free, and which lines call at the station. The city's
+# spelling is French; the words the popup shows are English and are decided in this section.
 
 # A metro stop_code is five digits starting with 10 (10118 = Angrignon).
 METRO_CODE = re.compile(r'10[0-9]{3}')
@@ -1249,13 +1214,12 @@ PARK_TYPES = {
 }
 
 
-# The city keeps one park name in three columns: Type is the head noun, Lien is
-# the linking word and Nom is the distinctive part, so "Parc" + "des" +
-# "Muguets" is the Parc des Muguets. Where the city filled in both the Type and
-# the Lien we show the name it spells out, in French, and the page sets it in
-# italics to mark it as the city's own wording. Lien ends in an apostrophe on
-# the rows that read "de l'Ouest", and nothing goes between an apostrophe and
-# what follows it.
+# The city keeps one park name in three columns: Type is the head noun, Lien the linking
+# word, Nom the distinctive part, so "Parc" + "des" + "Muguets" is the Parc des Muguets.
+# Where the city filled in both Type and Lien the name it spells out is shown as it stands,
+# in French, and the page sets it in italics to mark it as the city's own wording. Lien ends
+# in an apostrophe on the rows that read "de l'Ouest", and nothing goes between an apostrophe
+# and what follows it.
 NAME_JOIN_PARTICLES = {
     'de', 'du', 'des', 'de la', "de l'", "d'", 'le', 'la', 'les', 'au', 'aux',
 }
@@ -1507,22 +1471,19 @@ def check_metro(rows, skipped, out_path):
     print(f'All checks passed. {n} features.')
 
 
-# --- Green spaces: the city file is already GeoJSON, so we keep it as is ---
+# --- Green spaces: the city file is already GeoJSON, so it is kept as is ----
 #
-# The city's green-space file arrives in the shape the page wants, so this
-# section does three things and no more: it reads the file, it copies each
-# space across with every column the city wrote still on it, and it works out
-# the wording a popup shows. Nothing is filtered or simplified, and the one
-# thing that changes is the precision of the points, for the reason
-# PARK_COORD_DIGITS gives.
+# The city's green-space file arrives in the shape the page wants, so this section does
+# three things and no more: it reads the file, copies each space across with every column
+# the city wrote still on it, and works out the wording a popup shows. Nothing is filtered
+# or simplified, and the one thing that changes is the precision of the points.
 
-# Outline points are written rounded to this many decimals. The city writes ten,
-# which is a ten-thousandth of a millimetre - digits no screen has, and they are
-# a quarter of this file's bytes. Six decimals is 11 cm on the ground, while the
-# closest zoom the page offers (19) shows 0.21 m to the pixel and it opens at 12,
-# where a pixel is 27 m: a park's edge cannot move far enough for a reader to see
-# it. The street corners keep their seven (COORD_DIGITS, further down), because
-# there a tenth of a metre decides whether two corners are one.
+# Outline points are written rounded to this many decimals. The city writes ten, a
+# ten-thousandth of a millimetre - digits no screen has, and a quarter of this file's bytes.
+# Six decimals is 11 cm on the ground, while the closest zoom the page offers (19) shows
+# 0.21 m to the pixel and it opens at 12, where a pixel is 27 m: a park's edge cannot move
+# far enough for a reader to see it. The street corners keep their seven (COORD_DIGITS,
+# further down), because there a tenth of a metre decides whether two corners are one.
 PARK_COORD_DIGITS = 6
 
 
@@ -1542,12 +1503,11 @@ def read_parks():
 def build_park_features(source):
     '''One GeoJSON Feature per green space, keeping every attribute.
 
-    The city's export is already the shape we want, so each feature is copied
-    across as it stands: same properties, and the same shape with its points
-    rounded to PARK_COORD_DIGITS. Nothing else is rounded, filtered or
-    simplified, apart from the street right-of-way spaces that STREET_SPACE_TYPE
-    names, which are left out. We keep the raw values and worry about the file
-    size later.
+    The city's export is already the shape wanted here, so each feature is copied across as it
+    stands: same properties, and the same shape with its points rounded to PARK_COORD_DIGITS.
+    Nothing else is rounded, filtered or simplified, apart from the street right-of-way spaces
+    that STREET_SPACE_TYPE names, which are left out; the file's size is dealt with by the
+    rounding rather than by dropping columns.
     '''
     features = []
     skipped = 0
@@ -1852,13 +1812,13 @@ def check_parks(source, out_path):
 
 # --- Street intersections --------------------------------------------------
 
-# The city draws its streets as troncons: one line for each stretch of street
-# between two corners, 48031 of them, written in degrees. CLASSE says what kind
-# of road each one is, and that column is the only filter here - the same one
-# step 3 uses, Part 1's UNWALKABLE_CLASSES. The motorways, and the service ways
-# beside them, go first, before anything else is done, because nobody walks
-# there. So no point in this file is an intersection a person cannot stand on,
-# and the corners and the walks measured from them agree about what a street is.
+# The city draws its streets as troncons: one line for each stretch of street between two
+# corners, 48031 of them, written in degrees. CLASSE says what kind of road each one is, and
+# that column is the only filter here - the same one step 3 uses, Part 1's
+# UNWALKABLE_CLASSES. The motorways and the service ways beside them go first, before
+# anything else is done, because nobody walks there: no point in this file is a corner a
+# person cannot stand on, and the corners and the walks measured from them agree about what
+# a street is.
 
 # The file draws one corner once for every street that touches it, a
 # centimetre or two apart. Two ends this close together are the same corner,
@@ -1891,11 +1851,9 @@ UNNAMED_WAY_TITLE = 'Unnamed way'
 
 # --- Degrees to metres -----------------------------------------------------
 #
-# The distances here are metres on the ground and the file's are in degrees, so
-# the two are bridged by to_metres in Part 1: MTM zone 8, EPSG code 32188,
-# worked out from the city's own .prj file. The one copy of that maths in the
-# repo is there, and Part 1's self-check is what holds it against the city's
-# own metres.
+# The distances here are metres on the ground and the file's are in degrees, bridged by
+# to_metres() in Part 1. That is the only copy of the maths in the repo, and Part 1's
+# self-check is what holds it against the city's own metres.
 
 
 # --- Reading the streets, and finding the corners -------------------------
@@ -2245,11 +2203,9 @@ def check_intersections(corners, graph, rows, out_path):
 
 # --- Writing --------------------------------------------------------------
 #
-# One writer for all four files. Each is written to a temporary name beside
-# itself, read back off the disk, checked as what landed, and only then moved
-# into place, so a run that fails leaves the page with the files it already had.
-# A check that fails deletes the temporary file as well: what a failed run
-# leaves behind is the folder as it found it.
+# One writer for all four files: each is written to a temporary name beside itself, read
+# back off the disk, checked as what landed, and only then moved into place, so a run that
+# fails leaves the page with the files it already had and the folder as it found it.
 
 def collection(features):
     '''The FeatureCollection GeoJSON document around a list of features.'''
@@ -2331,33 +2287,28 @@ def build_geojson():
 
 # ======== Part 3: step 3, the walk from every corner ======================
 #
-# What comes in is step 2's corner file and the city's street lines; what goes
-# out is that same corner file with three numbers added to every corner - how
-# long the walk is to the nearest green space of each size and kind, and to the
-# nearest metro entrance, with and without steps - and one new file, the 34
-# outlines the page's mask is cut round.
+# In comes step 2's corner file and the city's street lines; out goes that same file with
+# three numbers added to every corner - how long the walk is to the nearest green space of
+# each size and kind, and to the nearest metro entrance, with and without steps - plus the
+# 34 outlines the page's mask is cut round.
 #
-# The work is done once per destination rather than once per corner: a single
-# search out from every green space of a band, and every metro entrance, gives
-# every corner its distance at the same time. That is 22 searches, which is why
-# the file can be rebuilt in a couple of minutes.
+# The work is done once per destination rather than once per corner: one search out from
+# every green space of a band, and from every metro entrance, gives every corner its
+# distance at the same time. That is 22 searches, which is why the file rebuilds in minutes.
 
 
 # --- The settings: what step 3 asks about ---------------------------------
 #
-# What counts as a destination, which corners are asking, and the numbers the
-# file's own format limits the answers to. The first few are distances and times
-# and can be changed freely; the last group is the file's ceiling, and the
-# comments beside it say why each one sits where it does.
+# What counts as a destination, which corners are asking, and the numbers the file's own
+# format limits the answers to. The distances and times can be changed freely; the last
+# group is the file's ceiling, and the comments beside it say why each sits where it does.
 
-# How far a gateway or a metro entrance may sit from the nearest street and
-# still be taken to be beside it. The file draws no paths inside parks, so a
-# space's own edge can be a street's width from the road that serves it, and
-# 100 m is generous enough to reach the far side of a wide space and tight
-# enough to refuse a point with no street drawn near it at all. What is not
-# thrown away by allowing it is the distance itself: the last stretch from the
-# street to the edge is added to every walk, so a walk is a chain of lines and
-# can never be shorter than the straight line.
+# How far a gateway or a metro entrance may sit from the nearest street and still be taken
+# to be beside it. The file draws no paths inside parks, so a space's own edge can be a
+# street's width from the road that serves it: 100 m reaches the far side of a wide space and
+# still refuses a point with no street drawn near it. What that slack would lose is handed
+# back anyway - the last stretch from the street to the edge is added to every walk - so a
+# walk is a chain of lines and can never be shorter than the straight line.
 ATTACH_METRES = 100.0
 
 # Points are taken along a green space's edge this far apart, and each one is
@@ -2385,13 +2336,12 @@ BANDS = (
 )
 ANY_BAND = ('any', 'Any size')
 
-# The kinds of green space the page offers, against the city's own six. The
-# keys are the ones step 2 wrote into the parks file from TYPO1: a
-# Grand parc is a city park, a Parc d'arrondissement is a borough park, and the
-# rest - other green spaces, the one garden, the rows still being validated and
-# the three with no type at all - are grouped as other green space rather than
-# given a chip each. "Any kind" is the minimum of the three, as "any size" is
-# of the four bands.
+# The kinds of green space the page offers, against the city's own six. The keys are the ones
+# step 2 wrote into the parks file from TYPO1: a Grand parc is a city park, a Parc
+# d'arrondissement a borough park, and the rest - other green spaces, the one garden, the rows
+# still being validated and the three with no type - are grouped as other green space rather
+# than given a chip each. "Any kind" is the minimum of the three, as "any size" is of the four
+# bands.
 KINDS = (
     ('city', 'City park'),
     ('borough', 'Borough park'),
@@ -2417,15 +2367,13 @@ METRO_LAYERS = (
      'stepfree', 'Step-free only'),
 )
 
-# Which of the published outlines the page draws: the ones the city's own file
-# labels an Arrondissement, its 19 boroughs, rather than the 15 cities linked to
-# it. The label is the file's own - its TYPE column - so the set the page is
-# about is read out of the city's file rather than typed in here a second time,
-# and the same answer is written beside each outline the page is given, as a flag
-# it can read without a list of names of its own. Both labels are named, and a
-# build that found a third would stop rather than quietly draw a smaller map.
-# The 15 are not drawn and are not measured for: they are what the page's grey
-# mask covers, so the page says nothing about their corners at all.
+# Which of the published outlines the page draws: the ones the city's own file labels an
+# Arrondissement, its 19 boroughs, rather than the 15 cities linked to it. The label is the
+# file's own - its TYPE column - so the set the page is about is read out of the city's file
+# rather than typed in here a second time, and the same answer is written beside each outline
+# as a flag the page can read without a list of names. Both labels are named, and a build that
+# found a third would stop rather than quietly draw a smaller map. The 15 are not drawn and
+# not measured for: they are what the grey mask covers.
 FOCUS_TYPE = 'Arrondissement'
 OTHER_TYPE = 'Ville liée'
 
@@ -2890,12 +2838,11 @@ def attach_destinations(nodes, edges, spaces, entrances, outlines):
 
 # --- What the layers are --------------------------------------------------
 #
-# A layer is one question the page can ask, kept as the answer to it: one
-# number for every corner on the map. "A borough park under 1 ha" is one layer
-# and "any metro entrance at all" is another, and the page's own menus are what
-# pick between them. This section says which layers exist and what each one is
-# called, since the page's menus and its legend are built from the wording
-# here; the measuring comes next.
+# A layer is one question the page can ask, kept as the answer to it: one number for every
+# corner on the map. "A borough park under 1 ha" is one layer and "any metro entrance at all"
+# another, and the page's menus pick between them. This section says which layers exist and
+# what each is called - the page's menus and legend are built from the wording here - and the
+# measuring comes next.
 
 def plan_layers():
     '''Every layer the page can ask for, in the order they are built.
@@ -3306,12 +3253,10 @@ def derive_layer(parents):
 
 # --- Writing --------------------------------------------------------------
 #
-# Two files come out of this step: the intersections step 2 wrote, with this
-# step's readings added to every corner of it, and the 34 outlines the page's
-# mask is cut round and its edges are drawn on. Both go to a temporary name
-# first, are read back and checked, and only then take their place, so a run
-# that fails leaves the page with the files it already had rather than with
-# half of new ones.
+# Two files come out of this step: the intersections file with this step's readings added to
+# every corner, and the 34 outlines the mask is cut round and the edges are drawn on. Both go
+# to a temporary name first, are read back and checked, and only then take their place, so a
+# run that fails leaves the page with the files it already had.
 
 def borough_features(outlines):
     '''The 34 outlines as GeoJSON features: a name, whether it is drawn, a shape.
@@ -3372,14 +3317,13 @@ def build_walk_file(features, plan, readings, borough, names, counts, coverage):
     city_parks.geojson or metro_stops.geojson, the two files the page already
     has open, so the same number means the same place in every layer.
 
-    Everything true of the whole map is written once, at the top, where the
-    manifest used to be: the wording of both filters rather than the page
-    inventing it, the four statements, the counts the page checks itself
-    against, the numbers its notes carry, and the 22 layers with the number of
-    corners each reaches and how many are within each of the times the filters
-    offer. The walks on the corners are what the layer files used to be, so the
-    page fetches four GeoJSON files and there is no second file that can fall
-    out of step with what is written beside each corner.
+    Everything true of the whole map is written once, at the top, in the manifest:
+    the wording of both filters rather than the page inventing it, the four
+    statements, the counts the page checks itself against, the numbers its notes
+    carry, and the 22 layers with the number of corners each reaches and how many are
+    within each of the times the filters offer. The walks live on the corners rather
+    than in a file per layer, so the page fetches four GeoJSON files and no second
+    file can fall out of step with what is written beside each corner.
 
     The counts each layer was measured to are counted over the corners the page
     may colour and no others, which is what makes them checkable: the page
@@ -3523,11 +3467,10 @@ def summarise(layers, plan):
 
 # --- Putting step 3 together ----------------------------------------------
 #
-# The order this step runs its own parts in: read, put the destinations onto the
-# network, search once per layer that needs a search of its own, work out the
-# eight that are a minimum of others, check all of it, then write. Every one of
-# those is a function above that does its own work and its own checking; what is
-# here is the order and the running commentary.
+# The order this step runs its own parts in: read, put the destinations onto the network,
+# search once per layer that needs a search of its own, work out the eight that are a minimum
+# of others, check all of it, then write. Each part is a function above that does its own work
+# and its own checking; what is here is the order and the running commentary.
 
 def build_walk_times():
     '''Step 3: read what step 2 wrote, measure every layer, write the three files.
@@ -3543,12 +3486,11 @@ def build_walk_times():
 
     dots, corner_features = read_dots()
     streets = read_streets()
-    # Only the metres are wanted for the walk, but they come through step 2's
-    # reader, so that this step walks the same troncons, in the same order, with
-    # the same road classes dropped as the corners were numbered from. One
-    # reader, so the two steps cannot disagree about what a street is. The
-    # records themselves are kept as well: the walking graph written at the end
-    # of this step needs each troncon's own street numbers, which are not in the
+    # Only the metres are wanted for the walk, but they come through step 2's reader, so that
+    # this step walks the same troncons, in the same order, with the same road classes dropped
+    # as the corners were numbered from: one reader, so the two steps cannot disagree about
+    # what a street is. The records themselves are kept too, because the walking graph written
+    # at the end of this step needs each troncon's own street numbers, which are not in the
     # metres.
     lines = [line['metres'] for line in streets]
     entrances = read_entrances()
@@ -3639,19 +3581,16 @@ def build_walk_times():
 
 # ======== Part 3b: the graph the page walks for itself ====================
 #
-# The two filters are answered before the page is ever opened: step 3 measures
-# every corner against every destination and writes the answer beside the
-# corner, so asking a question needs no search. An address is the other case.
-# Its corner is in no file, so the page has to find the street the address
-# names, work out which way along that street the number lies, find the nearest
-# link to that spot, and search out from it - in the browser, while the reader
-# waits.
+# The two filters are answered before the page is ever opened: step 3 measures every corner
+# against every destination and writes the answer beside the corner, so asking a question
+# needs no search. An address is the other case - it has no corner in any file, so the page
+# has to find the street it names, work out which way along that street the number lies, find
+# the nearest link and search out from it, in the browser, while the reader waits.
 #
-# What that needs is the network, and the city's street numbers to turn an
-# address into a place on it. Both are written here, as one file: corners in
-# degrees, links as two corner numbers and a length, and one row per troncon
-# that carries a range of civic numbers. Nothing in it is a shape the page
-# draws, which is why it is the one file the build writes that is not GeoJSON.
+# What that needs is the network and the city's street numbers. Both are written here as one
+# file: corners in degrees, links as two corner numbers and a length, and one row per troncon
+# that carries a range of civic numbers. Nothing in it is a shape the page draws, which is why
+# it is the one file the build writes that is not GeoJSON.
 
 # How far a troncon's own end may sit from the corner of the network that
 # stands for it. The two are the same point, but the network has been nudged by
@@ -3666,12 +3605,11 @@ ADDRESS_REACH = 2.0
 # hundredth of the twenty-five metres between two corners of the search.
 GRAPH_DECIMALS = 6
 
-# How many parts of a metre the lengths are written in: centimetres, so a length
-# is a whole number of them. The finest link in the network is a few centimetres
-# long - two corners the joining in Part 1 decided were the same junction - and
-# a coarser unit would round it to nothing, which would leave the page reading a
-# link that costs no walking. A centimetre is more precision than a walk needs,
-# and it is kept because it lets the numbers the page adds up be the numbers this
+# How many parts of a metre the lengths are written in: centimetres, so a length is a whole
+# number of them. The finest link in the network is a few centimetres long - two corners the
+# joining in Part 1 decided were the same junction - and a coarser unit would round it to
+# nothing, leaving the page reading a link that costs no walking. A centimetre is finer than a
+# walk needs, and it is kept because it lets the numbers the page adds up be the numbers this
 # file added up, which is what the check below holds them to.
 GRAPH_PARTS = 100
 

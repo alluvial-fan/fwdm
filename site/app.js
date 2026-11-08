@@ -1,24 +1,17 @@
-// The page's behaviour, in one file: fetch the four data files, draw the map of
-// the 19 boroughs over OpenStreetMap tiles, and answer the two filters out of
-// the walk times already written beside each corner. Nothing is measured in the
-// browser; the build did that, and this file only reads it.
+// The page's behaviour, in one file: fetch the data files, draw the 19 boroughs
+// over OpenStreetMap tiles, and answer the filters out of the walk times the
+// build wrote beside each corner. Nothing is measured here.
 //
-// The data files are GeoJSON, a text format for map shapes that a browser can
-// read as it stands, and the map is drawn with Leaflet, a small library that
-// turns those files into tiles, shapes and dots.
-//
-// Run under node, the same file does no drawing at all: it checks the data
-// instead, which is what makes `node site/app.js` a test.
+// Run under node, the same file draws nothing and checks the data instead,
+// which is what makes `node site/app.js` a test.
 
 let map = null;
 
-// Make the map and put the OpenStreetMap tiles on it. With preferCanvas set,
-// Leaflet draws all of the map's own shapes on a single canvas rather than as
-// one element each. Zoom animation is turned off, because Leaflet scales that
-// canvas while the tiles move, which lifts the grey mask off the map for the
-// length of the zoom. The bounds set in start() are made solid under a drag:
-// at a viscosity of 1 the drag stops at the edge instead of overshooting and
-// springing back.
+// Make the map and put the OpenStreetMap tiles on it. preferCanvas draws every
+// shape on one canvas rather than as an element each; zoom animation is off
+// because Leaflet scales that canvas while the tiles move, which lifts the mask
+// off the map for the length of the zoom; maxBoundsViscosity 1 makes a drag stop
+// at the edge instead of overshooting and springing back.
 function buildMap() {
   map = L.map('map', {
     preferCanvas: true,
@@ -32,17 +25,15 @@ function buildMap() {
   }).addTo(map);
 }
 
-// The column on a phone, where it has no room beside the map: the button in the
-// bar folds it away and the same button brings it back. Folding it changes how
-// much of the window the map fills, and Leaflet measures its box once and keeps
-// what it found, so the map is told to measure again - without that it goes on
-// drawing into the box it had while the column was open, and the height it
-// gained is left blank grey.
+// The column on a phone, where it has no room beside the map: the button in the bar folds
+// it away and the same button brings it back. Folding it changes how much of the window the
+// map fills, and Leaflet measures its box once and keeps what it found, so the map is told
+// to measure again - without that it goes on drawing into the box it had while the column
+// was open, and the height it gained is left blank grey.
 //
-// Above 760px the column is always shown, in the place style.css keeps for it: a
-// fold made on a phone must not follow the reader to a wide window, where the
-// button that would undo it is not there. Nothing here runs under node, which has
-// no window to fold.
+// Above 760px the column is always shown, in the place style.css keeps for it: a fold made
+// on a phone must not follow the reader to a wide window, where the button that would undo
+// it is not there. Nothing here runs under node, which has no window to fold.
 function wirePanelToggle() {
   const button = document.getElementById('panel-toggle');
   if (!button) { return; }
@@ -92,18 +83,13 @@ function showPanel() {
 }
 
 // Fetch one of the data files and read it as JSON. A reply that is not ok stops
-// here, naming the address that failed, rather than handing a page of HTML back
-// as though it were shapes. The file's name goes in front of whatever went
-// wrong, because a fetch that never reaches the server rejects with nothing but
-// "Failed to fetch", and a body that is not JSON goes on about a token: neither
-// says which of the four files did not come, and the line under the title has to
-// say it.
+// here rather than handing a page of HTML back as shapes, and the file's name goes
+// in front of whatever went wrong: a failed fetch rejects with "Failed to fetch"
+// and a bad body talks about a token, and neither says which file did not come.
 //
-// An options object is handed to fetch as it stands, which is how a file the
-// page does not need yet asks to be fetched at a low priority: the browser then
-// keeps the tiles the map is painting ahead of it instead of splitting the
-// connection evenly. A browser that does not know the priority option ignores
-// it, and every browser still fetches the file.
+// An options object is passed to fetch as it stands, which is how a file the page
+// does not need yet asks for a low-priority fetch: a browser that does not know
+// the option ignores it, and every browser still fetches the file.
 function loadGeojson(url, options) {
   const name = url.replace(/^data\//, '');
   return fetch(url, options)
@@ -143,11 +129,10 @@ function escapeHtml(value) {
 }
 
 // Park polygons by the city's TYPO1 kind: four shades of green, darkest for the
-// large parks, paler for pending and unclassified; each has a darker edge, and
-// pending spaces are dashed. The fill is at 0.4 rather than the 0.55 it wore on the
-// dark page: these greens now sit on pale tiles rather than under a navy column,
-// and at 0.55 the parks came up through the dots the reader is actually asking
-// about. The edges keep their weight, so a park's shape is still read.
+// large parks, paler for pending and unclassified, each with a darker edge, and
+// pending spaces dashed. The fill is 0.4 rather than 0.55 so the parks do not come
+// up through the dots drawn on them; the edges keep their weight, so a park's
+// shape is still read.
 const PARK_STYLE = {
   'grand_parc': { color: '#0B3D0F', weight: 1, fillColor: '#1B5E20', fillOpacity: 0.4 },
   'arrondissement': { color: '#1B5E20', weight: 1, fillColor: '#2E7D32', fillOpacity: 0.4 },
@@ -157,14 +142,12 @@ const PARK_STYLE = {
   'unknown': { color: '#81C784', weight: 1, fillColor: '#C8E6C9', fillOpacity: 0.4 }
 };
 
-// How far a park's outline may be thinned as it is drawn, in pixels: Leaflet
-// drops the points of a ring that fall within this distance of the line between
-// their neighbours, at the zoom being drawn, and takes the whole ring again at
-// any zoom where the difference would show. The parks are 1,981 shapes of about
-// eighty points each, all of them in view at the zoom the page opens on, so this
-// thinning is where the page's drawing time goes. Two pixels of a park edge is
-// 27 m at that opening zoom and 0.4 m at the closest one the page offers - the
-// corner of a fenced lawn either way, under a fill of 0.4.
+// How far a park's outline may be thinned as it is drawn, in pixels: Leaflet drops
+// the ring points that fall within this distance of the line between their
+// neighbours, and takes the whole ring again at zooms where the difference would
+// show. The 1,981 rings are about eighty points each and all in view at the zoom
+// the page opens on, so this is where the drawing time goes: two pixels is 27 m
+// there, 0.4 m at the closest zoom offered.
 const PARK_SMOOTHING = 2;
 
 // One marker per kind of metro point: stations are the big navy dots, entrances
@@ -190,12 +173,10 @@ function metroPopup(properties) {
   return lines.join('<br>');
 }
 
-// The mask: the world with the 19 drawn boroughs cut out as holes, filled in
-// the grey of the map itself. It dims the linked cities' parks and metro
-// points, and takes their clicks, so nothing outside the 19 opens. The grey is
-// the near-white the map's own box wears in style.css rather than a darker neutral
-// of its own, so the linked cities fade into the page's absent grey instead of
-// reading as a shape laid over the map.
+// The mask: the world with the 19 drawn boroughs cut out as holes, filled in the
+// grey the map's own box wears in style.css so the linked cities fade into the
+// page rather than reading as a shape laid over the map. It dims their parks and
+// metro points, and takes their clicks, so nothing outside the 19 opens.
 const MASK_STYLE = { stroke: false, fillColor: '#E5E7EB', fillOpacity: 0.78 };
 
 // The outlines the page draws: the 19 the build flagged from the city's TYPE
@@ -250,19 +231,15 @@ function focusBounds(windows) {
   return box.isValid() ? box : null;
 }
 
-// The page, once: make the map, ask for the borough outlines on their own, fit
-// the map to them so its tiles are on their way, then draw what no filter can
-// change - the parks, the metro points and the grey mask - read the walk times
-// out of the intersections file that has just loaded and wire the controls. Each
-// step hands its result to the next through page or walk, so nothing here holds
-// a value for long.
+// The page, once: make the map, ask for the borough outlines on their own and fit
+// the map to them, then draw what no filter can change - parks, metro points, the
+// mask - read the walk times and wire the controls. Each step hands its result on
+// through page or walk.
 //
-// The outlines are asked for first, and alone, because the view the map opens on
-// is made of them: until the map has been fitted it is asking for the tiles of
-// the view it was made with, and those tiles are the largest thing the page
-// paints. The outlines are 200 KB of the four and a half megabytes the page
-// loads, so fitting on them alone starts the right tiles about four megabytes
-// sooner than waiting for the parks would.
+// The outlines are asked for first, and alone, because the opening view is made of
+// them: they are 200 KB of the four and a half megabytes the page loads, so fitting
+// on them starts the right tiles about four megabytes sooner than waiting for the
+// parks would.
 function start() {
   buildMap();
   // The fold is wired before the files come, so a phone that folds the column
@@ -274,11 +251,10 @@ function start() {
       say('Loading the parks and metro points...');
       return Promise.all([
         loadGeojson('data/city_parks.geojson'),
-        // The corners are counted and coloured, never drawn, and no filter is
-        // asked until the reader asks one, so this file is told it may wait
-        // behind the tiles: two and a half megabytes arriving at the same
-        // priority as the map's own tiles is what leaves the page's largest
-        // paint waiting.
+        // The corners are counted and coloured, never drawn, and no filter is asked
+        // until the reader asks one, so this file is told it may wait behind the tiles:
+        // two and a half megabytes arriving at the tiles' priority is what leaves the
+        // page's largest paint waiting.
         loadGeojson('data/intersections.geojson', { priority: 'low' }),
         loadGeojson('data/metro_stops.geojson')
       ]);
@@ -315,11 +291,10 @@ function start() {
         }
       }).addTo(map);
 
-      // The mask made from the outlines went on first, under the parks: it is
-      // put back on top of them here, where its place in the stack is, so the
-      // order holds from this paint on rather than from the next redraw. The
-      // mask is what hides the linked cities, so nothing it covers may be drawn
-      // over it.
+      // The mask made from the outlines went on first, under the parks; it is put back
+      // on top of them here, where its place in the stack is, so the order holds from
+      // this paint on rather than from the next redraw. The mask hides the linked cities,
+      // so nothing it covers may be drawn over it.
       if (page.mask) {
         page.mask.remove();
         page.mask.addTo(map);
@@ -375,12 +350,10 @@ function start() {
       wireLookup();
     })
     .catch(function (err) {
-      // The line under the title, and not only the console: a reader without the
-      // console open still has to know that the page is empty because a file did
-      // not come, and which one. The colour tells the failure apart from the load
-      // status it replaces, and the tooltip carries the same words where the bar
-      // is too narrow to show them. The full error, with its stack, stays in the
-      // console.
+      // The line under the title, and not only the console: a reader still has to
+      // know the page is empty because a file did not come, and which one. The
+      // colour marks the failure, the tooltip repeats the words where the bar is
+      // too narrow, and the full error stays in the console.
       const status = document.getElementById('status');
       status.textContent = 'Could not load ' + err.message;
       status.title = err.message;
@@ -389,11 +362,11 @@ function start() {
     });
 }
 
-// The outlines, on their own and before the rest: the rings the lookup's click
-// is answered from, the grey mask, the dashed borough edges, and the view the
-// map opens on. The outlines come with the base map rather than the walk times
-// because the mask is the map's own shape: it is in place before any filter is
-// asked, and the tiles the page opens on are asked for as soon as it is.
+// The outlines, on their own and before the rest: the rings the lookup's click is answered
+// from, the grey mask, the dashed borough edges, and the view the map opens on. They come
+// with the base map rather than the walk times because the mask is the map's own shape: it
+// is in place before any filter is asked, and the tiles the page opens on are asked for as
+// soon as it is.
 function drawBoroughs(outlines) {
   walk.outlines = outlines;
   const windows = drawnOutlines(walk.outlines);
@@ -418,17 +391,12 @@ function drawBoroughs(outlines) {
   if (page.frame) { fitToFrame(page.frame); }
 }
 
-// Fit the map to a frame and hold it there. The hard edge on a drag: the map may
-// be panned anywhere inside the frame plus a small margin, and no further - not
-// to the US, not to another city, not to the ocean past the island. The margin
-// is 5% of the frame, a few hundred metres either way: enough that a borough on
-// the frame's edge keeps its rim beside the grey, not enough to reach anything
-// the page does not measure.
-//
-// And no zooming out past the fitted view: past it the mask fills the map with
-// grey. Zooming in stays free, and every drag stays inside the frame set here.
-// Both are called twice over a page load - once when the outlines arrive, and
-// again if they gave no frame at all - so both are safe to repeat.
+// Fit the map to a frame and hold it there: a drag may go anywhere inside the
+// frame plus a 5% margin - a few hundred metres - and no further, which keeps the
+// island in view without reaching anything the page does not measure; and no zoom
+// may go out past the fitted view, where the mask would fill the map with grey.
+// Zooming in stays free. Both calls are safe to repeat, and both are made twice
+// over a page load.
 function fitToFrame(frame) {
   map.fitBounds(frame);
   map.setMaxBounds(frame.pad(0.05));
@@ -452,17 +420,14 @@ const WALK_RING = '#141414';           // the dark edge every coloured dot wears
 const WALK_RADII = { 3: 2.5, 4: 3.5, 5: 4.5, 6: 5.5, 7: 7, 'other': 4 };
 // The 19 boroughs' own boundaries: a slate line, thin and half-there, dashed so it
 // reads as the edge of what the page measures rather than as another street on the
-// tiles. It was navy at 1.5px, which drew the eye to the least interesting thing in
-// the drawing and competed with the dots it is drawn under.
+// tiles, and light enough not to compete with the dots drawn over it.
 const EDGE_STYLE = { color: '#334155', weight: 1, opacity: 0.55,
                      dashArray: '5 4', fill: false };
 
-// What the page is drawn from: the intersections features, the two files a
-// destination is named from, the park and metro layers the filters show and hide,
-// the dots' group, the mask, the frame the map is held to, and the token that
-// tells the draw now being built from the one it replaced. `arming` is the one
-// piece of state here that the reader sets by hand rather than by a menu: whether
-// the next click on the map is a question about a point or only a click.
+// What the page is drawn from: the features, the layers the filters show and hide,
+// the mask, the frame the map is held to, and drawToken, which marks a draw as the
+// current one. `arming` is the one piece of state the reader sets by hand: whether
+// the next click on the map asks a question or is only a click.
 const page = { dots: null, metro: null, parks: null, parkLayer: null,
                metros: null, walkGroup: null, mask: null, graph: null,
                lookupGroup: null, rings: null, frame: null, answered: false,
@@ -542,13 +507,11 @@ function count(value) {
   return value === null || value === undefined ? '&hellip;' : String(value);
 }
 
-// Whether a shade wants white print on it or the page's own ink. The park ramp ends
-// in a cream (#F4D2A0) and the metro ramp in a pale blue (#BFE1F2), where white
-// cannot be read, and both begin at a dark colour the ink would disappear into. So
-// the choice is made from the shade rather than fixed in style.css: the three
-// channels are weighted the way the eye weights them - green much the most, blue the
-// least - and the crossover is the point where white and the ink are equally
-// legible, which is a relative luminance of 0.198.
+// Whether a shade wants white print on it or the page's ink. Both ramps end in a
+// pale colour white cannot be read on and begin in a dark one the ink would vanish
+// into, so the choice is made from the shade rather than fixed in style.css: WCAG
+// relative luminance, whose 0.198 crossover is where white and the ink are equally
+// legible.
 function inkOn(colour) {
   const value = parseInt(colour.slice(1), 16);
   const channels = [16, 8, 0].map(function (shift) {
@@ -630,17 +593,23 @@ function describeWalk() {
   fillMenu('park-kind', data.kinds, missing);
   fillMenu('park-band', data.bands, missing);
   fillMenu('metro-kind', data.metro_kinds, missing);
-  // A time menu is the build's ticks beside a value that means n/a.
-  const minutes = [{ key: 'none', label: 'n/a' }].concat(data.tick_minutes.map(
-    function (minute) {
-      return { key: String(minute), label: 'within ' + minute + ' min' };
-    }));
+  const minutes = minuteChoices(data);
   fillMenu('park-minutes', minutes, missing);
   fillMenu('metro-minutes', minutes, missing);
   if (missing.length) {
     say('The page offers a choice the build does not have: ' +
       missing.join(', '));
   }
+}
+
+// A time menu's choices: the build's own ticks beside the value that means n/a.
+// The words are the markup's words too, since a label that changes when the file
+// arrives is a menu renaming itself under the reader.
+function minuteChoices(data) {
+  return [{ key: 'none', label: 'n/a' }].concat(data.tick_minutes.map(
+    function (minute) {
+      return { key: String(minute), label: 'Within ' + minute + ' min' };
+    }));
 }
 
 // The wording of a menu, from the build rather than from this file, so a
@@ -689,12 +658,10 @@ function say(message) {
   document.getElementById('status').textContent = message;
 }
 
-// Seconds as a reader would say them: minutes under an hour, and hours and
-// minutes beyond it, since a walk of seventy minutes is not helped by being
-// called 70. A walk inside a minute is given as a bound - "< 1 min" - rather than
-// as the phrase it used to be: three words standing in the middle of a line of
-// figures read as a remark rather than as a measurement, and five walks are read
-// down a column. escapeHtml() sees to the "<", so it reaches the popup as text.
+// Seconds as a reader would say them: minutes under an hour, hours and minutes beyond
+// it, since a walk of seventy minutes is not helped by being called 70. A walk inside
+// a minute is a bound - "< 1 min" - rather than three words standing in a column of
+// figures. escapeHtml() sees to the "<", so it reaches the popup as text.
 function formatWalk(seconds) {
   if (seconds < 60) { return '< 1 min'; }
   const minutes = Math.round(seconds / 60);
@@ -753,10 +720,10 @@ function lookOf(number, wanted) {
 
 // --- Drawing the corners the filters pass ---------------------------------
 //
-// The corners that pass the filters, as dots on the map, with a popup each and
-// the tally the legend is built from. What comes in is the choices, the minutes
-// asked for and the walks already written on each corner; what goes out is a
-// dot for every corner the page may colour, and the counts a legend can read.
+// The corners that pass, as dots with a popup each, beside the tally the legend is
+// built from: in come the choices, the minutes asked for and the walks already
+// written on each corner, out go a dot per corner the page may colour and the
+// counts a legend can read.
 
 function newCounts() {
   const zeros = function () { return [0, 0, 0, 0, 0]; };
@@ -767,19 +734,16 @@ function newCounts() {
   };
 }
 
-// How many corners are turned into dots before the browser is given the page
-// back. A question that colours nineteen thousand corners builds nineteen
-// thousand markers, each with its own popup, and building them in one loop held
-// the main thread for a fifth of a second: long enough for the browser to report
-// one long task, and long enough for a tap to be counted late. The dots are the
-// same dots - the work did not change - but it is done in slices now, so a slice
-// is short and the page answers between one slice and the next.
+// How many corners are turned into dots before the browser is given the page back.
+// A question that colours nineteen thousand corners builds nineteen thousand
+// markers, each with a popup, and building them in one loop held the main thread for
+// a fifth of a second; the work is the same, but in slices the page answers between
+// one slice and the next.
 const SLICE_CORNERS = 2000;
 
-// Run a slice on the next frame, or now when there are no frames to wait for.
-// Under node there is no page to keep responsive and no drawing to do, so the
-// slices run back to back and a check sees the finished draw the moment redraw()
-// returns, exactly as it did when the loop was whole.
+// Run a slice on the next frame, or now when there are no frames to wait for: under
+// node there is no page to keep responsive and no drawing to do, so the slices run
+// back to back and a check sees the finished draw the moment redraw() returns.
 function nextFrame(run) {
   if (typeof requestAnimationFrame === 'function') { requestAnimationFrame(run); }
   else { run(); }
@@ -832,25 +796,23 @@ function drawDots(wanted, counts, token, finished) {
 
 // --- Which features are drawn ---------------------------------------------
 //
-// Each family answers to its own filter: a menu left on n/a is the reader
-// saying they do not care about that family, so none of its features are
-// drawn. The layers are made once and taken on and off the map here, which
-// keeps a restored choice drawing the features it asks about.
+// Each family answers to its own filter: a menu left on n/a is the reader saying
+// they do not care about that family, so none of its features are drawn. The layers
+// are made once and taken on and off the map here, which keeps a restored choice
+// drawing the features it asks about.
 function showFeature(layer, asked) {
   if (!layer || !map) { return; }
   if (asked && !map.hasLayer(layer)) { layer.addTo(map); }
   else if (!asked && map.hasLayer(layer)) { map.removeLayer(layer); }
 }
 
-// Everything a filter changes goes through here: the dots, the path order and
-// the legend, from one tally. Order: borough edges at the back, then parks,
+// Everything a filter changes goes through here: the dots, their stack order and the
+// legend, all from one tally. The stack runs borough edges at the back, then parks,
 // dots, the mask, and the metro points on top.
 //
-// The dots arrive in slices, so everything that reads the finished tally waits
-// for the last one: the stack order, the legend, and the count the build is
-// checked against. A question asked while the last one is still being built takes
-// over - page.drawToken is what stops the old draw's slices, whose dots have
-// already been cleared off the map.
+// The dots arrive in slices, so everything that reads the finished tally waits for
+// the last one. A question asked while the last draw is still being built takes over,
+// and drawToken is what stops the old draw's slices writing into the new one.
 function redraw() {
   const wanted = Object.keys(walk.asked);
   const counts = newCounts();
@@ -922,18 +884,15 @@ function drawLegend(counts, wanted) {
 }
 
 // The question the map is answering, in the build's own words for the choices:
-// a corner is coloured when every walk that was asked about is inside its own
-// time, and the two times are never added together.
+// a corner is coloured when every walk asked about is inside its own time, and
+// the two times are never added together.
 function questionText(wanted) {
   if (!wanted.length) {
-    return 'Nothing is asked yet, so the map draws neither parks nor metro stations. ' +
-      'Choose a walking time for green spaces, for metro stations, or for both: ' +
-      'the features you ask about appear, and every corner within their reach is coloured.';
+    return 'Nothing is asked yet.';
   }
   return 'Walk time to ' + askingText(wanted[0]) + (wanted.length === 1 ? '.' :
-    ' and to ' + askingText(wanted[1]) + ': an intersection "dot" appears only when ' +
-    'both requested walks are inside their own time, and its colour is the pair of ' +
-    'bands it falls in.');
+    ' and to ' + askingText(wanted[1]) + ': a dot is drawn only where both walks ' +
+    'are inside their own time.');
 }
 
 function askingText(family) {
@@ -1018,30 +977,28 @@ function filled(colour) {
 }
 
 // What the key holds, said under it: the grid for two answers at once, the one
-// row of counts for one, and, before anything is asked, the note that says the
-// key fills in - so the paragraph is always there and the column never jumps.
+// row of counts for one, and, before anything is asked, what the rows and
+// columns will be - so the paragraph is always there and the column never jumps.
 function axisNote(wanted) {
   if (wanted.length === 2) {
-    return '<p class="axis">Metro bands horizontal (x axis), green spaces vertical (y axis), ' +
-      'both in minutes. Each cell is the colour of an intersection passing both, and ' +
-      'displays how many dots are coloured that way.</p>';
+    return '<p class="axis">Metro bands across, green spaces down, both in ' +
+      'minutes; each cell counts the corners inside both bands.</p>';
   }
   if (wanted.length === 1) {
     return '<p class="axis">' + (wanted[0] === 'metro' ? 'Metro' : 'Green spaces') +
-      ' bands (in minutes), closest first, with each cell coloured by intersections within ' +
-      'that band, and how many dots are coloured that way.</p>';
+      ' bands in minutes, closest first; each cell is the colour of the corners ' +
+      'inside it, and how many there are.</p>';
   }
-  return '<p class="axis">The key fills in once a walking time is chosen: five bands ' +
-    '(in minutes), closest first, from the dark end of the scale to the pale one.</p>';
+  return '<p class="axis">Choose a walking time above: five bands, closest first, ' +
+    'dark to pale.</p>';
 }
 
 // --- Reading the header, and answering it ---------------------------------
 //
-// The controls are the only record of what is asked, so a change reads them
-// again rather than remembering what the last change was; a reload that
-// restores a menu's last choice therefore answers that choice straight away.
-// What comes out is walk.asked - one entry per menu not left on n/a - and a
-// redraw from it.
+// The controls are the only record of what is asked, so a change reads them again
+// rather than remembering the last change, and a reload that restores a menu answers
+// that choice straight away. Out comes walk.asked - one entry per menu not left on
+// n/a - and a redraw from it.
 
 // Wire the controls once the base map has loaded, then answer whatever they
 // hold: a reload restores a menu's last choice without firing a change, so the
@@ -1088,18 +1045,18 @@ function afterChange() {
   }
 }
 
-// An answer and a filter are two answers to the same question - what is within a
-// walk of somewhere - and a map carrying both reads as one answer that
-// contradicts itself: the dots say what is within reach of every corner, the
-// answer says what is within reach of one. So they take turns, both ways round.
-// A filter set to anything but n/a takes the answer off the map and says so in
-// the box the answer was asked from; an answer takes the map from the filters,
-// puts the menus back to n/a and says so under its own five walks (drawLookup).
+// An answer and a filter answer the same question - what is within a walk of
+// somewhere - and a map carrying both reads as one answer that contradicts itself:
+// the dots say what is within reach of every corner, the answer says what is within
+// reach of one. So they take turns, both ways round: a filter set to anything but
+// n/a takes the answer off the map and says so in the box the answer was asked from;
+// an answer takes the map from the filters and puts the menus back to n/a, saying so
+// under its own five walks (drawLookup).
 //
-// The menus are put back rather than the drawing being hidden behind them: the
-// menus are the only record of what is asked, everywhere else on this page, and
-// a menu left saying "within 15 min" over a map that draws no dots would be a
-// control that lies about the map under it.
+// The menus are put back rather than the drawing hidden behind them, because they
+// are the only record of what is asked everywhere else on the page: a menu left
+// saying "Within 15 min" over a map that draws no dots would be a control that lies
+// about the map under it.
 function clearAnswer() {
   if (!page.answered) { return false; }
   page.cleared = true;
@@ -1149,19 +1106,16 @@ function checkAgainstBuild(counts, wanted) {
 
 // --- The address: a graph, a street name, and a walk made here -------------
 //
-// The two filters are answered by the build: every corner carries its own walk
-// to every kind of destination, so a question about them needs no search. An
-// address is the other case. Nobody knows which place a reader will type until
-// they type it, so this section does what the build could not do in advance -
-// turn the text into a place, find the street under that place, and search out
-// from it - over the network the build wrote for the purpose, in
-// data/walk_graph.json, and in the browser.
+// The two filters are answered by the build: every corner carries its own walk to
+// every kind of destination, so a question about them needs no search. An address
+// cannot be, since nobody knows what a reader will type, so this section turns text
+// into a place, finds the street under it and searches out from it - over the network
+// the build wrote for the purpose, in data/walk_graph.json, and in the browser.
 //
-// The search is Dijkstra's, the same one the build runs over the same network:
-// always deal with the nearest corner not yet dealt with, so no corner is given
-// a distance that a longer way round could better. What comes back is a
-// distance for every corner, and the corner each one was reached from - which is
-// enough to draw the route, not only to name the walk.
+// The search is Dijkstra's, as in the build: always deal with the nearest corner not
+// yet dealt with, so no corner is given a distance a longer way round could better.
+// What comes back is a distance for every corner and the corner it was reached from,
+// which is enough to draw the route as well as name the walk.
 
 const ADDRESS_GRAPH = 'data/walk_graph.json';
 const SNAP_METRES = 100;       // how far a point may be from the street it is on
@@ -1171,13 +1125,12 @@ const DESTINATION_PARKS = 3;
 const DESTINATION_STATIONS = 2;
 const SNAP_CELL = 200;         // metres across one square of the snapping grid
 
-// Degrees to metres, for the two places this file has to measure in metres
-// alone: how far a click is from a street, and where along a link it landed.
-// The scale is the island's middle latitude, so the error over the whole island
-// is a part in five hundred - a metre or two in a kilometre - which the snap
-// does not care about, because it only has to pick the right street out of the
-// two or three within a hundred metres. Every distance a walk is made of is
-// measured by the build and read out of the file, never recomputed this way.
+// Degrees to metres, for the two places this file has to measure in metres alone: how
+// far a click is from a street, and where along a link it landed. The scale is the
+// island's middle latitude, so the error over the island is a part in five hundred,
+// which the snap does not care about: it only has to pick the right street out of the
+// two or three within a hundred metres. Every distance a walk is made of is measured
+// by the build and read out of the file, never recomputed this way.
 const ISLAND_LAT = 45.52;
 const LON_METRES = 111320 * Math.cos(ISLAND_LAT * Math.PI / 180);
 const LAT_METRES = 110540;
@@ -1229,17 +1182,13 @@ function withoutType(key) {
     ? words.slice(1).join(' ') : key;
 }
 
-// How alike two names are, from 0 to 1: one less the share of the longer name
-// that has to be changed to turn it into the other, a letter changed or added or
-// dropped counting one each. I first tried counting shared letter pairs, and it
-// refused "Sherbrook" against "Sherbrooke" at 0.85: dropping a letter there
-// breaks two pairs, the ones on either side of it, so the commonest slip of all
-// cost twice what it should. Counting the letters that have to change costs it
-// exactly one letter in eighteen.
-//
-// The same measure keeps "Rue Sherbrooke Est" away from "Rue Sherbrooke Ouest":
-// they differ by two letters, which is one name in nine, and the word they
-// differ in is the one word that says which street is meant.
+// How alike two names are, from 0 to 1: one less the share of the longer name that has
+// to be changed to turn it into the other, a letter changed, added or dropped counting
+// one each. Counting letters rather than shared pairs keeps "Sherbrook" next to
+// "Sherbrooke" at the cost of one letter in eighteen - a dropped letter breaks the two
+// pairs on either side of it - and still keeps "Rue Sherbrooke Est" away from "Rue
+// Sherbrooke Ouest": they differ by two letters, one name in nine, in the one word
+// that says which street is meant.
 function similarity(one, other) {
   if (one === other) { return 1; }
   const longest = Math.max(one.length, other.length);
@@ -1311,19 +1260,16 @@ function prepareGraph(document) {
   return graph;
 }
 
-// The street a piece of text names, as a place in graph.groups, or a record of
-// the names that came closest.
+// The street a piece of text names, as a place in graph.groups, or a record of the
+// names that came closest. Three passes, in the order a reader's guess should be
+// trusted: the name as written, which is the one answer that cannot be wrong; the name
+// with its type word set aside, which is how "Sherbrooke Est" finds "Rue Sherbrooke
+// Est"; and the closest name in the file, taken only when a mistyped letter is the
+// likelier story - which keeps "Curé-Labelle", a Laval street this file has no troncon
+// for, from being answered with a Montreal street that merely looks like it.
 //
-// Three passes, in the order a reader's guess should be trusted. The name as
-// written, which is the one answer that cannot be wrong. Then the name with its
-// type word set aside, which is how "Sherbrooke Est" finds "Rue Sherbrooke
-// Est". Then the closest name in the file, taken only when it is close enough
-// that a mistyped letter is the likelier story - which is what keeps
-// "Curé-Labelle", a street of Laval that this file has no troncon for, from
-// being answered with some Montreal street that merely looks like it.
-//
-// Every answer says how it was reached, so the page can print the street it
-// settled on: a guess a reader can see is a guess they can correct.
+// Every answer says how it was reached, so the page can print the street it settled
+// on: a guess a reader can see is a guess they can correct.
 function findStreet(graph, text) {
   const wanted = tidy(text);
   const bare = withoutType(wanted);
@@ -1370,20 +1316,17 @@ function splitAddress(text) {
 
 // --- A number on a street, and the point it stands at ----------------------
 
-// Where along its street a number lies: one of the troncon's two sides and the
-// share of the range from its first end. A troncon that holds the number is
-// taken whole, and the number is placed its share of the way from DEB to FIN,
-// the two ends in the order the city drew them. Reading those ends backwards
-// would swap the sides of the street and put the number at the far end of its
-// block - which is the one way this placement can be out by hundreds of metres,
-// and the reason the file keeps the troncon's own direction.
+// Where along its street a number lies: one of the troncon's two sides and the share of
+// the range from its first end. A troncon that holds the number is taken whole and the
+// number placed its share of the way from DEB to FIN, the two ends in the order the
+// city drew them - read backwards, the sides swap and the number lands at the far end
+// of its block, which is the one way this placement can be out by hundreds of metres.
 //
 // When no troncon of the street holds the number, the nearest block end within
-// NEAR_BLOCK is used and the distance reported, because a street whose numbers
-// the city stopped publishing at some block still has a house at the end of it.
-// Beyond that distance nothing is placed: an address invented at the end of the
-// street is worse than a refusal, since every walk drawn from it would be drawn
-// from somewhere the reader did not ask about.
+// NEAR_BLOCK is used and the distance reported, because a street whose numbers the city
+// stopped publishing at some block still has a house at the end of it. Beyond that
+// distance nothing is placed: an address invented at the end of a street is worse than
+// a refusal, since every walk drawn from it would start somewhere nobody asked about.
 function findNumber(rows, number) {
   let held = null;
   let near = null;
@@ -1423,12 +1366,11 @@ function pointOn(graph, found) {
           start[1] + (end[1] - start[1]) * found.share];
 }
 
-// The whole of what a line of text resolves to: the number, the street it named
-// and how it named it, the troncon and side the number was placed on, and the
-// point. Each refusal comes back as its own kind, because each has its own
-// sentence to write: a name this file does not have and a number this street
-// does not have are different mistakes, and a reader can only put right the one
-// they made.
+// The whole of what a line of text resolves to: the number, the street it named and
+// how it named it, the troncon and side the number was placed on, and the point. Each
+// refusal comes back as its own kind, because each has its own sentence to write: a
+// name this file does not have and a number this street does not have are different
+// mistakes, and a reader can only put right the one they made.
 function addressPoint(graph, text) {
   const asked = splitAddress(text);
   if (!asked) { return { kind: 'no-number' }; }
@@ -1546,16 +1488,15 @@ function prepareSearch(graph) {
   return graph;
 }
 
-// Dijkstra from a point on the network, as the build runs it: always deal with
-// the nearest corner not yet dealt with, so a corner's distance is settled
-// before it is used to settle another's, and every distance that comes out is
-// the shortest way there is.
+// Dijkstra from a point on the network, as the build runs it: always deal with the
+// nearest corner not yet dealt with, so a corner's distance is settled before it is
+// used to settle another's, and every distance that comes out is the shortest way
+// there is.
 //
-// The reader's point is a spot part-way along a link, not a corner, so the
-// search begins at both ends of that link with the distance from the point to
-// each already covered. That is what lets a walk start at an address without a
-// corner being made for it: the two ends carry the address's distance, and
-// every other corner is reached from one of them the usual way.
+// The reader's point is a spot part-way along a link, not a corner, so the search
+// begins at both ends of that link with the distance from the point to each already
+// covered: the two ends carry the address's distance and every other corner is
+// reached from one of them the usual way, with no corner made for the address.
 //
 // Returns the distance to every corner, and the corner each was reached from.
 // The corner the walk started at has none behind it, which is where the route
@@ -1642,15 +1583,13 @@ function walkNetwork(graph, seeds) {
   return { metres: metres, came: came };
 }
 
-// The nearest destinations of one family, from the distances the search found:
-// for each destination the shortest of its gateways, then the nearest few of
-// those. A destination whose every gateway went unreached is left out, because
-// a park on a piece of network the rest of the island does not join is a park
-// no walk here can reach, and listing it with no walk would be the worse answer.
-//
-// The gateway's own stub is added to the walk: the search stops at the corner
-// on the pavement, and the last few metres are the ones from the pavement to
-// the door or to the park's edge.
+// The nearest destinations of one family, from the distances the search found: for
+// each destination the shortest of its gateways, then the nearest few of those. A
+// destination whose every gateway went unreached is left out, because a park on a
+// piece of network the island does not join is a park no walk here can reach, and
+// listing it with no walk would be the worse answer. The gateway's own stub is added
+// to the walk: the search stops on the pavement, and the last few metres are the ones
+// from the pavement to the door or the park's edge.
 function nearestDestinations(graph, metres, destinations, count) {
   const found = [];
   destinations.forEach(function (destination) {
@@ -1688,13 +1627,13 @@ function routeOf(graph, came, target) {
   return corners.map(function (index) { return graph.nodes[index]; });
 }
 
-// One lookup, from the point the reader gave: the walk to the nearest three
-// green spaces and the nearest two stations, each with the metres walked, the
-// seconds that makes at the build's walking speed, and the line to draw.
+// One lookup, from the point the reader gave: the walk to the nearest three green
+// spaces and the nearest two stations, each with the metres walked, the seconds that
+// makes at the build's walking speed, and the line to draw.
 //
-// Both families come out of one search, since one search already has the
-// distance to every corner: asking twice would walk the whole network twice to
-// answer two halves of the same question.
+// Both families come out of one search, since one search already has the distance to
+// every corner: asking twice would walk the whole network twice to answer two halves
+// of the same question.
 function lookupAt(graph, point, reach) {
   const snap = snapToNetwork(graph, point, reach || SNAP_METRES);
   if (!snap) { return { kind: 'no-street', point: point }; }
@@ -1725,11 +1664,10 @@ function lookupAt(graph, point, reach) {
 
 // --- The lookup on the page -----------------------------------------------
 //
-// The engine above answers a question about a place; this is the page's part of
-// it - the box to type in, the click to answer, the five lines and the list. The
-// graph is fetched on the first question rather than with the rest of the page,
-// because it is the fifth file and the other four are what the map opens with: a
-// reader who only ever uses the filters never downloads it.
+// The engine above answers a question about a place; this is the page's part of it -
+// the box to type in, the click to answer, the five lines and the list. The graph is
+// fetched on the first question rather than with the rest of the page, because it is
+// the fifth file and a reader who only ever uses the filters never downloads it.
 
 // The two families' lines, in the dark end of the palette the filters already
 // use, so a lookup's lines read as the same two things the dots stand for and
@@ -1738,33 +1676,31 @@ const LOOKUP_STYLE = {
   park: { color: WALK_RAMPS.park[0], weight: 4, opacity: 0.95 },
   metro: { color: WALK_RAMPS.metro[0], weight: 4, opacity: 0.95 }
 };
-// The reader's own point, marked the way a map marks the place its reader is
-// standing on: a soft halo with a dark core inside it, both in the panel's navy,
-// so "here I am" reads at a glance and does not look like a third kind of
-// destination beside the brown parks and the blue stations.
+// The reader's own point, marked the way a map marks where its reader stands: a soft
+// halo with a dark core inside it, both in the panel's navy, so "here I am" reads at
+// a glance and does not look like a third kind of destination beside the brown parks
+// and the blue stations.
 const LOOKUP_HALO = { radius: 17, stroke: false, fillColor: '#1F2D5A',
                       fillOpacity: 0.16 };
 const LOOKUP_START = { radius: 7, color: '#ffffff', weight: 2.5,
                        fillColor: '#1F2D5A', fillOpacity: 1 };
-// A park the answer names is drawn as the city drew it, in a green dark enough to
-// read over the grey mask: the parks layer answers to a menu that may well be left
-// on n/a, and a walk that ends "in Parc La Fontaine" is only useful if the shape
-// called Parc La Fontaine can be found.
+// A park the answer names is drawn as the city drew it, in a green dark enough to read
+// over the grey mask: the parks layer answers to a menu that may be left on n/a, and a
+// walk that ends "in Parc La Fontaine" is only useful if that shape can be found.
 const LOOKUP_PARK = { color: '#1B5E20', weight: 2, opacity: 0.9,
                       fillColor: '#7CC47F', fillOpacity: 0.35 };
 const LOOKUP_ZOOM = 16;    // the closest the map is taken to an answer
 const LOOKUP_PAD = 40;     // pixels of margin round the six points fitted
 
-// The one question this page asks anything but its own data, and the one thing
-// it is allowed to be told: how the city spells a street it has never heard of.
-// Photon is a free geocoder that needs no key, which is why it is the only one
-// that can be used from a static page at all - every service that places an
-// address properly wants a key, and a key on a public page is a key given away.
+// The one question this page asks anything but its own data, and the one thing it is
+// allowed to be told: how the city spells a street it has never heard of. Photon is a
+// free geocoder that needs no key, which is what makes it usable from a static page at
+// all - every service that places an address properly wants a key, and a key on a
+// public page is a key given away.
 //
-// Its answers are read for their names and nothing else: the coordinates go in
-// the bin, because a service that puts 4250 Rue Sherbrooke Est seven kilometres
-// from where it is cannot be trusted to put it anywhere, while the city's own
-// file of street numbers can. The spelling is the whole of what is kept.
+// Its answers are read for their names and nothing else: the coordinates go in the bin,
+// because a service that puts 4250 Rue Sherbrooke Est seven kilometres from where it is
+// cannot be trusted to put it anywhere, while the city's own file of street numbers can.
 const PHOTON_ASSIST = true;
 const PHOTON_URL = 'https://photon.komoot.io/api/';
 const PHOTON_LIMIT = 5;
@@ -1861,24 +1797,23 @@ function loadGraph() {
 
 // --- Arming the map --------------------------------------------------------
 //
-// A click on the map used to be a question unconditionally: any press that was not
-// on a dot started a lookup, so a reader could not pan, dismiss a popup or simply
-// touch the map without the page asking about wherever the press landed and taking
-// the filters off the map to answer. The map is armed first now, by the button under
-// the address field, and the click that answers puts the arm down: one arm is good
-// for one answer, and a click meant for nothing means nothing.
+// A click on the map is not a question by itself: a reader panning, dismissing a popup
+// or touching the map would otherwise have the page ask about wherever the press landed
+// and take the filters off the map to answer. The map is armed first, by the button
+// under the address field, and the click that answers puts the arm down: one arm is
+// good for one answer, and a click meant for nothing means nothing.
 //
-// The rule itself is one function of two facts - whether the map is armed, and what
-// the click landed on - kept apart from the document and from Leaflet so the checks
-// under node can run it. There are three answers:
+// The rule is one function of two facts - whether the map is armed, and what the click
+// landed on - kept apart from the document and from Leaflet so the checks under node
+// can run it. There are three answers:
 //
 //   'layer'    the click landed on something the page draws: its own popup is the
-//              answer, armed or not, and the arm is left as it was. Looking at two
+//              answer, armed or not, and the arm is left as it was - looking at two
 //              parks in a row should not mean pressing the button twice.
 //   'nothing'  the map was not armed: the click is only a click.
 //   'ask'      the map was armed and the click landed on it, or on the grey mask -
-//              which is a question about a place this map does not measure, and
-//              deserves the sentence in the box rather than silence.
+//              a question about a place this map does not measure, which deserves the
+//              sentence in the box rather than silence.
 function clickMeans(event, armed) {
   if (event.layer && event.layer !== page.mask) { return 'layer'; }
   return armed ? 'ask' : 'nothing';
@@ -1917,9 +1852,9 @@ function armOn() {
   armMark(true);
 }
 
-// Putting the arm down when it is already down says nothing: every answer calls
-// this, and a reader who never armed the map must not have the hint rewritten
-// under them by a lookup they asked for in words.
+// Putting the arm down when it is already down says nothing: every answer calls this,
+// and a reader who never armed the map must not have the hint rewritten under them by a
+// lookup they asked for in words.
 function armOff() {
   if (!page.arming) { return; }
   page.arming = false;
@@ -2054,12 +1989,11 @@ function showPlaced(graph, placed, typed, asked) {
              placed.asked.number + ' ' + placed.name, placed.how);
 }
 
-// A click on the map: the same answer, asked from a place instead of a name. This
-// is only ever reached from a click the map was armed for - clickMeans() decides
-// that, and puts the arm down before calling here - so nothing in this function
-// looks at the arm.
-// Somewhere outside the 19 boroughs is refused by name, since the grey mask is a
-// shape rather than a lock and Leaflet passes its clicks on to the map.
+// A click on the map: the same answer, asked from a place instead of a name. It is only
+// ever reached from a click the map was armed for - clickMeans() decides that and puts
+// the arm down before calling here - so nothing below looks at the arm. Somewhere
+// outside the 19 boroughs is refused by name, since the grey mask is a shape rather than
+// a lock and Leaflet passes its clicks on to the map.
 function lookupPoint(lat, lng) {
   if (!inDrawn(lat, lng)) {
     return sayLookup('That spot is outside the 19 boroughs this map covers, so ' +
@@ -2108,15 +2042,15 @@ function listOf(words) {
   return words.join(', ').replace(/, ([^,]*)$/, ' and $1');
 }
 
-// The answer, drawn and listed: the reader's own point, a line from it to each
-// of the three parks and two stations, and the same five named under the field
-// with their walks, shortest first.
+// The answer, drawn and listed: the reader's own point, a line from it to each of the
+// three parks and two stations, and the same five named under the field with their
+// walks, shortest first.
 //
-// A line is the corners the search went through, with the reader's own point in
-// front of them - that point lies on the link the search started from, so the
-// first segment is the stretch of that link already walked - and the last few
-// metres from the pavement to the park's edge or the station, which is the stub
-// the build measured and the search counted as covered.
+// A line is the corners the search went through, with the reader's own point in front of
+// them - that point lies on the link the search started from, so the first segment is
+// the stretch of that link already walked - and the last few metres from the pavement to
+// the park's edge or the station, the stub the build measured and the search counted as
+// covered.
 function drawLookup(point, found, label, how) {
   // A phone's column is where the answer is written, so it is opened before the
   // map is fitted to the answer: the fit is measured against the map as it will
@@ -2203,13 +2137,12 @@ function drawLookup(point, found, label, how) {
   ].join('');
 }
 
-// The park a walk ends in, drawn as the city drew it and lifted out of the
-// filters: the parks layer answers to `park-minutes`, so a menu left on n/a takes
-// the whole of it off the map and a line ending "in Parc La Fontaine" would end on
-// a green dot with nothing green under it. The outline keeps the park's own popup,
-// so clicking the shape opens the card the park would have shown. A park the city
-// drew as several polygons is one feature and one layer: L.geoJSON draws every
-// piece of it, and every piece answers to the same card.
+// The park a walk ends in, drawn as the city drew it and lifted out of the filters: the
+// parks layer answers to `park-minutes`, so a menu left on n/a takes the whole of it off
+// the map and a line ending "in Parc La Fontaine" would end on a green dot with nothing
+// green under it. The outline keeps the park's own popup, so clicking it opens the card
+// the park would have shown, and a park the city drew as several polygons is one feature
+// and one layer: every piece answers to the same card.
 function addParkOutline(number) {
   const feature = page.parks && page.parks.features[number];
   if (!feature) { return; }
@@ -2295,10 +2228,10 @@ function missingWord(count, thing) {
 
 // --- Running this file without a browser ----------------------------------
 //
-// `node site/app.js` reads the intersections file off the disk and checks it
-// without a map: the numbering, one walk per layer per corner, the build's own
-// counts, and lookOf() on all 22 layers. Every check prints a line, and a
-// failure sets a non-zero exit code, so a script can run this file as a test.
+// `node site/app.js` reads the data files off the disk and checks them without a map:
+// the numbering, one walk per layer per corner, the build's own counts, lookOf() on all
+// 22 layers, and the five menus against the labels in the markup. Every check prints a
+// line, and a failure sets a non-zero exit code, so a script can run this file as a test.
 
 async function checkWithoutBrowser() {
   const fs = require('fs');
@@ -2543,11 +2476,10 @@ async function checkWithoutBrowser() {
 
   // --- The address: the graph, the street names, and the walks --------------
   //
-  // These come last because they are the slow ones: the graph is 13 MB and one
-  // walk visits a quarter of a million corners. The graph is read the way the
-  // page reads it, through prepareGraph() and addressPoint(), so what is
-  // checked is this file's own lookup rather than a second one written to
-  // agree with it.
+  // These come last because they are the slow ones: the graph is 13 MB and one walk
+  // visits a quarter of a million corners. It is read the way the page reads it,
+  // through prepareGraph() and addressPoint(), so what is checked is this file's own
+  // lookup rather than a second one written to agree with it.
 
   const graph = prepareGraph(JSON.parse(fs.readFileSync(
     path.join(__dirname, 'data', 'walk_graph.json'), 'utf8')));
@@ -2639,16 +2571,14 @@ async function checkWithoutBrowser() {
       broken.push(probe.text + ' could not be walked from at all');
       return;
     }
-    // The number is placed on a troncon whose two ends are corners of the
-    // network, so the point stands on the network already and the snap has
-    // nothing to do. A snap of any size means the placement and the network
-    // have drifted apart, and every walk from it would start somewhere else.
-    // The number is placed on the straight line between the troncon's two
-    // ends, while the street itself may bend between them, so the point can
-    // stand a few metres off the pavement - four metres on the worst address
-    // tried, which is a bend, not a mistake. The snap is what takes the point
-    // back onto the road, and anything that needed more than fifteen metres of
-    // it would be a placement on the wrong block rather than a bend.
+    // The number is placed on a troncon whose two ends are corners of the network, so
+    // the point stands on the network already and the snap has nothing to do: a snap of
+    // any size means the placement and the network have drifted apart, and every walk
+    // from it would start somewhere else. The number is placed on the straight line
+    // between the troncon's two ends while the street itself may bend between them, so
+    // the point can stand a few metres off the pavement - four metres on the worst
+    // address tried, which is a bend and not a mistake. Anywhere needing more than
+    // fifteen metres of snap is a placement on the wrong block.
     if (!(found.snap.metres <= 15)) {
       broken.push(probe.text + ' stands ' + found.snap.metres.toFixed(1) +
                   ' m off the street it was placed on');
@@ -2796,17 +2726,15 @@ async function checkWithoutBrowser() {
 
   // --- The answer as drawn --------------------------------------------------
   //
-  // drawLookup() is the one part of the lookup that otherwise needs a browser to
-  // see, and the one place a pair of numbers in the wrong order would draw five
-  // lines into the Atlantic without failing anything else. So Leaflet and the
-  // document are stood in for here: the shapes the function asks for are
-  // recorded, and what it asked for is checked - five lines, the address at the
-  // head of each, a dot at the end of each to click, and five walks listed under
-  // the box.
+  // drawLookup() is the one part of the lookup that otherwise needs a browser to see,
+  // and the one place a pair of numbers in the wrong order would draw five lines into the
+  // Atlantic without failing anything else. So Leaflet and the document are stood in for
+  // here and what the function asked for is checked: five lines, the address at the head
+  // of each, a dot at the end of each to click, five walks listed under the box.
   //
-  // The stand-ins go in last, so nothing after them sees a map that is not
-  // Leaflet's, and the page's own two destination files are handed to it so that
-  // a park's name and outline are the real ones.
+  // The stand-ins go in last, so nothing after them sees a map that is not Leaflet's, and
+  // the page's own two destination files are handed to it so a park's name and outline
+  // are the real ones.
   (function () {
     const drawn = [];
     const box = { innerHTML: '' };
@@ -3023,13 +2951,12 @@ async function checkWithoutBrowser() {
 
   // --- The arm on the map ----------------------------------------------------
   //
-  // A click on the map asks a question only once the reader has said so, and the
-  // rule that decides is one function of two facts - so every case is run here
-  // rather than left to a browser: an unarmed click on the map is nothing, an armed
-  // one on the map is a question, a click on a drawn shape is that shape's own popup
-  // either way, and a click on the mask is a question about a place the page does
-  // not measure. The mask is stood in for, since under node the map never loaded
-  // one.
+  // A click on the map asks a question only once the reader has said so, and the rule
+  // that decides is one function of two facts, so every case is run here rather than
+  // left to a browser: an unarmed click on the map is nothing, an armed one on the map is
+  // a question, a click on a drawn shape is that shape's own popup either way, and a
+  // click on the mask is a question about a place the page does not measure. The mask is
+  // stood in for, since under node the map never loaded one.
   const realMask = page.mask;
   page.mask = { kind: 'mask' };
   const shape = { kind: 'park' };
@@ -3103,9 +3030,9 @@ async function checkWithoutBrowser() {
     collapsed === HINT_RESTING && HINT_ARMED !== HINT_RESTING,
     JSON.stringify(collapsed) + ' against ' + JSON.stringify(HINT_RESTING));
 
-  // A walk inside a minute, as the five walks under the field and the popups say
-  // it: a bound rather than the phrase it used to be, and escaped wherever it is
-  // written into a card, since "<" opens a tag in HTML.
+  // A walk inside a minute, as the five walks under the field and the popups say it: a
+  // bound rather than words, and escaped wherever it is written into a card, since "<"
+  // opens a tag in HTML.
   const inside = formatWalk(59);
   check('a walk inside a minute is said as a bound, and escaped where it is printed',
     inside === '< 1 min' && formatWalk(0) === '< 1 min' && formatWalk(60) === '1 min'
@@ -3123,6 +3050,41 @@ async function checkWithoutBrowser() {
     && dark.every(function (colour) { return inkOn(colour) === '#FFFFFF'; }),
     pale.map(function (colour) { return colour + ' ' + inkOn(colour); }).join(', ') +
     '; ' + dark.map(function (colour) { return colour + ' ' + inkOn(colour); }).join(', '));
+
+  // A menu's words are written twice: once in the markup, which is what a reader
+  // sees before the file arrives, and once by fillMenu(), which is what they see
+  // after it. Both have to say the same thing, or every load ends with a menu
+  // renaming itself a second after the page opens.
+  const menus = [['park-minutes', minuteChoices(dots)],
+                 ['park-kind', dots.kinds],
+                 ['park-band', dots.bands],
+                 ['metro-minutes', minuteChoices(dots)],
+                 ['metro-kind', dots.metro_kinds]];
+  const mismatched = [];
+  menus.forEach(function (menu) {
+    const id = menu[0];
+    const block = markup.match(
+      new RegExp('<select id=\'' + id + '\'[\\s\\S]*?</select>')) || [''];
+    const said = [];
+    const option = /<option value='([^']*)'>([^<]*)<\/option>/g;
+    let found = option.exec(block[0]);
+    while (found) {
+      said.push({ key: found[1], label: found[2] });
+      found = option.exec(block[0]);
+    }
+    if (said.length !== menu[1].length) {
+      mismatched.push(id + ' says ' + said.length + ' choices');
+      return;
+    }
+    said.forEach(function (choice, at) {
+      if (choice.key !== menu[1][at].key || choice.label !== menu[1][at].label) {
+        mismatched.push(id + ' "' + choice.label + '" against "' +
+          menu[1][at].label + '"');
+      }
+    });
+  });
+  check('the menus in the markup say what the page writes into them',
+    mismatched.length === 0, mismatched.join('; '));
 
   console.log(failures
     ? failures + ' of ' + checked + ' checks failed'

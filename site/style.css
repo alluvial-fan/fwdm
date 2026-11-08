@@ -1,41 +1,32 @@
-/* The page's look: the layout, the two filters, the legend's key, the caveats
-   and the popups. site/index.html is the page's markup and site/app.js its
-   behaviour; what the page is styled with is here.
+/* The page's look: the layout, the two filters, the legend's key, the caveats and the
+   popups. site/index.html is the markup, site/app.js the behaviour, this is the styling.
 
-   The page is a sage-grey and the colour on it is the data's. That is the one
-   decision every rule below follows from: the dots on the map, the parks and the
-   key's cells are the only things allowed to be a strong colour, so the column
-   beside them is quiet - a grey window, cards a step lighter than it, fields a step
-   darker, and ink with the hard edge taken off it. Nothing on the page is white and
-   nothing on it is black: a sheet of #FFFFFF under 13px type is the glare this
-   palette exists to avoid, and a near-black window under it is the same glare turned
-   inside out. The window also sits one value step below the map's own tiles, which
-   are nearly #E9EBEE, so the map is the one lit surface in the window and the column
-   beside it reads as the chassis it hangs in. Text is the operating system's own
-   sans, since every platform now ships a good one, and Arial is what an unstyled
-   page looks like.
+   The page is a sage-grey and the colour on it is the data's: the dots, the parks and the
+   key's cells are the only things allowed to be a strong colour, so the column beside them
+   is quiet - a grey window, cards a step lighter, fields a step darker, and ink with the
+   hard edge taken off it. Nothing here is white and nothing is black: a sheet of #FFFFFF
+   under 13px type is the glare this palette exists to avoid, and a near-black window under
+   it is the same glare turned inside out. The window also sits one value step below the
+   map's own tiles, so the map is the one lit surface and the column reads as the chassis it
+   hangs in. Text is the operating system's own sans, since every platform ships a good one.
 
-   The map is left alone. Its tiles, its greys and the two ramps the key explains
-   were drawn to be read together, and a filter over them would recolour the very
-   greens and blues the legend names; the page's own surfaces are what step back. The
-   chips and cards drawn over the tiles are therefore their own colours rather than
-   the column's, which is why those rules below carry literals.
+   The map is left alone: its tiles and the two ramps the key explains were drawn to be read
+   together, and a tint over them would recolour the greens and blues the legend names. The
+   chips and cards drawn over the tiles are therefore their own colours rather than the
+   column's, which is why those rules below carry literals.
 */
 
-/* THE PALETTE, named once. Every colour and measure below is one of these, so a
-   change of mind is a change here rather than a hunt through the file. The surfaces
-   are a sage-grey rather than paper: #BFC2B4 is the window, #CED1C3 a card lifted off
-   it, #C6C9BB a field sunk into a card, and #D3D6C8 that field under a pointer, taken
-   up past the card so the change is felt. The green in that grey is what keeps it from
-   reading as concrete, and the whole ramp is one value step below the tiles so it
-   cannot compete with them. The inks are a document's own ink with the hard edge taken
-   off: #1D2320 for what is read (10.3:1 on a card, 8.8:1 on the window), #3F4641 for
-   what supports it (6.3:1 on a card) and #434A45 - the lightest of the three, and so the
-   quietest - for a label or a hint, which is read once (5.9:1 on a card, 5.4:1 on a
-   field, 5.0:1 on the window). Nothing lighter than that last one is used for text at
-   all. The blue is deep because the card under it is mid-tone and eats the contrast white
-   once gave it: #1E4494 is 5.9:1 on a card, 5.0:1 on the window, 9.1:1 under white where
-   it is a fill, and 7.6:1 against the tiles where it is the ring round an armed map. */
+/* THE PALETTE, named once: every colour and measure below is one of these, so a change of
+   mind is a change here rather than a hunt through the file. The surfaces are a sage-grey
+   rather than paper - #BFC2B4 the window, #CED1C3 a card lifted off it, #C6C9BB a field sunk
+   into a card, #D3D6C8 that field under a pointer - and the green in that grey is what keeps
+   it from reading as concrete. The inks are a document's ink with the hard edge off:
+   #1D2320 for what is read (10.3:1 on a card, 8.8:1 on the window), #3F4641 for what
+   supports it (6.3:1), and #434A45 for a label or a hint, which is read once (5.9:1 on a
+   card, 5.4:1 on a field, 5.0:1 on the window); nothing lighter than that last one is used
+   for text at all. The blue is deep because the card under it is mid-tone and eats the
+   contrast white once gave it: #1E4494 is 5.9:1 on a card, 5.0:1 on the window, 9.1:1 under
+   white where it is a fill, and 7.6:1 against the tiles where it rings an armed map. */
 :root {
   --page: #BFC2B4;         /* the window: the bar and the column, under the cards */
   --surface: #CED1C3;      /* a card, a raised button: one step up from the window */
