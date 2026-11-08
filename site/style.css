@@ -218,11 +218,26 @@ body.mode-walks #walk-panel .mark, body.mode-address #lookup .mark { color: var(
                  border: 1px solid var(--line); border-radius: 5px; cursor: pointer; }
 .filter select:hover { background: var(--subtle-hover); border-color: var(--line-strong); }
 .filter select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* The one control in this panel that asks no question: every menu back to what it opens
+   in, so a reader who set three of the five gets the blank map back in one press rather
+   than in three. It sits at the foot of the stack inside #filters, so the gap above it is
+   the gap between the two groups, and it is drawn as the page's second kind of button -
+   the one Pick on map wears, raised on the panel's own surface with a strong edge - because
+   a control on the subtle grey of the menus would read as another question. No accent on
+   it: the accent says "this panel is live", and putting the filters back is not a thing the
+   map is showing. */
+#walk-reset { font: inherit; font-size: 12.5px; font-weight: 600; width: 100%;
+              padding: 6px 8px; cursor: pointer; color: var(--ink);
+              background: var(--surface); border: 1px solid var(--line-strong);
+              border-radius: 5px; box-shadow: var(--shadow); }
+#walk-reset:hover { background: var(--subtle-hover); border-color: var(--ink-muted); }
+#walk-reset:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* The address lookup, inside the first of the column's two panels: the field and its
-   button share one line, the way into the map sits under them and the hint under that,
-   so the panel keeps one line of input however narrow the column gets; the list that
-   answers a question fills whatever is left of it. */
+   button share one line, the way into the map sits under them, and the line that speaks
+   while the map is armed sits under that - out of the way until the map is armed, since
+   an empty line takes the panel's gap with it. The panel keeps one line of input however
+   narrow the column gets; the list that answers a question fills whatever is left. */
 #lookup form { display: flex; gap: 6px; }
 /* The field and the two buttons are one family with the menus above: the same
    subtle grey, the same hairline, the same corner and the same height, so nothing
@@ -283,21 +298,39 @@ body.mode-walks #walk-panel .mark, body.mode-address #lookup .mark { color: var(
    container in order to be read over them. */
 body.arming #map.leaflet-container { cursor: crosshair; }
 body.arming #map { outline: 2px solid var(--accent); outline-offset: -2px; }
-/* The hint is the line that says what the box wants next, and the one line that
-   changes when the map is armed: small and muted, and never wider than the panel. */
+/* The line under the button, and the only one that appears rather than being there:
+   what the box wants at rest is said by the story above and by the field's
+   placeholder, so the line stands empty, and it is the live region that speaks while
+   the map is armed. Small and muted, and never wider than the panel. */
 #lookup .hint { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--ink-muted); }
-/* The answer, in the panel that asked for it: the address as its heading, the five
-   walks as a list, and the metres each of them took set back in the muted grey - a
-   distance is a detail of a walk, not the walk. The panel's own gap spaces it, so an
-   empty box takes no space at all. */
-#lookup-body { font-size: 12.5px; color: var(--ink); }
+/* An empty line still stands between the button and the answer, and takes the panel's
+   gap on both sides of itself: the negative margin above takes one of the two back, so
+   the panel is as tight as it was when nothing stood there. The line is not hidden
+   instead, because a live region that is display:none is outside the accessibility tree
+   and announces nothing - and the region is what says the map is armed. */
+#lookup .hint:empty { margin-top: -8px; }
+/* The answer, in the panel that asked for it: the address or the picked point as its
+   heading, then the walks as two lists under two headings - the parks, then the
+   stations - each line the walk's time in bold, the place, and the metres it took set
+   back in the muted grey. Neither list is numbered or bulleted: the group heading says
+   which kind of place these are, and a reader asked which places are near, not how they
+   rank. Set a half step under the field's size and tighter than prose, because it is a
+   list of short lines in a column with nothing to spare: the heading stands four pixels
+   above the first group's name rather than a paragraph's gap away, and the groups are
+   named in the size of a caption, so a heading never reads as a second title. The
+   panel's own gap spaces it, so an empty box takes no space at all. */
+#lookup-body { font-size: 12px; line-height: 1.35; color: var(--ink); }
 #lookup-body:empty { display: none; }
-#lookup-body .asked { margin: 0 0 2px; font-weight: 600; }
+#lookup-body .asked { margin: 0; font-weight: 600; line-height: 1.3; }
 #lookup-body .said { margin: 0; color: var(--ink-soft); }
 #lookup-body .short { margin: 0; color: var(--ink-soft); }
-#lookup-body ol { margin: 0; padding-left: 18px; }
-#lookup-body li { margin: 3px 0; line-height: 1.4; }
-#lookup-body .far { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+#lookup-body .group { margin: 4px 0 1px; font-size: 11.5px; line-height: 1.3;
+                      color: var(--ink-muted); }
+#lookup-body ul { margin: 0; padding: 0; list-style: none; }
+#lookup-body li { margin: 0; line-height: 1.35;
+                  font-variant-numeric: tabular-nums; }
+#lookup-body .far { color: var(--ink-muted); font-variant-numeric: tabular-nums;
+                    white-space: nowrap; }
 
 /* The name on a destination: the parks and stations an answer names are labelled
    where they are, so a reader can tell which green shape is the park without

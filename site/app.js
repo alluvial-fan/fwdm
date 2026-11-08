@@ -1012,6 +1012,16 @@ function wireFilters() {
     .forEach(function (id) {
       document.getElementById(id).addEventListener('change', afterChange);
     });
+  // The button under the filters is not a question, so it is wired apart from the menus:
+  // one press puts every one of them back to what it opens in, which is resetFilters()'s
+  // whole job. It is never drawn dead - a page whose menus are all on n/a has the state
+  // the button asks for already, and pressing it then moves nothing and says nothing,
+  // where a button that greyed itself out would take focus off the reader's hands for a
+  // fact the panel's own name already reports.
+  const reset = document.getElementById('walk-reset');
+  if (reset) {
+    reset.addEventListener('click', function () { resetFilters(); });
+  }
   if (document.readyState === 'complete') {
     afterChange();
   } else {
@@ -1074,10 +1084,11 @@ function clearAnswer() {
 const FILTER_NONE = { 'park-minutes': 'none', 'metro-minutes': 'none',
                       'park-kind': 'any', 'park-band': 'any', 'metro-kind': 'any' };
 
-// A filter was not asked after all, or an answer needs the map to itself: put
-// every menu back to n/a and redraw from them. What comes back is how many had to
-// be put back, which is 0 on a map with nothing asked, so the common case costs
-// nothing.
+// A filter was not asked after all, an answer needs the map to itself, or the reader
+// pressed the button under the filters: put every menu back to n/a and redraw from them.
+// What comes back is how many had to be put back, which is 0 on a map with nothing asked,
+// so the common case costs nothing - and a press of that button on a panel already on n/a
+// moves nothing, redraws nothing and says nothing.
 function resetFilters() {
   let cleared = 0;
   Object.keys(FILTER_NONE).forEach(function (id) {
@@ -1823,14 +1834,22 @@ function clickMeans(event, armed) {
   return armed ? 'ask' : 'nothing';
 }
 
-// What the hint under the field says, resting and armed. One line replaced rather
-// than appended, so the box keeps its height and a reader is never read two
-// instructions at once.
-const HINT_RESTING = 'Street number, then the street. Or press Pick on map, ' +
-  'then click the map.';
+// What the hint under the field says, resting and armed. At rest it says nothing at
+// all: the sentence at the top of the column names both ways in, and the field's
+// placeholder shows the shape of an address, so a standing instruction is a line a
+// reader reads once and then keeps scrolling past. Armed, it is the only place that
+// says in words what the next click will do - the button's blue fill and the ring
+// round the map are shapes - and it is one line replaced rather than appended, so a
+// reader is never read two instructions at once.
+const HINT_RESTING = '';
 const HINT_ARMED = 'The map is armed: click a point to ask about it. Escape, or ' +
   'the button again, puts it down.';
 
+// The live region is in the page at all times, empty at rest, so arming it is a change
+// to something already there rather than an insertion - a region taken out of the
+// accessibility tree, or one added at the moment it has something to say, is announced
+// by nothing. An empty line has no height, so the panel is as tight as it was when the
+// instruction stood there.
 function setHint(text) {
   if (typeof document === 'undefined') { return; }
   const hint = document.getElementById('lookup-hint');
@@ -2048,7 +2067,7 @@ function lookupPoint(lat, lng) {
       return sayLookup('No street within ' + SNAP_METRES + ' m of that spot, so ' +
         'there is nowhere to start walking from.');
     }
-    drawLookup([lng, lat], found, 'the point you clicked', null);
+    drawLookup([lng, lat], found, 'The point you picked', null);
   }).catch(reportFailure);
 }
 
@@ -2088,8 +2107,8 @@ function listOf(words) {
 }
 
 // The answer, drawn and listed: the reader's own point, a line from it to each of the
-// three parks and two stations, and the same five named under the field with their
-// walks, shortest first.
+// three parks and two stations, and the same five named under the field in two lists -
+// the parks, then the stations - each shortest first.
 //
 // A line is the corners the search went through, with the reader's own point in front of
 // them - that point lies on the link the search started from, so the first segment is
@@ -2145,13 +2164,20 @@ function drawLookup(point, found, label, how) {
   });
 
   // The core of the reader's own point, over the lines it starts: five lines
-  // leaving one point would otherwise cover the dot they leave from. It keeps the
-  // address in its popup, and says in words what the two circles mean, because a
-  // shape alone has to be interpreted and a label does not.
+  // leaving one point would otherwise cover the dot they leave from. It says "you
+  // are here" in words, because a shape alone has to be interpreted and a label
+  // does not.
+  //
+  // A card is only put on it when there is something on it the panel cannot say:
+  // an address, and the spelling the lookup had to correct to reach it. A point
+  // picked off the map has nothing to add to its own heading under the field, so a
+  // click on it opens nothing rather than repeating "The point you picked".
   const here = L.circleMarker(at, LOOKUP_START);
   const note = LOOKUP_NOTE[how];
-  here.bindPopup('<strong>' + escapeHtml(label) + '</strong>' +
-    (note ? '<br><span class="dim">' + escapeHtml(note) + '</span>' : ''));
+  if (how) {
+    here.bindPopup('<strong>' + escapeHtml(label) + '</strong>' +
+      (note ? '<br><span class="dim">' + escapeHtml(note) + '</span>' : ''));
+  }
   here.bindTooltip('You are here', { permanent: true, direction: 'top',
                                      className: 'here-tag' });
   page.lookupGroup.addLayer(here);
@@ -2239,16 +2265,36 @@ function nearestOnOutline(geometry, corner) {
   return best ? best.point : [corner[1], corner[0]];
 }
 
-// The five walks as a list, shortest first, each with the time the map's lines
-// cannot show and the metres the time is made of.
+// The five walks as two named lists rather than one numbered one: the parks under
+// their own heading, then the stations under theirs, each shortest first. A reader
+// asked what is near them, not for a ranking of five, and a park is not competing with
+// a station for the first place. Each line is the walk's time in bold, then the place,
+// then the metres the time is made of set back in the grey - a distance is a detail of
+// a walk, not the walk. The count in a heading is the count the search came back with,
+// so a heading never promises a park no walk could reach.
 function walkList(walks) {
-  const items = walks.map(function (walk) {
-    return '<li>' + (walk.family === 'metro' ? 'Metro' : 'Park') + ': ' +
-      '<b>' + escapeHtml(formatWalk(walk.seconds)) + '</b> &mdash; ' +
-      escapeHtml(destinationName(walk.family, walk.destination)) +
-      ' <span class="far">' + escapeHtml(formatMetres(walk.metres)) + '</span></li>';
-  });
-  return '<ol>' + items.join('') + '</ol>';
+  // Each group: the family in the file, and how one and several of them are said.
+  const groups = [['park', 'park', 'parks'], ['metro', 'metro', 'metros']];
+  return groups.map(function (group) {
+    const held = walks.filter(function (walk) {
+      return walk.family === group[0];
+    }).sort(function (one, other) {
+      return one.seconds - other.seconds;
+    });
+    if (!held.length) { return ''; }
+    const items = held.map(function (walk) {
+      return '<li><b>' + escapeHtml(formatWalk(walk.seconds)) + '</b> &ndash; ' +
+        escapeHtml(destinationName(walk.family, walk.destination)) +
+        ' <span class="far">' + escapeHtml(formatMetres(walk.metres)) +
+        '</span></li>';
+    });
+    // role="list" because the browsers set list-style off for a list drawn without
+    // markers, and a reader of the page aloud should still hear three items under a
+    // heading rather than three loose sentences.
+    return '<p class="group">Closest ' + held.length + ' ' +
+      (held.length === 1 ? group[1] : group[2]) + ':</p>' +
+      '<ul role="list">' + items.join('') + '</ul>';
+  }).join('');
 }
 
 // The one thing a list of fewer than five cannot say by itself: which of the two
@@ -2775,6 +2821,21 @@ async function checkWithoutBrowser() {
     'button that arms the map, and the two panels\' names and state words',
     absent.length === 0, absent.join(', '));
 
+  // The button that puts the filters back is a button and not a submit - the column has
+  // nothing to submit, and a submit inside it would reload the page - and it is labelled in
+  // the words on its own face rather than in an aria-label, so the name a reader sees is the
+  // name a screen reader hears. A rename or a move would leave the listener wired to nothing,
+  // so where it sits is checked as well: inside the walk-time panel, before the key.
+  const resetTag = markup.match(/<button[^>]*id='walk-reset'[^>]*>([\s\S]*?)<\/button>/);
+  const resetAt = markup.indexOf("id='walk-reset'");
+  check('the page holds one button that puts the filters back, in the walk-time panel',
+    !!resetTag && /type='button'/.test(resetTag[0])
+    && resetTag[1].replace(/\s+/g, ' ').trim() === 'Reset filters'
+    && resetAt > markup.indexOf("id='walk-panel'")
+    && resetAt < markup.indexOf("id='legend'"),
+    resetTag ? JSON.stringify(resetTag[0]) + ' in the panel'
+             : 'no button by that name');
+
   // --- The answer as drawn --------------------------------------------------
   //
   // drawLookup() is the one part of the lookup that otherwise needs a browser to see,
@@ -2883,11 +2944,21 @@ async function checkWithoutBrowser() {
         });
       }), lines.length + ' lines, ' + clickable.length + ' clickable dots of ' +
       dots.length + ' marks');
-    check('the box under the field lists the same five walks',
+    check('the box under the field lists the same five walks, in two named groups, ' +
+      'each with its time in bold and its metres after it',
       (box.innerHTML.match(/<li>/g) || []).length ===
         DESTINATION_PARKS + DESTINATION_STATIONS
+      && box.innerHTML.indexOf('Closest ' + DESTINATION_PARKS + ' parks:') >= 0
+      && box.innerHTML.indexOf('Closest ' + DESTINATION_STATIONS + ' metros:') >= 0
+      && box.innerHTML.indexOf('<ol>') < 0
+      && (box.innerHTML.match(/<b>[^<]*<\/b> &ndash; /g) || []).length ===
+        DESTINATION_PARKS + DESTINATION_STATIONS
+      && (box.innerHTML.match(/<span class="far">[^<]*<\/span><\/li>/g) || [])
+        .length === DESTINATION_PARKS + DESTINATION_STATIONS
       && box.innerHTML.indexOf('Rue Saint-Denis') >= 0,
-      (box.innerHTML.match(/<li>/g) || []).length + ' walks listed');
+      (box.innerHTML.match(/<li>/g) || []).length + ' walks listed, ' +
+      (box.innerHTML.match(/<span class="far">/g) || []).length +
+      ' with a distance');
 
     // The five places the list names have to be findable on the map itself: each
     // park as the shape the city drew (with its own card, so a click on it still
@@ -2991,6 +3062,58 @@ async function checkWithoutBrowser() {
       && box.innerHTML.indexOf('filters are back on n/a') >= 0,
       drawn.length + ' layers drawn, and the box says ' +
       (box.innerHTML.indexOf('filters are back on n/a') >= 0 ? 'so' : 'otherwise'));
+
+    // The button under the filters asks for the same thing in one press rather than in as
+    // many presses as there are menus set. Its listener calls resetFilters() and nothing
+    // else, so that is what is called here: four menus moved off what they open in go back
+    // in one go, and the map is left asked nothing at all.
+    const stoodAgain = walk.corners;
+    walk.corners = [];
+    menus['park-minutes'].value = '15';
+    menus['park-band'].value = '5to10';
+    menus['metro-minutes'].value = '30';
+    menus['metro-kind'].value = 'stepfree';
+    afterChange();
+    const askedBefore = Object.keys(walk.asked).join(', ');
+    const moved = resetFilters();
+    const still = Object.keys(menus).filter(function (id) {
+      return menus[id].value !== FILTER_NONE[id];
+    });
+    check('the button under the filters puts every menu back to the default in one press',
+      askedBefore === 'park, metro' && moved === 4 && still.length === 0
+      && Object.keys(walk.asked).length === 0 && page.answered === false
+      && drawn.length === 0,
+      askedBefore + ' asked, ' + moved + ' menus moved, and ' +
+        (still.length ? 'still held: ' + still.join(', ') : 'every menu on n/a'));
+
+    // And a press of it on a panel already on n/a is not a press that does anything: no
+    // menu moves, the map is not redrawn through afterChange() and the box is not written
+    // over a second time, so a reader who presses it twice does not hear it twice.
+    const words = box.innerHTML;
+    const again = resetFilters();
+    check('a second press of it moves nothing, and leaves the box as it was',
+      again === 0 && still.length === 0 && box.innerHTML === words,
+      again + ' menus moved, and the box says ' +
+        (box.innerHTML === words ? 'the same thing' : 'something new'));
+    walk.corners = stoodAgain;
+
+    // A point picked off the map is named under the field and nothing else: the dot
+    // says "you are here" and the heading says which point it was, so a card on the
+    // dot repeating it would be a click with nothing behind it. An address keeps its
+    // card, because the spelling the lookup had to correct to is nowhere else.
+    const stoodCorner = walk.corners;
+    walk.corners = [];
+    drawLookup(probe.placed.point, probe.found, 'The point you picked', null);
+    walk.corners = stoodCorner;
+    const picked = drawn.filter(function (dot) {
+      return dot.kind === 'dot' && dot.at[0] === origin[0] && dot.at[1] === origin[1]
+        && dot.tooltip === 'You are here';
+    });
+    check('a picked point is named under the field and opens no card on the map',
+      picked.length === 1 && picked[0].popup === ''
+      && box.innerHTML.indexOf('The point you picked') >= 0,
+      picked.length + ' cores, and the card on it reads "' +
+        (picked.length ? picked[0].popup : '') + '"');
 
     global.document = realDocument;
     global.L = undefined;
@@ -3138,24 +3261,28 @@ async function checkWithoutBrowser() {
     const down = { page: page.arming, button: pressed.value,
                    ring: classes.arming === true, hint: hint.textContent };
     global.document = realDocument;
-    check('arming the map shows on its button, round its edge and in the hint, ' +
-      'and disarming puts all three back',
+    check('arming the map shows on its button, round its edge and in the line under ' +
+      'the button, and disarming puts all three back',
       rested === '' && up.page === true && up.button === 'true' && up.ring === true
       && up.hint === HINT_ARMED && down.page === false && down.button === 'false'
       && down.ring === false && down.hint === HINT_RESTING,
       'armed ' + JSON.stringify(up) + ', down ' + JSON.stringify(down));
   })();
 
-  // The line under the field is written twice - once in the markup, which is what a
-  // reader sees before touching anything, and once in HINT_RESTING, which is what
-  // they see when the arm goes down - so the two have to say the same words. The
-  // markup's own line breaks are collapsed first, since they are indentation rather
-  // than prose.
+  // The line under the button stands empty until the map is armed, so the markup must
+  // hold that element already: empty, a live region, and not hidden - a region taken out
+  // of the accessibility tree, or one inserted at the moment it has something to say, is
+  // announced by nothing. The markup's own line breaks are collapsed first, since they
+  // are indentation rather than prose.
+  const hintTag = (markup.match(/<p[^>]*id='lookup-hint'[^>]*>/) || [])[0] || '';
   const hintInMarkup = (markup.match(/id='lookup-hint'[^>]*>([\s\S]*?)<\/p>/) || [])[1];
   const collapsed = String(hintInMarkup || '').replace(/\s+/g, ' ').trim();
-  check('the hint in the markup says what the page says when the arm goes down',
-    collapsed === HINT_RESTING && HINT_ARMED !== HINT_RESTING,
-    JSON.stringify(collapsed) + ' against ' + JSON.stringify(HINT_RESTING));
+  check('the line under the button starts empty, and is a live region that is not hidden',
+    collapsed === HINT_RESTING && HINT_RESTING === ''
+    && /aria-live='polite'/.test(hintTag) && !/\shidden(\s|>)/.test(hintTag)
+    && HINT_ARMED !== HINT_RESTING,
+    JSON.stringify(collapsed) + ' in the markup, and the tag reads ' +
+      JSON.stringify(hintTag));
 
   // A walk inside a minute, as the five walks under the field and the popups say it: a
   // bound rather than words, and escaped wherever it is written into a card, since "<"

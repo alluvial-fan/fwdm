@@ -8,7 +8,7 @@
        not white: a white address bar over a sage page is the brightest edge on the
        screen. -->
   <meta name='theme-color' content='#BFC2B4'>
-  <title>Montreal Feature Distance Map</title>
+  <title>Montreal Feature Walking Distance Map</title>
   <!-- What the page is, for a search result or a link preview: the one sentence
        that is read where the page itself is not. Kept under 160 characters,
        because past that a result is cut off mid-word. -->
@@ -58,12 +58,13 @@
          is where the page asks its questions and writes its answers, and the map
          shows what it was asked. The id is what the fold's aria-controls names. -->
     <main class='panel' id='panel'>
-      <!-- The story: who this map is for and the one thing they can do, in two
-           sentences, so a stranger knows what the map is for before touching a
-           filter. -->
+      <!-- The story: why the tool exists and the two things it does, so a stranger
+           knows what the map is for before touching a filter. The first sentence is
+           the project's own, and the second names both halves of the page - the
+           look-up and the walk-time map - in the order the column holds them. -->
       <section id='story'>
-        <p>Renters and buyers in Montreal rarely know, before they visit, whether a street corner is a comfortable walk from a metro entrance or a green space.</p>
-        <p>Choose a walking time for green spaces, for metro stations, or for both: every street corner is coloured by how close it is.</p>
+        <p>While we don't pick where we're born, we later in life get to pick where we'll live; this tool aims to make that process easier.</p>
+        <p>Type an address or pick a point on the map to see its closest green spaces and metro stations, or set a walking time for either and colour every street corner by how close it is.</p>
       </section>
 
       <!-- The address lookup: the one question this page cannot answer from a file,
@@ -77,10 +78,13 @@
            submitted, so the button in the row submits them; a point on the map has to
            be aimed at, and a click meant for nothing would still take the filters off
            the map - so the map is armed by a button of its own first, and the click
-           that answers puts the arm down. The hint under it says what the box wants
-           next, and it carries a live region of its own: arming the map is announced
-           there rather than in the status line, which is the bar's report on the files
-           and nothing else. -->
+           that answers puts the arm down. The line under the button stands empty: what
+           the box wants is said by the sentence above it and by the field's own
+           placeholder, so a standing instruction would be read once and then sit in the
+           way of the answer. What it still carries is a live region of its own, which
+           speaks one line while the map is armed: arming the map is announced there
+           rather than in the status line, which is the bar's report on the files and
+           nothing else. -->
       <!-- The first of the page's two ways to colour the map: an address, and the five
            walks from it. A panel, and named the way the panel below it is named, because
            the two are alternatives rather than two halves of one form - what says so is
@@ -115,8 +119,12 @@
           </svg>
           Pick on map
         </button>
-        <p class='hint' id='lookup-hint' aria-live='polite'>Street number, then the
-          street. Or press Pick on map, then click the map.</p>
+        <!-- Empty on purpose, and not hidden: the line speaks only while the map is
+             armed, and a live region that is display:none is outside the accessibility
+             tree and announces nothing - so it stays in the page and in the flow, where
+             an empty line takes no height. Kept on one line, since a line break inside
+             the tag would be text. -->
+        <p class='hint' id='lookup-hint' aria-live='polite'></p>
         <div id='lookup-body'></div>
       </section>
 
@@ -132,7 +140,9 @@
            first visit opens with nothing asked and nothing drawn. A reload is the
            other case: the browser can bring a choice back, and the page then draws
            the question its menus hold rather than a blank map under a menu that says
-           otherwise.
+           otherwise. The button under the five menus puts every one of them back to
+           that third state in one press, since a reader who has set three of them has
+           no reason to work out which three before going back to the blank map.
            Each menu is named twice over and neither name is wasted: the box is a
            group labelled by its heading, so a reader hears "Green spaces" once on
            stepping into it, and each menu then carries a visible label of its own -
@@ -193,6 +203,12 @@
               <option value='stepfree'>Step-free only</option>
             </select>
           </section>
+          <!-- The one control in this panel that asks no question: a reader who has set
+               three of the five menus to get back to the blank map should not have to work
+               out which three, so one press puts every menu back to what it opens in. It is
+               typed as a button rather than as a submit, since there is nothing here to
+               submit and a submit inside the column would reload the page. -->
+          <button id='walk-reset' type='button'>Reset filters</button>
         </div>
       </section>
       <!-- What is left of the column is reference rather than a third thing to do, and
