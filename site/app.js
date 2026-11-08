@@ -98,9 +98,15 @@ function showPanel() {
 // "Failed to fetch", and a body that is not JSON goes on about a token: neither
 // says which of the four files did not come, and the line under the title has to
 // say it.
-function loadGeojson(url) {
+//
+// An options object is handed to fetch as it stands, which is how a file the
+// page does not need yet asks to be fetched at a low priority: the browser then
+// keeps the tiles the map is painting ahead of it instead of splitting the
+// connection evenly. A browser that does not know the priority option ignores
+// it, and every browser still fetches the file.
+function loadGeojson(url, options) {
   const name = url.replace(/^data\//, '');
-  return fetch(url)
+  return fetch(url, options)
     .then(function (response) {
       if (!response.ok) { throw new Error(name + ' (HTTP ' + response.status + ')'); }
       return response.json();
@@ -147,6 +153,16 @@ const PARK_STYLE = {
   'pending': { color: '#4CAF50', weight: 1, dashArray: '4 3', fillColor: '#A5D6A7', fillOpacity: 0.55 },
   'unknown': { color: '#81C784', weight: 1, fillColor: '#C8E6C9', fillOpacity: 0.55 }
 };
+
+// How far a park's outline may be thinned as it is drawn, in pixels: Leaflet
+// drops the points of a ring that fall within this distance of the line between
+// their neighbours, at the zoom being drawn, and takes the whole ring again at
+// any zoom where the difference would show. The parks are 1,981 shapes of about
+// eighty points each, all of them in view at the zoom the page opens on, so this
+// thinning is where the page's drawing time goes. Two pixels of a park edge is
+// 27 m at that opening zoom and 0.4 m at the closest one the page offers - the
+// corner of a fenced lawn either way, under a fill of 0.55.
+const PARK_SMOOTHING = 2;
 
 // One marker per kind of metro point: stations are the big navy dots, entrances
 // the small hollow grey ones, so size tells them apart as well as colour.
@@ -228,31 +244,45 @@ function focusBounds(windows) {
   return box.isValid() ? box : null;
 }
 
-// The page, once: make the map, load the four files, draw what no filter can
-// change - the borough edges, the parks, the metro points and the grey mask -
-// then read the walk times out of the intersections file that has just loaded
-// and wire the controls. Each step hands its result to the next through page or
-// walk, so nothing here holds a value for long.
+// The page, once: make the map, ask for the borough outlines on their own, fit
+// the map to them so its tiles are on their way, then draw what no filter can
+// change - the parks, the metro points and the grey mask - read the walk times
+// out of the intersections file that has just loaded and wire the controls. Each
+// step hands its result to the next through page or walk, so nothing here holds
+// a value for long.
+//
+// The outlines are asked for first, and alone, because the view the map opens on
+// is made of them: until the map has been fitted it is asking for the tiles of
+// the view it was made with, and those tiles are the largest thing the page
+// paints. The outlines are 200 KB of the four and a half megabytes the page
+// loads, so fitting on them alone starts the right tiles about four megabytes
+// sooner than waiting for the parks would.
 function start() {
   buildMap();
   // The fold is wired before the files come, so a phone that folds the column
   // while the page is loading gets a map that already fills the window.
   wirePanelToggle();
-  Promise.all([
-    loadGeojson('data/city_parks.geojson'),
-    loadGeojson('data/intersections.geojson'),
-    loadGeojson('data/metro_stops.geojson'),
-    loadGeojson('data/boroughs.geojson')
-  ])
-    .then(function ([parksData, intersectionsData, metroData, outlines]) {
-      // The outlines come with the base map, not the walk times: the mask is
-      // the map's own shape, so it is in place before any filter is asked.
-      walk.outlines = outlines;
-
+  loadGeojson('data/boroughs.geojson')
+    .then(function (outlines) {
+      drawBoroughs(outlines);
+      say('Loading the parks and metro points...');
+      return Promise.all([
+        loadGeojson('data/city_parks.geojson'),
+        // The corners are counted and coloured, never drawn, and no filter is
+        // asked until the reader asks one, so this file is told it may wait
+        // behind the tiles: two and a half megabytes arriving at the same
+        // priority as the map's own tiles is what leaves the page's largest
+        // paint waiting.
+        loadGeojson('data/intersections.geojson', { priority: 'low' }),
+        loadGeojson('data/metro_stops.geojson')
+      ]);
+    })
+    .then(function ([parksData, intersectionsData, metroData]) {
       // Parks first, then the metro points, so a click finds a metro point
       // where a park edge lies under one; the size order of the parks file
       // settles the rest.
       const parks = L.geoJSON(parksData, {
+        smoothFactor: PARK_SMOOTHING,
         style: function (feature) {
           return PARK_STYLE[feature.properties.popup_kind_key] || PARK_STYLE['unknown'];
         },
@@ -279,38 +309,23 @@ function start() {
         }
       }).addTo(map);
 
-      // The mask, added after the parks and metro points, takes the clicks they
-      // miss; redraw() brings it to the front again.
-      const windows = drawnOutlines(walk.outlines);
-      // The 19 boroughs' rings, kept for the lookup's click. A click can land
-      // under the grey mask, and Leaflet passes a click on a filled shape on to
-      // the map as well, so the page has to know where its own windows are
-      // before it answers one.
-      page.rings = windows.map(function (feature) {
-        return ringsOf(feature.geometry);
-      }).flat();
-      page.mask = maskOf(windows);
-      if (page.mask) { page.mask.addTo(map); }
+      // The mask made from the outlines went on first, under the parks: it is
+      // put back on top of them here, where its place in the stack is, so the
+      // order holds from this paint on rather than from the next redraw. The
+      // mask is what hides the linked cities, so nothing it covers may be drawn
+      // over it.
+      if (page.mask) {
+        page.mask.remove();
+        page.mask.addTo(map);
+      }
 
-      // The 19 boroughs, edged and named on hover, and the opening view: the
-      // whole of what the page draws.
-      drawBoroughEdges(windows);
-      const drawn = focusBounds(windows);
-      const frame = drawn || parks.getBounds().extend(metros.getBounds());
-      map.fitBounds(frame);
-
-      // The hard edge on a drag: the map may be panned anywhere inside the
-      // frame plus a small margin, and no further - not to the US, not to
-      // another city, not to the ocean past the island. The margin is 5% of
-      // the frame, a few hundred metres either way: enough that a borough on
-      // the frame's edge keeps its rim beside the grey, not enough to reach
-      // anything the page does not measure.
-      map.setMaxBounds(frame.pad(0.05));
-
-      // No zooming out past the fitted view: past it the mask fills the map
-      // with grey. Zooming in stays free, and every drag stays inside the
-      // frame set above.
-      map.setMinZoom(map.getZoom());
+      // The view, when the outlines gave none: the box round the parks and the
+      // metro points, which is very nearly the city's own. A file with none of
+      // its shapes flagged as drawn is the one case where the map opens on the
+      // view it was made with and is fitted here instead.
+      if (!page.frame) {
+        fitToFrame(parks.getBounds().extend(metros.getBounds()));
+      }
 
       // The status line: metro points by kind and corners by how many street
       // ends meet at them.
@@ -368,6 +383,52 @@ function start() {
     });
 }
 
+// The outlines, on their own and before the rest: the rings the lookup's click
+// is answered from, the grey mask, the dashed borough edges, and the view the
+// map opens on. The outlines come with the base map rather than the walk times
+// because the mask is the map's own shape: it is in place before any filter is
+// asked, and the tiles the page opens on are asked for as soon as it is.
+function drawBoroughs(outlines) {
+  walk.outlines = outlines;
+  const windows = drawnOutlines(walk.outlines);
+
+  // The 19 boroughs' rings, kept for the lookup's click. A click can land under
+  // the grey mask, and Leaflet passes a click on a filled shape on to the map as
+  // well, so the page has to know where its own windows are before it answers
+  // one.
+  page.rings = windows.map(function (feature) {
+    return ringsOf(feature.geometry);
+  }).flat();
+
+  // The mask takes the clicks the parks and metro points miss; redraw() brings
+  // it to the front again.
+  page.mask = maskOf(windows);
+  if (page.mask) { page.mask.addTo(map); }
+
+  // The 19 boroughs, edged and named on hover, and the opening view: the whole
+  // of what the page draws.
+  drawBoroughEdges(windows);
+  page.frame = focusBounds(windows);
+  if (page.frame) { fitToFrame(page.frame); }
+}
+
+// Fit the map to a frame and hold it there. The hard edge on a drag: the map may
+// be panned anywhere inside the frame plus a small margin, and no further - not
+// to the US, not to another city, not to the ocean past the island. The margin
+// is 5% of the frame, a few hundred metres either way: enough that a borough on
+// the frame's edge keeps its rim beside the grey, not enough to reach anything
+// the page does not measure.
+//
+// And no zooming out past the fitted view: past it the mask fills the map with
+// grey. Zooming in stays free, and every drag stays inside the frame set here.
+// Both are called twice over a page load - once when the outlines arrive, and
+// again if they gave no frame at all - so both are safe to repeat.
+function fitToFrame(frame) {
+  map.fitBounds(frame);
+  map.setMaxBounds(frame.pad(0.05));
+  map.setMinZoom(map.getZoom());
+}
+
 // --- The walk times: the two filters, and the corners they colour ----------
 //
 // The intersections file already carries each corner's walk for all 22
@@ -386,14 +447,14 @@ const WALK_RADII = { 3: 2.5, 4: 3.5, 5: 4.5, 6: 5.5, 7: 7, 'other': 4 };
 const EDGE_STYLE = { color: '#1F2D5A', weight: 1.5, opacity: 0.8,
                      dashArray: '6 4', fill: false };
 
-// What the page is drawn from, once the four files have loaded: the
-// intersections features, the two files a destination is named from, the park
-// and metro layers the filters show and hide, the dots' group, the mask, and the
-// token that tells the draw now being built from the one it replaced.
+// What the page is drawn from: the intersections features, the two files a
+// destination is named from, the park and metro layers the filters show and hide,
+// the dots' group, the mask, the frame the map is held to, and the token that
+// tells the draw now being built from the one it replaced.
 const page = { dots: null, metro: null, parks: null, parkLayer: null,
                metros: null, walkGroup: null, mask: null, graph: null,
-               lookupGroup: null, rings: null, answered: false, cleared: false,
-               drawToken: 0 };
+               lookupGroup: null, rings: null, frame: null, answered: false,
+               cleared: false, drawToken: 0 };
 
 // The build's own answers, read from the intersections file: the layers it
 // measured, each layer's walk in a corner's list, its counts per time, the

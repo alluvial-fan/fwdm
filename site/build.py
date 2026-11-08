@@ -1512,7 +1512,19 @@ def check_metro(rows, skipped, out_path):
 # The city's green-space file arrives in the shape the page wants, so this
 # section does three things and no more: it reads the file, it copies each
 # space across with every column the city wrote still on it, and it works out
-# the wording a popup shows. Nothing is rounded, filtered or simplified.
+# the wording a popup shows. Nothing is filtered or simplified, and the one
+# thing that changes is the precision of the points, for the reason
+# PARK_COORD_DIGITS gives.
+
+# Outline points are written rounded to this many decimals. The city writes ten,
+# which is a ten-thousandth of a millimetre - digits no screen has, and they are
+# a quarter of this file's bytes. Six decimals is 11 cm on the ground, while the
+# closest zoom the page offers (19) shows 0.21 m to the pixel and it opens at 12,
+# where a pixel is 27 m: a park's edge cannot move far enough for a reader to see
+# it. The street corners keep their seven (COORD_DIGITS, further down), because
+# there a tenth of a metre decides whether two corners are one.
+PARK_COORD_DIGITS = 6
+
 
 def read_parks():
     '''Read the city's green-space export.
@@ -1531,10 +1543,11 @@ def build_park_features(source):
     '''One GeoJSON Feature per green space, keeping every attribute.
 
     The city's export is already the shape we want, so each feature is copied
-    across unchanged: same geometry, same properties. Nothing is rounded,
-    filtered or simplified, apart from the street right-of-way spaces that
-    STREET_SPACE_TYPE names, which are left out. We keep the raw values and
-    worry about the file size later.
+    across as it stands: same properties, and the same shape with its points
+    rounded to PARK_COORD_DIGITS. Nothing else is rounded, filtered or
+    simplified, apart from the street right-of-way spaces that STREET_SPACE_TYPE
+    names, which are left out. We keep the raw values and worry about the file
+    size later.
     '''
     features = []
     skipped = 0
@@ -1545,16 +1558,32 @@ def build_park_features(source):
 
         feature = {
             'type': 'Feature',
-            'geometry': {
-                'type': feat['geometry']['type'],
-                'coordinates': feat['geometry']['coordinates'],
-            },
+            'geometry': round_coordinates(feat['geometry'], PARK_COORD_DIGITS),
             'properties': dict(feat['properties']),   # all 11 columns, untouched
         }
         features.append(feature)
 
     print(f'{len(features)} features built, {skipped} street spaces skipped')
     return features
+
+
+def round_coordinates(geometry, digits):
+    '''A shape with every point of it rounded to digits decimals.
+
+    A GeoJSON shape is a polygon's rings, or a multipolygon's polygons of rings,
+    of [lon, lat] pairs, so the two cases are the whole of it. A ring's first and
+    last point are the same pair, and rounding both the same way keeps them
+    equal: a closed ring stays closed.
+    '''
+    def ring(points):
+        return [[round(lon, digits), round(lat, digits)] for lon, lat in points]
+
+    if geometry['type'] == 'Polygon':
+        coordinates = [ring(points) for points in geometry['coordinates']]
+    else:
+        coordinates = [[ring(points) for points in polygon]
+                       for polygon in geometry['coordinates']]
+    return {'type': geometry['type'], 'coordinates': coordinates}
 
 
 def city_park_name(head, lien, name):
@@ -1673,9 +1702,13 @@ def check_parks(source, out_path):
     for feat in data['features']:
         assert set(feat['properties']) == expected, 'a feature lost an attribute'
 
-    # Every feature must still be a polygon, near Montreal, with closed rings.
+    # Every feature must still be a polygon, near Montreal, with closed rings
+    # written at PARK_COORD_DIGITS and no finer: the rounding is what takes a
+    # quarter off the file, so a shape that slipped past it - a ring copied
+    # rather than round_coordinates'd - fails here.
     for feat in data['features']:
         geometry = feat['geometry']
+        obj = feat['properties']['OBJECTID']
         assert geometry['type'] in ('Polygon', 'MultiPolygon'), 'not a polygon: ' + geometry['type']
 
         if geometry['type'] == 'Polygon':
@@ -1685,9 +1718,12 @@ def check_parks(source, out_path):
 
         for ring in rings:
             assert ring[0] == ring[-1], 'a ring is not closed'
+            for lon, lat in ring:
+                assert round(lon, PARK_COORD_DIGITS) == lon and \
+                    round(lat, PARK_COORD_DIGITS) == lat, \
+                    'green space ' + obj + ' has a point finer than six decimals'
 
         lon, lat = rings[0][0]
-        obj = feat['properties']['OBJECTID']
         assert 45.3 < lat < 45.8 and -74.1 < lon < -73.3, 'green space ' + obj + ' is not near Montreal'
 
     # --- Popup fields added next to the raw columns -----------------------
@@ -2023,13 +2059,20 @@ def sort_corners(corners):
 def build_intersection_features(corners, lines):
     '''One GeoJSON Point per intersection, in the order given (see sort_corners).
 
-    The properties are the corner's own three: its number, how many street ends
-    meet there, and the city's ID_TRC for every troncon that met there, which is
-    the only record of where the point came from. The popup keys are added next,
-    in add_intersection_popup_fields below, the way the other two outputs do it.
+    The properties are the corner's own two: its number and how many street ends
+    meet there. The city's ID_TRC for every troncon that met there is what the
+    point was made from, but it stays in this build's hands rather than going
+    into the file: the page draws the corner and names its streets, and the ids
+    were 290 KB of the 2.5 MB the page downloads of this file. They are checked
+    here, before the feature is made, because this is the last place they are in
+    hand. The popup keys are added next, in add_intersection_popup_fields below,
+    the way the other two outputs do it.
     '''
     features = []
     for corner in corners:
+        for number in corner['troncons']:
+            assert str(lines[number]['props']['ID_TRC']).isdigit(), \
+                lines[number]['props']['ID_TRC']
         lon, lat = corner['wgs']
         features.append({
             'type': 'Feature',
@@ -2039,8 +2082,6 @@ def build_intersection_features(corners, lines):
             'properties': {
                 'id': corner['id'],
                 'degree': corner['degree'],
-                'troncons': ','.join(str(lines[number]['props']['ID_TRC'])
-                                     for number in corner['troncons']),
             },
         })
 
@@ -2049,17 +2090,19 @@ def build_intersection_features(corners, lines):
 
 
 def add_intersection_popup_fields(features, corners, lines):
-    '''Add the two popup_* keys the page reads, next to the corner's own values.
+    '''Add the popup_title key the page reads, next to the corner's own values.
 
         popup_title   the streets that meet at the corner, named once each and
                       sorted, as a person would say them: "Avenue du Parc /
                       Rue Saint-Viateur". The names are the city's own, from the
                       ODONYME column of the troncons that met there, less the
                       ones the city has not named at all.
-        popup_degree  the wording for the degree: "4 street ends meet here".
 
     The count is ends and the list is names, and the two differ wherever a
-    street comes back to the same corner: that is two ends but one name.
+    street comes back to the same corner: that is two ends but one name. The
+    corner's degree goes beside it as a number, because that is what the page
+    uses it as: it decides the size of the corner's dot and the tally on the
+    status line. No wording for it is written here.
     '''
     for feat, corner in zip(features, corners):
         props = feat['properties']
@@ -2071,7 +2114,6 @@ def add_intersection_popup_fields(features, corners, lines):
         names = sorted({lines[number]['props']['ODONYME'].strip()
                         for number in corner['troncons']} - {UNNAMED_WAY})
         props['popup_title'] = ' / '.join(names) if names else UNNAMED_WAY_TITLE
-        props['popup_degree'] = f'{props["degree"]} street ends meet here'
 
     print('Popup fields added')
 
@@ -2113,21 +2155,18 @@ def check_intersections(corners, graph, rows, out_path):
                 feat['geometry']['coordinates'][0]) for feat in features]
     assert written == sorted(written), 'the file is not in the order it is numbered in'
 
-    # Keys: the three the corner has plus the two the page reads, and no more,
-    # so a change to the shape of a feature fails here rather than in the page.
+    # Keys: the corner's own two plus the one the page reads, and no more, so a
+    # change to the shape of a feature fails here rather than in the page.
     for p in props:
-        assert set(p) == {'id', 'degree', 'troncons', 'popup_title',
-                          'popup_degree'}, sorted(p)
+        assert set(p) == {'id', 'degree', 'popup_title'}, sorted(p)
 
-    # Every point is a Point, in this city, written at COORD_DIGITS and no
-    # finer, and the troncon ids are the city's own ID_TRC values.
+    # Every point is a Point, in this city, and written at COORD_DIGITS and no
+    # finer.
     for feat in features:
         assert feat['type'] == 'Feature' and feat['geometry']['type'] == 'Point'
         lon, lat = feat['geometry']['coordinates']
         assert 45.3 < lat < 45.8 and -74.1 < lon < -73.3, 'not near Montreal'
         assert round(lon, COORD_DIGITS) == lon and round(lat, COORD_DIGITS) == lat
-        for troncon in feat['properties']['troncons'].split(','):
-            assert troncon.isdigit(), troncon
 
     # No two intersections are written at the same place: two written points
     # would have to be closer than a centimetre, and the snapping never leaves
@@ -2137,14 +2176,13 @@ def check_intersections(corners, graph, rows, out_path):
     assert len(places) == len(features), 'two intersections share a place'
 
     # Degrees: every point is a place a walk can turn at, the number written is
-    # the number the network has there, and the wording agrees with it. The
-    # histogram is pinned too, so a change in how corners are found fails here.
+    # the number the network has there. The histogram is pinned too, so a change
+    # in how corners are found fails here.
     degrees = collections.Counter(p['degree'] for p in props)
     assert degrees == {3: 16242, 4: 8156, 5: 257, 6: 13, 7: 1}, degrees
     assert sum(degrees.values()) == len(features)
     for p, corner in zip(props, corners):
         assert p['degree'] == corner['degree'], p['id']
-        assert p['popup_degree'] == f'{p["degree"]} street ends meet here'
         assert p['popup_title'] == p['popup_title'].strip(), p['id']
         assert p['popup_title'], p['id']
 
@@ -2169,8 +2207,7 @@ def check_intersections(corners, graph, rows, out_path):
     print('Popup preview:')
     for feat in (features[0], features[len(features) // 2], features[-1]):
         p = feat['properties']
-        print(f'  {p["popup_title"]} | {p["popup_degree"]} | '
-              f'id {p["id"]}, troncons {p["troncons"]}')
+        print(f'  {p["popup_title"]} | id {p["id"]}, {p["degree"]} ends')
 
 
     # --- The STM's own points, as a second source -------------------------
@@ -2445,7 +2482,6 @@ def read_dots():
         dots.append({
             'id': len(dots), 'point': to_metres(lon, lat),
             'title': props['popup_title'], 'degree': degree,
-            'degree_word': props['popup_degree'],
         })
 
     print(f'{len(dots)} street corners read from the intersections file: '

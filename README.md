@@ -139,6 +139,10 @@ Three files, a CSV, a ZIP, and a GeoJSON.
 
 `site/index.html` is a LeafletJS map of the 19 boroughs of the city of Montreal. It reads GeoJSON data files for metro points, green spaces, street corners (with walk times), and borough outlines (for masking). A coloured dot is applied for each intersection with the time requested by the user per feature type.
 
+The page asks for the borough outlines first, on their own, and fits the map to them before asking for anything else: the mask is the map's own shape, and until the map has been fitted it is asking for the tiles of the view it was made with, so the 200 KB of outlines is what puts the right tiles on their way. The parks and metro points come next, and the corners with their walk times after them at a low priority, because no filter is drawn until the reader asks one.
+
+The two files the page draws are written as tightly as it can read them: park outlines to six decimals of a degree, which is 11 cm on the ground and finer than any zoom the page offers, and street corners to seven, where the tenth of a metre is what decides whether two street ends are one corner. The corners file also carries nothing the page does not read: the city's troncon ids and a written-out wording for each corner's degree were dropped, and what is left of the degree is the number, which sizes the corner's dot and is counted on the status line.
+
 ### Steps
 
 | Step | Command | Reads | Writes |
@@ -147,7 +151,7 @@ Three files, a CSV, a ZIP, and a GeoJSON.
 | 2 | `python site/build.py geojson` | `data/metro_stops/gtfs_stm.zip`, `data/city_parks/espace_vert.json`, `data/street_network/geobase.json` | `site/data/metro_stops.geojson` (68 station points and 134 entrances), `site/data/city_parks.geojson` (1981 green spaces), `site/data/intersections.geojson` (24,669 intersections) |
 | 3 | `python site/build.py walks` | `data/street_network/geobase.json`, `data/neighbourhoods/limites-administratives-agglomeration.geojson.json`, and step 2's three output geojsons| a rewritten `site/data/intersections.geojson` with walk times written into the corners, `site/data/boroughs.geojson` for the visual masking and borough labelling, and `site/data/walk_graph.json` for the address lookup |
 
-Step 3 also writes `site/data/walk_graph.json`: the same street network in the compact form the page searches itself when a reader gives it an address rather than a filter - 257,908 corners, 274,085 links with their lengths in centimetres, 5,996 street names with the 31,455 troncons that carry civic numbers, and the 46,371 gateways where a walk can end at 1,922 green spaces and 64 stations. It is 13.1 MB, so the page fetches it on the first address lookup and not before; a reader who only uses the filters never downloads it.
+Step 3 also writes `site/data/walk_graph.json`: the same street network in the compact form the page searches itself when a reader gives it an address rather than a filter - 257,947 corners, 274,124 links with their lengths in centimetres, 5,996 street names with the 31,455 troncons that carry civic numbers, and the 46,392 gateways where a walk can end at 1,922 green spaces and 64 stations. It is 13.1 MB, so the page fetches it on the first address lookup and not before; a reader who only uses the filters never downloads it.
 
 Before steps 2 and 3, `python site/build.py check` holds the projection every distance in this project is measured in (MTM zone 8, EPSG:32188) against the city's own metres: it projects the city's 34 outlines and compares them with the city's own MTM copy, point for point, in both directions. It reads no built file and writes nothing, so it is the first thing to run when a distance looks wrong.
 

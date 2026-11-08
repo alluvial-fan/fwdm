@@ -4,7 +4,18 @@
   <meta charset='utf-8'>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
   <title>Montreal Feature Distance Map</title>
+  <!-- What the page is, for a search result or a link preview: the one sentence
+       that is read where the page itself is not. Kept under 160 characters,
+       because past that a result is cut off mid-word. -->
+  <meta name='description' content='Walk times from every Montreal street corner to green space and metro entrances, with filters by park kind, size and entrance type.'>
   <link rel='icon' type='image/svg+xml' href='favicon.svg'>
+  <!-- The tiles are not asked for until app.js has made the map, so the name
+       lookup and the handshake with the tile server are paid after the last of
+       the page's own files. Done here, in the head, they are paid while the
+       stylesheets are still arriving. Leaflet itself needs none: it is named in
+       the first line of the body, where a browser finds it before it draws
+       anything. -->
+  <link rel='preconnect' href='https://tile.openstreetmap.org'>
   <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'>
   <!-- The page's look is site/style.css; this file is the page's shape. -->
   <link rel='stylesheet' href='style.css'>
