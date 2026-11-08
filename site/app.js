@@ -836,6 +836,10 @@ function redraw() {
     if (walk.edges) { walk.edges.bringToBack(); }
     drawLegend(counts, wanted);
     checkAgainstBuild(counts, wanted);
+    // What the column says it is showing, said once the draw is done rather than as it
+    // starts: the dots are on the map by now, which is what the walk-time panel's rail
+    // is claiming.
+    showMode();
   }
 
   if (wanted.length) { drawDots(wanted, counts, token, settle); }
@@ -1833,6 +1837,44 @@ function setHint(text) {
   if (hint) { hint.textContent = text; }
 }
 
+// The word in one of the two panels' names, if the page has that panel.
+function setState(id, text) {
+  const said = document.getElementById(id);
+  if (said) { said.textContent = text; }
+}
+
+// Which of the column's two panels the map is showing, said on both of them at once.
+//
+// The page has two ways to colour the map and they take turns (see clearAnswer), so one
+// of them is always the one the map is showing. That is drawn, not told: a rail of the
+// accent down the live panel's edge, the panel's name taken to the page's ink and its
+// glyph to the accent. The words in the two names repeat it for a reader who reads them,
+// and both words are in the page whatever the map is doing - only the text changes, so
+// nothing appears or disappears as a reader uses the page.
+//
+// Read off the state the map is already kept in rather than passed in, so the two cannot
+// disagree: an answer wins over the filters, which is the order the page lives by - an
+// answer takes the map from the filters (drawLookup) and a filter takes it back
+// (clearAnswer). Called from the three places that state changes: the end of a draw
+// (settle), the end of an answer (drawLookup) and the box that speaks for the lookup
+// (sayLookup), which is what every clearing and every refusal goes through.
+function showMode() {
+  if (typeof document === 'undefined') { return; }
+  const mode = page.answered ? 'address'
+    : Object.keys(walk.asked).length ? 'walks' : 'none';
+  // A page stood in for by a stand-in document may have no body, and a page with no
+  // document has nothing to write to at all: guarded the way armMark() guards its own.
+  const body = document.body;
+  if (body && body.classList) {
+    body.classList.toggle('mode-walks', mode === 'walks');
+    body.classList.toggle('mode-address', mode === 'address');
+  }
+  setState('walk-state', mode === 'walks' ? 'showing'
+    : mode === 'address' ? 'not showing' : 'nothing asked');
+  setState('address-state', mode === 'address' ? 'showing'
+    : mode === 'walks' ? 'not showing' : 'no answer yet');
+}
+
 // Everything that says the map is armed, said in one place: the record the click
 // reads, the button's own pressed state, the class that draws the ring round the
 // map, and the hint. A page with no document - the checks under node - has nothing
@@ -2029,6 +2071,9 @@ function sayLookup(message) {
   page.answered = false;
   document.getElementById('lookup-body').innerHTML =
     '<p class="said">' + escapeHtml(message) + '</p>';
+  // No answer is on the map now, so the address panel stands down: the walk map takes
+  // the rail back if the filters are asked, and neither claims the map if they are not.
+  showMode();
 }
 
 function reportFailure(error) {
@@ -2135,6 +2180,9 @@ function drawLookup(point, found, label, how) {
     cleared ? '<p class="short">The filters were set back to n/a: an answer and ' +
       'a filter are not shown together.</p>' : ''
   ].join('');
+  // The address panel takes the rail: the map under it is its five walks and nothing
+  // else, since resetFilters() above has just put the menus back to n/a.
+  showMode();
 }
 
 // The park a walk ends in, drawn as the city drew it and lifted out of the filters: the
@@ -2711,18 +2759,21 @@ async function checkWithoutBrowser() {
   });
 
   // The page's markup has to hold the boxes the lookup types into and writes into,
-  // and the button and the line that arm the map: a rename in index.html would
-  // otherwise leave a lookup that does nothing at all, and nothing here would say
-  // so.
+  // the button and the line that arm the map, and the two panels' names with the words
+  // that say which of them is live: a rename in index.html would otherwise leave a
+  // lookup that does nothing, or a column that says the wrong panel is showing, and
+  // nothing here would say so.
   const markup = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
   const wanted = ['lookup-form', 'lookup-text', 'lookup-body', 'lookup-arm',
-                  'lookup-hint'];
+                  'lookup-hint', 'lookup-head', 'address-state', 'walk-panel',
+                  'walk-head', 'walk-state'];
   const absent = wanted.filter(function (id) {
     return markup.indexOf("id='" + id + "'") < 0
       && markup.indexOf('id="' + id + '"') < 0;
   });
-  check('the page holds the box the lookup is typed into, the one it writes in, ' +
-    'and the button that arms the map', absent.length === 0, absent.join(', '));
+  check('the page holds the box the lookup is typed into, the one it writes in, the ' +
+    'button that arms the map, and the two panels\' names and state words',
+    absent.length === 0, absent.join(', '));
 
   // --- The answer as drawn --------------------------------------------------
   //
@@ -2947,6 +2998,82 @@ async function checkWithoutBrowser() {
     page.metro = realMetro;
     page.parks = realParks;
     page.lookupGroup = realGroup;
+  })();
+
+  // --- Which of the two panels the map is showing ---------------------------
+  //
+  // The column says which of its two ways of colouring the map is the one on it in a
+  // way a reader can see without reading anything - a rail of the accent down the live
+  // panel's edge, its name taken to the page's ink, its glyph to the accent - and the
+  // words in the two names say it again for a reader who reads them. All of that is one
+  // class on the body and two words, so what those are in each of the three states is
+  // checked here, along with the agreement between them: a rail round one panel and a
+  // word claiming the other would be worse than neither.
+  (function () {
+    const realDocument = global.document;
+    const words = { 'walk-state': '', 'address-state': '' };
+    const held = new Set();
+    global.document = {
+      body: { classList: {
+        toggle: function (name, on) {
+          if (on) { held.add(name); } else { held.delete(name); }
+        }
+      } },
+      // Only the two words are stood in for: showMode() writes those and nothing else,
+      // and an id it does not know is a page with no such panel, which is the other
+      // case it has to survive.
+      getElementById: function (id) {
+        if (!Object.prototype.hasOwnProperty.call(words, id)) { return null; }
+        return { set textContent(text) { words[id] = text; } };
+      }
+    };
+
+    const answered = page.answered;
+    const asked = walk.asked;
+    function state(address, filters) {
+      page.answered = address;
+      walk.asked = filters;
+      held.clear();
+      showMode();
+      return {
+        walks: held.has('mode-walks'), address: held.has('mode-address'),
+        walkWord: words['walk-state'], addressWord: words['address-state']
+      };
+    }
+
+    const none = state(false, {});
+    check('with nothing asked neither panel claims the map, and both say so',
+      !none.walks && !none.address && none.walkWord === 'nothing asked'
+      && none.addressWord === 'no answer yet', JSON.stringify(none));
+
+    const dots = state(false, { park: {} });
+    check('a filter puts the rail on the walk-time panel and says so',
+      dots.walks && !dots.address && dots.walkWord === 'showing'
+      && dots.addressWord === 'not showing', JSON.stringify(dots));
+
+    const answer = state(true, {});
+    check('an answer puts the rail on the address panel and says so',
+      answer.address && !answer.walks && answer.addressWord === 'showing'
+      && answer.walkWord === 'not showing', JSON.stringify(answer));
+
+    check('the rail and the word agree in every state',
+      [none, dots, answer].every(function (each) {
+        return each.walks === (each.walkWord === 'showing')
+          && each.address === (each.addressWord === 'showing');
+      }), JSON.stringify([none, dots, answer]));
+
+    page.answered = answered;
+    walk.asked = asked;
+
+    // And with no document at all - which is this page under node, once the stand-in
+    // above is taken away - there is nowhere to write, and nothing may throw trying.
+    const threw = (function () {
+      try { global.document = undefined; showMode(); return false; }
+      catch (error) { return error.message; }
+    })();
+    global.document = realDocument;
+    check('saying which panel is live needs no document, and throws nothing',
+      threw === false, String(threw));
   })();
 
   // --- The arm on the map ----------------------------------------------------

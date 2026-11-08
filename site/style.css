@@ -3,8 +3,8 @@
 
    The page is a sage-grey and the colour on it is the data's: the dots, the parks and the
    key's cells are the only things allowed to be a strong colour, so the column beside them
-   is quiet - a grey window, cards a step lighter, fields a step darker, and ink with the
-   hard edge taken off it. Nothing here is white and nothing is black: a sheet of #FFFFFF
+   is quiet - a grey window, two panels a step lighter, fields a step darker, and ink with
+   the hard edge taken off it. Nothing here is white and nothing is black: a sheet of #FFFFFF
    under 13px type is the glare this palette exists to avoid, and a near-black window under
    it is the same glare turned inside out. The window also sits one value step below the
    map's own tiles, so the map is the one lit surface and the column reads as the chassis it
@@ -18,20 +18,21 @@
 
 /* THE PALETTE, named once: every colour and measure below is one of these, so a change of
    mind is a change here rather than a hunt through the file. The surfaces are a sage-grey
-   rather than paper - #BFC2B4 the window, #CED1C3 a card lifted off it, #C6C9BB a field sunk
-   into a card, #D3D6C8 that field under a pointer - and the green in that grey is what keeps
-   it from reading as concrete. The inks are a document's ink with the hard edge off:
-   #1D2320 for what is read (10.3:1 on a card, 8.8:1 on the window), #3F4641 for what
+   rather than paper - #BFC2B4 the window, #CED1C3 a panel lifted off it, #C6C9BB a field
+   sunk into one, #D3D6C8 that field under a pointer - and the green in that grey is what
+   keeps it from reading as concrete. The inks are a document's ink with the hard edge off:
+   #1D2320 for what is read (10.3:1 on a panel, 8.8:1 on the window), #3F4641 for what
    supports it (6.3:1), and #434A45 for a label or a hint, which is read once (5.9:1 on a
-   card, 5.4:1 on a field, 5.0:1 on the window); nothing lighter than that last one is used
-   for text at all. The blue is deep because the card under it is mid-tone and eats the
-   contrast white once gave it: #1E4494 is 5.9:1 on a card, 5.0:1 on the window, 9.1:1 under
-   white where it is a fill, and 7.6:1 against the tiles where it rings an armed map. */
+   panel, 5.4:1 on a field, 5.0:1 on the window); nothing lighter than that last one is
+   used for text at all. The blue is deep because the panel under it is mid-tone and eats
+   the contrast white once gave it: #1E4494 is 5.9:1 on a panel, 5.0:1 on the window,
+   9.1:1 under white where it is a fill, and 7.6:1 against the tiles where it rings an
+   armed map. */
 :root {
-  --page: #BFC2B4;         /* the window: the bar and the column, under the cards */
-  --surface: #CED1C3;      /* a card, a raised button: one step up from the window */
+  --page: #BFC2B4;         /* the window: the bar and the column, under the panels */
+  --surface: #CED1C3;      /* a panel, a raised button: one step up from the window */
   --subtle: #C6C9BB;       /* a field, a rail: a surface inside a surface */
-  --subtle-hover: #D3D6C8; /* the same field under a pointer, lifted to the card's surface */
+  --subtle-hover: #D3D6C8; /* the same field under a pointer, lifted to a panel's surface */
   --line: #A7AA9C;         /* the hairline that separates them */
   --line-strong: #909387;  /* the same line under a pointer, or a button's edge */
   --popup: #E4E5DE;        /* a popup: a card over the tiles, a step lighter than a card */
@@ -137,31 +138,72 @@ body { margin: 0; background: var(--page); color: var(--ink);
   body.folded .panel { display: none; }
 }
 
-/* The blocks the column is made of: the address box, the two filters, the legend
-   and, folded away, the caveats. One card each - a surface one step up from the
-   window, a hairline, a corner and a shadow that only just shows - so a reader sees
-   four things to read rather than one long column. The gap between them is the same
-   12px everywhere, which is most of what makes a column look laid out rather than
-   stacked, and lifting each one a step off the window is what makes it read as a
-   card at all on a surface that is already grey. */
-.filter { display: flex; flex-direction: column; gap: 8px; padding: 12px;
-          background: var(--surface); border: 1px solid var(--line);
-          border-radius: var(--radius); box-shadow: var(--shadow); }
-/* A card's name: small, upper case and spaced out, the way a form labels a group
-   rather than a sentence. It is the quietest thing in the card, so it reads as the
-   card's label and not as its first line - the yellow bold heading it replaces was
-   the loudest thing in the column, which is why nothing under it had a chance. */
-.filter .switch { font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+/* The column is two things a reader can do and one thing they can read: a panel each
+   for the address answer and the walk-time map, an "or" between them, and the key and
+   the caveats underneath, drawn as reference. One make for both panels - a surface one
+   step up from the window, a hairline, a corner and a shadow that only just shows -
+   because two panels of one make read as two ways to do the same thing, which is what
+   they are, and because a frame round each of the four things in the column was most of
+   why it read as four unrelated cards. */
+.mode { display: flex; flex-direction: column; gap: 8px; padding: 12px;
+        margin-top: 12px; background: var(--surface);
+        border: 1px solid var(--line); border-radius: var(--radius);
+        box-shadow: var(--shadow); }
+/* Which of the two the map is showing, as a shape before it is a word: a rail of the
+   accent down the live panel's edge - the same blue as the ring round an armed map and
+   the fill of a pressed button, because it is the same fact - and the panel's edge taken
+   a step darker. Nothing is ever put out of reach: the other panel's controls stay live
+   and look it, since touching one is how a reader switches. */
+body.mode-walks #walk-panel, body.mode-address #lookup {
+  border-color: var(--line-strong);
+  box-shadow: inset 3px 0 0 var(--accent), var(--shadow); }
+/* A panel's name: a glyph and two words, one step louder than the names of the groups
+   inside it, because a mode is what a reader chooses between and a group is a part of
+   one. The glyph is the shape of what the panel draws - a crosshair for a point asked
+   about, three dots of three sizes for the map's own dots - so the two panels are told
+   apart before either name is read, and it takes the accent when its panel is live. */
+.mode-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px;
+             margin: 0; }
+.mode-head .mark { flex: 0 0 auto; align-self: center; width: 14px; height: 14px;
+                   color: var(--ink-muted); }
+.mode-head .title { font-size: 12px; font-weight: 600; letter-spacing: 0.05em;
+                    text-transform: uppercase; color: var(--ink-soft); }
+/* The word at the end of the name: always in the markup, always the same slot, and the
+   only thing on the page that changes when the mode does - so nothing appears, and a
+   reader who has just clicked something has not moved the column under their hand. */
+.mode-head .state { margin-left: auto; font-size: 10.5px; color: var(--ink-muted); }
+body.mode-walks #walk-panel .title, body.mode-address #lookup .title { color: var(--ink); }
+body.mode-walks #walk-panel .mark, body.mode-address #lookup .mark { color: var(--accent); }
+/* The "or" between the two panels: a rule either side of the one word that says they are
+   alternatives, which is the whole of how the page says "one or the other" to a reader
+   who reads no sentences at all. */
+.either { display: flex; align-items: center; gap: 10px; margin: 10px 0 0;
+          font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em;
+          text-transform: uppercase; color: var(--ink-muted); }
+.either::before, .either::after { content: ''; flex: 1 1 auto; height: 1px;
+                                  background: var(--line); }
+/* A group inside a panel: flat, because the panel is already the box, and separated from
+   its neighbour by a hairline rather than a frame of its own - a box inside a box is what
+   makes a column read as a stack of cards. */
+.mode .filter { display: flex; flex-direction: column; gap: 8px; padding: 0;
+                background: none; border: 0; border-radius: 0; box-shadow: none; }
+.mode .filter + .filter { border-top: 1px solid var(--line); padding-top: 8px; }
+/* A group's name, under the panel's: small, upper case and spaced out the way a form
+   labels a group, and in the muted grey - quieter than the panel's name, so "Green
+   spaces" reads as a part of the walk-time map and not as another mode. */
+.filter .switch { font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em;
                   text-transform: uppercase; color: var(--ink-muted); }
 /* The two filters: two blocks one above the other, each one question - how long,
    what kind, how big - with each of its menus on a line of its own and its name in
    a narrow column on the left. The names line up, so three menus and then two read
    as a table of questions rather than as five boxes in a pile, and the menus take
-   what is left of the card, so the column stays a column however narrow it gets.
+   what is left of the panel, so the column stays a column however narrow it gets.
    The name column is 52px because the longest of the four names is "Entrance": at
    12px it needs about 48 of them, and a column that fits it keeps every menu's left
-   edge on the same line. */
-#filters { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+   edge on the same line. The two groups are flat and share the panel's edges - the
+   panel is the box, so a box per group would be a box in a box - and the hairline
+   above the second of them is the separation the old card drew as a frame. */
+#filters { display: flex; flex-direction: column; gap: 10px; margin-top: 0; }
 #filters .filter { display: grid; grid-template-columns: 52px 1fr;
                    align-items: center; gap: 6px 8px; }
 #filters .filter .switch { grid-column: 1 / -1; }
@@ -177,12 +219,10 @@ body { margin: 0; background: var(--page); color: var(--ink);
 .filter select:hover { background: var(--subtle-hover); border-color: var(--line-strong); }
 .filter select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-/* The address lookup: a card of the filters' own make, above them, because it is
-   the other way to ask this page a question - by an address rather than by a menu.
-   The field and its button share one line, the way into the map sits under them and
-   the hint under that, so the box keeps one line of input however narrow the column
-   gets; the list that answers a question fills whatever is left of the box. */
-#lookup { margin-top: 12px; }
+/* The address lookup, inside the first of the column's two panels: the field and its
+   button share one line, the way into the map sits under them and the hint under that,
+   so the panel keeps one line of input however narrow the column gets; the list that
+   answers a question fills whatever is left of it. */
 #lookup form { display: flex; gap: 6px; }
 /* The field and the two buttons are one family with the menus above: the same
    subtle grey, the same hairline, the same corner and the same height, so nothing
@@ -210,20 +250,24 @@ body { margin: 0; background: var(--page); color: var(--ink);
                                       border-color: var(--solid-hover); }
 #lookup button[type='submit']:focus-visible { outline: 2px solid var(--accent);
                                               outline-offset: 2px; }
-/* The other way in: a point on the map, which a click cannot mean unless the reader
-   says so first. This is the second of the card's two buttons and is drawn as one -
-   a hairline on a field's surface - until it is pressed, and then it is the accent
-   with white on it, the same blue as the ring that appears round the armed map. It
-   is the one place the accent is a surface rather than a line, because it is the one
-   place a reader has switched something on. A field's surface rather than a card's,
-   because a button the colour of the card it stands on is a label; and it is the
-   only control in the column that has to look pressable while it is off. */
-#lookup-arm { align-self: flex-start; font: inherit; font-size: 12px; font-weight: 500;
-              padding: 5px 10px; cursor: pointer; color: var(--ink-soft);
-              background: var(--subtle); border: 1px solid var(--line-strong);
-              border-radius: 5px; }
-#lookup-arm:hover { color: var(--ink); background: var(--subtle-hover);
-                    border-color: var(--ink-muted); }
+/* The other way in, and the one control in the column that has to look pressable while
+   it is off: a point on the map, which a click cannot mean unless the reader says so
+   first. So it is drawn as the page's second kind of button rather than as a caption -
+   the full width of the panel under the field, a raised surface with a strong edge and
+   the panels' own shadow, the crosshair it arms the map with on its face - and it is
+   filled with the ink's own weight rather than the accent, because the accent means "this
+   is live" and nothing else: a button wearing it while it is off would spend the one
+   colour the page keeps for the panel that is showing. Pressed, it is the accent as a
+   surface with white on it, the same blue as the ring that appears round the armed map. */
+#lookup-arm { display: flex; align-items: center; justify-content: center; gap: 6px;
+              width: 100%; font: inherit; font-size: 12.5px; font-weight: 600;
+              padding: 6px 10px; cursor: pointer; color: var(--ink);
+              background: var(--surface); border: 1px solid var(--line-strong);
+              border-radius: 5px; box-shadow: var(--shadow); }
+/* The glyph is the button's own ink, so it goes white with the words when the button is
+   pressed and needs no rule of its own for that. */
+#lookup-arm .mark { width: 13px; height: 13px; }
+#lookup-arm:hover { background: var(--subtle-hover); border-color: var(--ink-muted); }
 #lookup-arm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 #lookup-arm[aria-pressed='true'] { color: var(--on-accent); background: var(--accent);
                                    border-color: var(--accent); }
@@ -240,11 +284,11 @@ body { margin: 0; background: var(--page); color: var(--ink);
 body.arming #map.leaflet-container { cursor: crosshair; }
 body.arming #map { outline: 2px solid var(--accent); outline-offset: -2px; }
 /* The hint is the line that says what the box wants next, and the one line that
-   changes when the map is armed: small and muted, and never wider than the card. */
+   changes when the map is armed: small and muted, and never wider than the panel. */
 #lookup .hint { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--ink-muted); }
-/* The answer, in the card that asked for it: the address as its heading, the five
+/* The answer, in the panel that asked for it: the address as its heading, the five
    walks as a list, and the metres each of them took set back in the muted grey - a
-   distance is a detail of a walk, not the walk. The card's own gap spaces it, so an
+   distance is a detail of a walk, not the walk. The panel's own gap spaces it, so an
    empty box takes no space at all. */
 #lookup-body { font-size: 12.5px; color: var(--ink); }
 #lookup-body:empty { display: none; }
@@ -276,13 +320,17 @@ body.arming #map { outline: 2px solid var(--accent); outline-offset: -2px; }
             color: #FFFFFF; background: #23272C; }
 .here-tag::before { display: none; }
 
-/* The legend: a card of the filters' own make - the same border, corner and padding,
-   and a name on its first line - so a key with nothing in it yet reads as a key
-   rather than as a gap under them. In it the key comes first: five band names across
-   the top of a table, one cell for each pair of bands, and the grid of mixed colours
-   when both are asked; then the question as the filters stand. The table is the same
-   size whatever is asked, so the box never moves as the filters change. */
-#legend { margin-top: 12px; }
+/* The legend: the first of the two blocks under the panels that are read rather than
+   used, so it wears no card - a hairline where the walk-time panel ends and a name a
+   size smaller than a panel's - because a frame of the panels' own make made it look
+   like a third thing to choose between. In it the key comes first: five band names
+   across the top of a table, one cell for each pair of bands, and the grid of mixed
+   colours when both are asked; then the question as the filters stand. The table is the
+   same size whatever is asked, so the block never moves as the filters change. */
+#legend { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.info-head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; }
+.info-head .title { font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em;
+                    text-transform: uppercase; color: var(--ink-muted); }
 #legend-body { font-size: 12.5px; }
 /* The question the key answers, said under it: supporting text rather than the
    yellow announcement it was, because the key above it is the loud thing and this
@@ -295,10 +343,10 @@ body.arming #map { outline: 2px solid var(--accent); outline-offset: -2px; }
    and the five band columns sharing the rest - so an empty key, one row of
    counts and a full 5 by 5 grid are all the same size. The names are cut to
    "<6" and "6-12", so even the 40px band column of the narrowest panel leaves a
-   gap between one name and the next. The seams between the cells are the card's own
-   surface, so the field of colour reads as a field rather than as a spreadsheet with
-   a line drawn round every cell - the navy seams it wore before were most of what
-   made a key look like a table. */
+   gap between one name and the next. The seams between the cells are the window's own
+   grey, now that the key sits on the window rather than on a card, so the field of
+   colour reads as a field rather than as a spreadsheet with a line drawn round every
+   cell - the navy seams it wore before were most of what made a key look like a table. */
 #legend table.blend { table-layout: fixed; width: 100%; border-collapse: collapse;
                       margin: 0; }
 #legend table.blend th, #legend table.blend td { box-sizing: border-box; }
@@ -314,7 +362,7 @@ body.arming #map { outline: 2px solid var(--accent); outline-offset: -2px; }
 #legend table.blend th { font: inherit; font-size: 10px; font-weight: 600;
                          letter-spacing: 0.02em; color: var(--ink-muted);
                          background: var(--subtle); padding: 0; height: 16px;
-                         white-space: nowrap; border: 1px solid var(--surface); }
+                         white-space: nowrap; border: 1px solid var(--page); }
 /* A cell of the field: the shade of the pair the row and the column name, and how
    many corners are drawn that way. The count is bold and in figures of one width, so
    it reads as a number rather than as a name, and its colour comes from the shade it
@@ -322,14 +370,14 @@ body.arming #map { outline: 2px solid var(--accent); outline-offset: -2px; }
    rather than from the dark halo it used to wear, which was a shadow cast over a
    colour that means something. app.js decides which of the two, so a cell is legible
    on every one of the shades the ramps hold. */
-#legend table.blend td.cell { height: 20px; border: 1px solid var(--surface);
+#legend table.blend td.cell { height: 20px; border: 1px solid var(--page);
                               text-align: center; color: #fff; font-size: 10.5px;
                               font-weight: 600;
                               font-variant-numeric: tabular-nums; }
 /* A cell of the field with nothing in it yet: a pair no corner falls in, or a
-   family nobody has asked about. Its grey is the card's own subtle surface, so the
-   field's empties read as unfilled slots and never as names, and the seams keep
-   the 5 by 5 structure visible even when every cell is empty. */
+   family nobody has asked about. Its grey is a step off the window, so the field's
+   empties read as unfilled slots and never as names, and the seams keep the 5 by 5
+   structure visible even when every cell is empty. */
 #legend table.blend td.blank { background: var(--subtle); color: var(--ink-muted); }
 #legend .axis { color: var(--ink-muted); font-size: 11.5px; line-height: 1.45;
                 margin: 0; }

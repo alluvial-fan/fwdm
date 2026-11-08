@@ -81,25 +81,53 @@
            next, and it carries a live region of its own: arming the map is announced
            there rather than in the status line, which is the bar's report on the files
            and nothing else. -->
-      <section class='filter' id='lookup'>
-        <span class='switch'>Address lookup</span>
+      <!-- The first of the page's two ways to colour the map: an address, and the five
+           walks from it. A panel, and named the way the panel below it is named, because
+           the two are alternatives rather than two halves of one form - what says so is
+           the "or" between them and the fact that they are built alike.
+           The word at the end of the name says which panel the map is showing. It is in
+           the markup whichever one that is and only its text changes, so a reader never
+           watches anything appear: app.js's showMode() keeps the pair of words and the
+           rail down the live panel's edge in step with the map. -->
+      <section class='mode' id='lookup' aria-labelledby='lookup-head'>
+        <p class='mode-head'>
+          <svg class='mark' viewBox='0 0 16 16' aria-hidden='true' focusable='false'>
+            <circle cx='8' cy='8' r='5' fill='none' stroke='currentColor'
+                    stroke-width='1.4'/>
+            <path d='M8 0.5v4M8 11.5v4M0.5 8h4M11.5 8h4' stroke='currentColor'
+                  stroke-width='1.4'/>
+          </svg>
+          <span class='title' id='lookup-head'>Address lookup</span>
+          <span class='state' id='address-state'>no answer yet</span>
+        </p>
         <form id='lookup-form'>
           <input id='lookup-text' type='text' autocomplete='off' spellcheck='false'
                  placeholder='4250 Rue Sherbrooke Est'
                  aria-label='Street number and street'>
           <button type='submit'>Walk it</button>
         </form>
-        <button id='lookup-arm' type='button' aria-pressed='false'>Pick on map</button>
+        <button id='lookup-arm' type='button' aria-pressed='false'>
+          <svg class='mark' viewBox='0 0 16 16' aria-hidden='true' focusable='false'>
+            <circle cx='8' cy='8' r='5' fill='none' stroke='currentColor'
+                    stroke-width='1.4'/>
+            <path d='M8 0.5v4M8 11.5v4M0.5 8h4M11.5 8h4' stroke='currentColor'
+                  stroke-width='1.4'/>
+          </svg>
+          Pick on map
+        </button>
         <p class='hint' id='lookup-hint' aria-live='polite'>Street number, then the
           street. Or press Pick on map, then click the map.</p>
         <div id='lookup-body'></div>
       </section>
 
-      <!-- The two filters, kept apart from each other. The first asks whether there
-           is a green space of a chosen kind and size within so many minutes' walk of
-           a corner, the second whether there is a metro entrance - or a step-free one
-           - within so many minutes'. Either can be asked alone, and the two walks are
-           never added up.
+      <!-- The second of the two ways, and the one that colours every corner at once: a
+           panel built like the address's, with an "or" above it, so a reader who reads
+           nothing at all still sees two things to choose between rather than a list of
+           controls. Inside it the two filters are kept apart from each other. The first
+           asks whether there is a green space of a chosen kind and size within so many
+           minutes' walk of a corner, the second whether there is a metro entrance - or a
+           step-free one - within so many minutes'. Either can be asked alone, and the
+           two walks are never added up.
            "Don't care" is the third state of each and the one both start in, so a
            first visit opens with nothing asked and nothing drawn. A reload is the
            other case: the browser can bring a choice back, and the page then draws
@@ -111,56 +139,72 @@
            Time, Type, Size - in the narrow column those labels share. A menu left to
            itself reaches a screen reader as "combo box" with no question attached,
            which is what the labels are for. -->
-      <div id='filters'>
-        <section class='filter' id='park-filter' role='group'
-                 aria-labelledby='park-head'>
-          <span class='switch' id='park-head'>Green spaces</span>
-          <label class='name' for='park-minutes'>Time</label>
-          <select id='park-minutes'>
-            <option value='none'>n/a</option>
-            <option value='5'>Within 5 min</option>
-            <option value='15'>Within 15 min</option>
-            <option value='30'>Within 30 min</option>
-          </select>
-          <label class='name' for='park-kind'>Type</label>
-          <select id='park-kind'>
-            <option value='any'>Any green space</option>
-            <option value='city'>City park</option>
-            <option value='borough'>Borough park</option>
-            <option value='other'>Other green space</option>
-          </select>
-          <label class='name' for='park-band'>Size</label>
-          <select id='park-band'>
-            <option value='any'>Any size</option>
-            <option value='0to1'>under 1 ha</option>
-            <option value='1to5'>1 to 5 ha</option>
-            <option value='5to10'>5 to 10 ha</option>
-            <option value='10up'>10 ha or more</option>
-          </select>
-        </section>
-        <section class='filter' id='metro-filter' role='group'
-                 aria-labelledby='metro-head'>
-          <span class='switch' id='metro-head'>Metro stations</span>
-          <label class='name' for='metro-minutes'>Time</label>
-          <select id='metro-minutes'>
-            <option value='none'>n/a</option>
-            <option value='5'>Within 5 min</option>
-            <option value='15'>Within 15 min</option>
-            <option value='30'>Within 30 min</option>
-          </select>
-          <label class='name' for='metro-kind'>Entrance</label>
-          <select id='metro-kind'>
-            <option value='any'>Any entrance</option>
-            <option value='stepfree'>Step-free only</option>
-          </select>
-        </section>
-      </div>
-      <!-- The legend: a box of its own, laid out like the filters above it - the title
-           on the first line, then what app.js builds from the intersections file: the key
-           that answers the filters first and the question they ask after it, so the table
-           keeps its size and place and only the words under it change. -->
-      <section class='filter' id='legend'>
-        <span class='switch'>Legend</span>
+      <p class='either'><span>or</span></p>
+      <section class='mode' id='walk-panel' aria-labelledby='walk-head'>
+        <p class='mode-head'>
+          <svg class='mark' viewBox='0 0 16 16' aria-hidden='true' focusable='false'>
+            <circle cx='4.4' cy='11.2' r='1.9' fill='currentColor'/>
+            <circle cx='8.6' cy='7.2' r='2.6' fill='currentColor'/>
+            <circle cx='12.4' cy='12' r='1.4' fill='currentColor'/>
+          </svg>
+          <span class='title' id='walk-head'>Walk-time map</span>
+          <span class='state' id='walk-state'>nothing asked</span>
+        </p>
+        <div id='filters'>
+          <section class='filter' id='park-filter' role='group'
+                   aria-labelledby='park-head'>
+            <span class='switch' id='park-head'>Green spaces</span>
+            <label class='name' for='park-minutes'>Time</label>
+            <select id='park-minutes'>
+              <option value='none'>n/a</option>
+              <option value='5'>Within 5 min</option>
+              <option value='15'>Within 15 min</option>
+              <option value='30'>Within 30 min</option>
+            </select>
+            <label class='name' for='park-kind'>Type</label>
+            <select id='park-kind'>
+              <option value='any'>Any green space</option>
+              <option value='city'>City park</option>
+              <option value='borough'>Borough park</option>
+              <option value='other'>Other green space</option>
+            </select>
+            <label class='name' for='park-band'>Size</label>
+            <select id='park-band'>
+              <option value='any'>Any size</option>
+              <option value='0to1'>under 1 ha</option>
+              <option value='1to5'>1 to 5 ha</option>
+              <option value='5to10'>5 to 10 ha</option>
+              <option value='10up'>10 ha or more</option>
+            </select>
+          </section>
+          <section class='filter' id='metro-filter' role='group'
+                   aria-labelledby='metro-head'>
+            <span class='switch' id='metro-head'>Metro stations</span>
+            <label class='name' for='metro-minutes'>Time</label>
+            <select id='metro-minutes'>
+              <option value='none'>n/a</option>
+              <option value='5'>Within 5 min</option>
+              <option value='15'>Within 15 min</option>
+              <option value='30'>Within 30 min</option>
+            </select>
+            <label class='name' for='metro-kind'>Entrance</label>
+            <select id='metro-kind'>
+              <option value='any'>Any entrance</option>
+              <option value='stepfree'>Step-free only</option>
+            </select>
+          </section>
+        </div>
+      </section>
+      <!-- What is left of the column is reference rather than a third thing to do, and
+           it is drawn that way: no card, a name a size smaller than a panel's, and no
+           control of its own. What app.js builds from the intersections file still comes
+           in the same order - the key that answers the filters, then the question they
+           ask - so the table keeps its size and place and only the words under it
+           change. The key stays a key whatever the map is showing: the dots are the
+           page's own vocabulary, and a reader who has just looked up an address still
+           needs to know what one is. -->
+      <section class='info' id='legend' aria-labelledby='legend-head'>
+        <p class='info-head'><span class='title' id='legend-head'>Legend</span></p>
         <div id='legend-body'></div>
       </section>
       <!-- The sources and the caveats, folded away under a summary line: the
