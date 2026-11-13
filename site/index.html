@@ -104,12 +104,23 @@
           <span class='title' id='lookup-head'>Address lookup</span>
           <span class='state' id='address-state'>no answer yet</span>
         </p>
+        <!-- The field is a combobox over the list under it: the names the file holds
+             that answer to what has been typed are offered as words, so a reader can
+             take the city's spelling (5e Avenue, not 5th) instead of being refused for
+             not knowing it. The list is a listbox the field points at, empty and hidden
+             until there is something to offer; app.js's wireSuggestions() owns both
+             ends of it, and the arrow keys and Enter choose from it without the focus
+             ever leaving the field. -->
         <form id='lookup-form'>
           <input id='lookup-text' type='text' autocomplete='off' spellcheck='false'
                  placeholder='4250 Rue Sherbrooke Est'
-                 aria-label='Street number and street'>
+                 aria-label='Street number and street'
+                 role='combobox' aria-autocomplete='list' aria-expanded='false'
+                 aria-controls='lookup-picks'>
           <button type='submit'>Walk it</button>
         </form>
+        <ul id='lookup-picks' role='listbox' aria-label='Streets in the street file'
+            hidden></ul>
         <button id='lookup-arm' type='button' aria-pressed='false'>
           <svg class='mark' viewBox='0 0 16 16' aria-hidden='true' focusable='false'>
             <circle cx='8' cy='8' r='5' fill='none' stroke='currentColor'
@@ -227,15 +238,20 @@
            long form of both is the README, which this points at. -->
       <details id='notes'>
         <summary>Sources and caveats</summary>
-        <p><strong>Sources.</strong> Metro entrances from the <a href='https://www.stm.info/en/about/developers' target='_blank' rel='noopener'>STM</a>; <a href='https://donnees.montreal.ca/fr/dataset/grands-parcs-parcs-d-arrondissements-et-espaces-publics' target='_blank' rel='noopener'>parks</a>, <a href='https://donnees.montreal.ca/fr/dataset/limites-administratives-agglomeration' target='_blank' rel='noopener'>borough boundaries</a> and the <a href='https://donnees.montreal.ca/dataset/geobase' target='_blank' rel='noopener'>street network</a> (Géobase) from the Ville de Montréal open data portal; map tiles from OpenStreetMap. Each file, with its version and its licence, is listed in the <a href='https://github.com/alluvial-fan/fwdm#readme' target='_blank' rel='noopener'>README</a>.</p>
+        <p><strong>Sources.</strong> Metro entrances from the <a href='https://www.stm.info/en/about/developers' target='_blank' rel='noopener'>STM</a>; <a href='https://donnees.montreal.ca/fr/dataset/grands-parcs-parcs-d-arrondissements-et-espaces-publics' target='_blank' rel='noopener'>parks</a>, <a href='https://donnees.montreal.ca/fr/dataset/limites-administratives-agglomeration' target='_blank' rel='noopener'>borough boundaries</a> and the <a href='https://donnees.montreal.ca/dataset/geobase' target='_blank' rel='noopener'>street network</a> (Géobase) from the Ville de Montréal open data portal; map tiles from OpenStreetMap. The field's suggestions are searched with <a href='https://fusejs.io/' target='_blank' rel='noopener'>Fuse.js</a> (Apache-2.0), vendored in <code>site/vendor</code>. Each file, with its version and its licence, is listed in the <a href='https://github.com/alluvial-fan/fwdm#readme' target='_blank' rel='noopener'>README</a>.</p>
         <p><strong>Coverage.</strong> All 19 boroughs of the city are drawn; the 15 independent municipalities on the island are greyed out. Their corners are still measured, so a walk near the city edge is not cut short, but they cannot be clicked.</p>
         <p><strong>Walk times.</strong> Corner to corner along the street network at 1.35 m/s (4.9 km/h), so they ignore shortcuts through parks, hills, construction and stop lights, and a metro walk ends at an entrance rather than a platform. A dot's size is the number of streets that meet at that corner.</p>
-        <p><strong>Address lookup.</strong> The same street file is searched in your browser, so a 13 MB file is fetched the first time you look up an address. A number or a street the file does not hold is refused; a misspelling is checked against <a href='https://photon.komoot.io/' target='_blank' rel='noopener'>Photon</a> for its spelling only, and no position it returns is ever used.</p>
+        <p><strong>Address lookup.</strong> The same street file is searched in your browser, so a 13 MB file is fetched the first time you look up an address. An ordinal is read the way Montreal writes it, so <em>5e</em>, <em>5th</em> and a plain <em>5</em> name the same avenue. The names the field offers while you type come from a 108 KB list of them, fetched when you first type rather than with the page. A number or a street the file does not hold is refused, and a refusal offers the nearest names as buttons to take; a misspelling is checked against <a href='https://photon.komoot.io/' target='_blank' rel='noopener'>Photon</a> for its spelling only, and no position it returns is ever used.</p>
       </details>
     </main>
     <div id='map'></div>
   </div>
   <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
+  <!-- The field's own search, vendored rather than fetched from a CDN so that the
+       page, its checks under node, and a copy opened from a folder all work offline:
+       5 KB gzipped, Apache-2.0, no dependencies. It is loaded before app.js, which
+       builds the search on the first press into the field. -->
+  <script src='vendor/fuse.min.js'></script>
   <script src='app.js'></script>
 </body>
 </html>

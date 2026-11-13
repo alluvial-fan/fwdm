@@ -22,7 +22,7 @@ To run it locally, clone the repository and open [site/index.html](site/index.ht
 
 A reader can do three things:
 
-- **Filter.** Parks, metros or both, with walk-time ranges, green spaces by types and size, and whether the metro entrance must be step-free.
+- **Filter.** Parks, metros or both, with walk-time ranges, green spaces by types and size, and whether the metro entrance must be step-free; one button under the filters puts every menu back to n/a.
 - **Pick on map.** Press the "Pick on Map" button, then click a spot to measure from there.
 - **Type an address.** A house number and a street name; the page finds it and (assuming it's within the boundaries) measures from there.
 

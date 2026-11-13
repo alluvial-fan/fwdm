@@ -428,10 +428,18 @@ const EDGE_STYLE = { color: '#334155', weight: 1, opacity: 0.55,
 // the mask, the frame the map is held to, and drawToken, which marks a draw as the
 // current one. `arming` is the one piece of state the reader sets by hand: whether
 // the next click on the map asks a question or is only a click.
+//
+// The rest is the address field's: `names` is the promise of the street names the
+// field suggests from (with `index` and `fuse`, the two shapes it is searched in),
+// `offers` is the streets the refusal under the field is offering as buttons, `picks`
+// and `at` are the list under the field and the name the arrow keys are on, and
+// `offerToken` is the one thing that says which list is still wanted.
 const page = { dots: null, metro: null, parks: null, parkLayer: null,
                metros: null, walkGroup: null, mask: null, graph: null,
                lookupGroup: null, rings: null, frame: null, answered: false,
-               cleared: false, arming: false, drawToken: 0 };
+               cleared: false, arming: false, drawToken: 0,
+               names: null, index: null, fuse: null, offers: null,
+               picks: [], at: -1, typing: null, offerToken: 0 };
 
 // The build's own answers, read from the intersections file: the layers it
 // measured, each layer's walk in a corner's list, its counts per time, the
@@ -1135,6 +1143,9 @@ function checkAgainstBuild(counts, wanted) {
 const ADDRESS_GRAPH = 'data/walk_graph.json';
 const SNAP_METRES = 100;       // how far a point may be from the street it is on
 const STREET_TYPO = 0.9;       // how alike two street names must be to be one name
+const SUGGEST_SHOWN = 6;       // streets offered at once, under the field and in a refusal
+const SUGGEST_FLOOR = 0.5;     // how unlike a typing a street may be and still be listed
+const OFFER_FLOOR = 0.8;       // how alike a name must be to be offered as a correction
 const NEAR_BLOCK = 100;        // how far outside a range a number may be and fit
 const DESTINATION_PARKS = 3;
 const DESTINATION_STATIONS = 2;
@@ -1173,20 +1184,45 @@ const TYPE_WORDS = ['rue', 'avenue', 'boulevard', 'chemin', 'place',
   'croissant', 'montee', 'route', 'cote', 'rang', 'autoroute', 'impasse',
   'allee', 'sentier', 'pont', 'voie', 'square', 'quai', 'terrasse', 'ruelle'];
 
+// Every way an ordinal is written on this island, and the one way the city writes it:
+// 5e in the file, 5th in English, 5eme with or without its accent (which the fold below
+// has already taken), and 1er for a first. Each is folded to e, so that "5th Avenue"
+// and "5e Avenue" are one name before any pass compares two names.
+const ORDINAL_SUFFIX = { e: 'e', er: 'e', ere: 'e', re: 'e',
+                         eme: 'e', ieme: 'e',
+                         th: 'e', st: 'e', nd: 'e', rd: 'e' };
+
+// One word with its ordinal folded: "5th" is "5e", "5e" is left as it is, and a word
+// that is only a number is not an ordinal at all and is left alone. Only a word that
+// opens with a number is touched, so no street's own name is ever rewritten.
+function ordinalWord(word) {
+  const parts = word.match(/^(\d+)([a-z]+)$/);
+  return parts && ORDINAL_SUFFIX[parts[2]] === 'e' ? parts[1] + 'e' : word;
+}
+
 // A street name as this file compares them: lower case, no accents, one space
-// between words, no punctuation, and the type spelled out. Two names that tidy
-// to the same text are the same street to every pass below, which is exactly
-// the point: the city writes "Rue de la Gauchetière" and "Rue De La
-// Gauchetière" on different troncons of the one street.
+// between words, no punctuation, the type spelled out, and the ordinal in the one
+// spelling the city uses. Two names that tidy to the same text are the same street
+// to every pass below, which is exactly the point: the city writes "Rue de la
+// Gauchetière" and "Rue De La Gauchetière" on different troncons of the one street,
+// and a reader writes "5th Avenue" for the street the city calls "5e Avenue".
+//
+// The ordinal written as its own word is made one word first - "5 e", "5 th" and
+// "1 er" are one ordinal - and only where the word stands alone: "1435 St-Denis" is a
+// number and a saint, not a thousand four hundred and thirty-fifth, so the short
+// form of "saint" is not read as an ordinal when a hyphen follows it.
 function tidy(text) {
   return String(text)
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/\u0153/g, 'oe').replace(/\u00e6/g, 'ae')
     .toLowerCase()
+    .replace(/\b(\d+)\s+(?:ieme|eme|ere|er|re|th|st|nd|rd|e)(?=\s|$)/g, '$1e')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
     .split(' ')
-    .map(function (word) { return STREET_TYPES[word] || word; })
+    .map(function (word) {
+      return ordinalWord(STREET_TYPES[word] || word);
+    })
     .join(' ');
 }
 
@@ -1197,6 +1233,21 @@ function withoutType(key) {
     ? words.slice(1).join(' ') : key;
 }
 
+// The same name with its ordinal set aside, for the third pass: a reader who writes
+// "5 Avenue" or "Avenue 5" has named the street the city files as "5e Avenue", and
+// nothing about leaving the e off says they mean a different street. Only the e that
+// tidy() writes is taken off - a name with no ordinal in it comes back as it was.
+function ordinalFree(key) {
+  return key.replace(/\b(\d+)e\b/g, '$1');
+}
+
+// The words of a name in alphabetical order, for the fourth pass: the file holds
+// "Avenue Fifth", a reader may well write "Fifth Avenue", and the two are one street
+// in one order only in the city's file.
+function anyOrder(key) {
+  return key.split(' ').sort().join(' ');
+}
+
 // How alike two names are, from 0 to 1: one less the share of the longer name that has
 // to be changed to turn it into the other, a letter changed, added or dropped counting
 // one each. Counting letters rather than shared pairs keeps "Sherbrook" next to
@@ -1204,14 +1255,17 @@ function withoutType(key) {
 // pairs on either side of it - and still keeps "Rue Sherbrooke Est" away from "Rue
 // Sherbrooke Ouest": they differ by two letters, one name in nine, in the one word
 // that says which street is meant.
-function similarity(one, other) {
+function similarity(one, other, floor) {
   if (one === other) { return 1; }
   const longest = Math.max(one.length, other.length);
   if (!longest) { return 0; }
   // Two names whose lengths are far apart cannot come within reach however
   // their letters fall, since every missing letter has to be made up - so they
-  // are dropped without being counted.
-  if (Math.abs(one.length - other.length) > longest * (1 - STREET_TYPO)) {
+  // are dropped without being counted. The reach is the lowest score still worth
+  // having: STREET_TYPO where a name has to be one name, and lower where the
+  // field is offering names and half a name is still worth offering.
+  const reach = floor === undefined ? STREET_TYPO : floor;
+  if (Math.abs(one.length - other.length) > longest * (1 - reach)) {
     return 0;
   }
   return 1 - distance(one, other) / longest;
@@ -1240,15 +1294,20 @@ function distance(one, other) {
 
 // --- Reading the graph once into the shape the lookups want ----------------
 
-// The graph as the lookups use it: the file's own lists, plus three things
+// The graph as the lookups use it: the file's own lists, plus five things
 // built from them once and used by every lookup after - the streets gathered
-// under their tidied names, the links filed by square for the snapping, and the
-// corners' links laid end to end for the search.
+// under their tidied names, under those names with the type word set aside, with
+// the ordinal set aside and with the words in any order, and the links filed by
+// square for the snapping. The four name indexes answer four ways of writing the
+// same street, and each is filled first-wins: two spellings that tidy alike are
+// one street, so the second one found has nothing to add.
 function prepareGraph(document) {
   const graph = document;
   graph.groups = [];                  // one per distinct street name
   graph.groupAt = {};                 // that name -> its place in the list
   graph.bareAt = {};                  // the same, with the type word taken off
+  graph.ordAt = {};                   // the same, with the ordinal set aside
+  graph.sortAt = {};                  // the same, with the words in any order
   // Two spellings of one name are one street here, so their troncons are
   // gathered together: a reader who types the name one way still finds the
   // block the city wrote the other.
@@ -1264,6 +1323,10 @@ function prepareGraph(document) {
   });
   graph.groups.forEach(function (group, index) {
     if (graph.bareAt[group.bare] === undefined) { graph.bareAt[group.bare] = index; }
+    const ordinal = ordinalFree(group.key);
+    if (graph.ordAt[ordinal] === undefined) { graph.ordAt[ordinal] = index; }
+    const ordered = anyOrder(group.key);
+    if (graph.sortAt[ordered] === undefined) { graph.sortAt[ordered] = index; }
   });
   const groupOfName = document.names.map(function (name) {
     return graph.groupAt[tidy(name)];
@@ -1276,12 +1339,21 @@ function prepareGraph(document) {
 }
 
 // The street a piece of text names, as a place in graph.groups, or a record of the
-// names that came closest. Three passes, in the order a reader's guess should be
+// names that came closest. Five passes, in the order a reader's guess should be
 // trusted: the name as written, which is the one answer that cannot be wrong; the name
 // with its type word set aside, which is how "Sherbrooke Est" finds "Rue Sherbrooke
-// Est"; and the closest name in the file, taken only when a mistyped letter is the
-// likelier story - which keeps "Curé-Labelle", a Laval street this file has no troncon
-// for, from being answered with a Montreal street that merely looks like it.
+// Est"; the name with its ordinal set aside, which is how "5 Avenue" finds "5e
+// Avenue"; the name with its words in another order, which is how "Fifth Avenue" finds
+// "Avenue Fifth"; and the closest name in the file, taken only when a mistyped letter
+// is the likelier story - which keeps "Curé-Labelle", a Laval street this file has no
+// troncon for, from being answered with a Montreal street that merely looks like it.
+//
+// The two middle passes are safe because they are one-to-one over the file: the
+// build's own check refuses a graph in which two streets share a name with the
+// ordinal set aside, or share one with the words re-ordered, so "5 Avenue" has one
+// answer and it is the fifth. A threshold loosened far enough to catch 5 and 5e as a
+// near miss would also tie "5e Avenue" with "9e Avenue", which is why the ordinal is
+// folded rather than guessed at.
 //
 // Every answer says how it was reached, so the page can print the street it settled
 // on: a guess a reader can see is a guess they can correct.
@@ -1312,11 +1384,75 @@ function findStreet(graph, text) {
              score: similarity(bare, graph.groups[index].bare),
              nearest: closest };
   }
+  // The ordinal the reader left off, or wrote the English way, which tidy() has
+  // already folded: "5 Avenue", "5th Avenue" and "5e Avenue" are one text by now, and
+  // the index says which street answers to it.
+  const flat = ordinalFree(wanted);
+  const flatBare = ordinalFree(bare);
+  const ordinal = graph.ordAt[flat] !== undefined ? graph.ordAt[flat]
+    : graph.ordAt[flatBare];
+  if (ordinal !== undefined) {
+    return { found: true, index: ordinal, how: 'ordinal',
+             score: similarity(wanted, graph.groups[ordinal].key),
+             nearest: closest };
+  }
+  const ordered = graph.sortAt[anyOrder(wanted)];
+  if (ordered !== undefined) {
+    return { found: true, index: ordered, how: 're-ordered',
+             score: similarity(wanted, graph.groups[ordered].key),
+             nearest: closest };
+  }
   if (best && best.score >= STREET_TYPO) {
     return { found: true, index: best.index, how: 'fuzzy',
              score: best.score, nearest: closest };
   }
   return { found: false, nearest: closest };
+}
+
+// The streets a reader most likely meant, in the order to offer them: the three a
+// refusal turns into buttons, and the six the field lists while a name is being typed.
+// A name is scored the way findStreet trusts names - the exact key, then the ordinal
+// set aside, then the words in another order, then letters in common - and, when a
+// number came with it, the streets that hold that number are offered first: a reader
+// who typed 5555 5 Avenue wants the fifth avenue with a 5555 on it, and saying which
+// street that is beats refusing the address.
+//
+// floor is how little a name may have in common and still be offered: the field's own
+// list is generous, because a reader is still typing, while a refusal's buttons are held
+// to a resemblance close enough to be the same name - under the typo threshold, since a
+// name that close would have been found, and far enough above it that a street of another
+// city is not answered with a menu of Montreal streets that merely share letters.
+function suggestStreets(graph, text, number, count, floor) {
+  const lowest = floor === undefined ? SUGGEST_FLOOR : floor;
+  const wanted = tidy(text);
+  const bare = withoutType(wanted);
+  const flat = ordinalFree(wanted);
+  const flatBare = ordinalFree(bare);
+  const ordered = anyOrder(wanted);
+  const found = [];
+  graph.groups.forEach(function (group, index) {
+    let score = Math.max(similarity(wanted, group.key, lowest),
+                         similarity(bare, group.bare, lowest));
+    if (group.key === wanted || group.bare === bare) {
+      score = 1;
+    } else if (ordinalFree(group.key) === flat
+               || ordinalFree(group.bare) === flatBare) {
+      score = Math.max(score, 0.97);
+    } else if (anyOrder(group.key) === ordered) {
+      score = Math.max(score, 0.96);
+    }
+    if (score < lowest) { return; }
+    found.push({
+      index: index, score: score, name: graph.names[group.names[0]],
+      holds: number === undefined || number === null ? null
+        : findNumber(group.rows, number) !== null
+    });
+  });
+  found.sort(function (one, other) {
+    if (one.holds !== other.holds) { return one.holds ? -1 : 1; }
+    return other.score - one.score;
+  });
+  return found.slice(0, count || SUGGEST_SHOWN);
 }
 
 // The number and the street in a line of text: "4250 Rue Sherbrooke Est". A
@@ -1930,10 +2066,25 @@ function wireLookup() {
     function (event) {
       event.preventDefault();
       // Words are the same question as a click, and one answer puts the arm down
-      // whichever way it was asked for.
+      // whichever way it was asked for. The list under the field goes with them: the
+      // question has been asked, so there is nothing left to suggest.
       armOff();
+      closeSuggestions();
       lookupTyped(document.getElementById('lookup-text').value);
     });
+  // The streets a refusal offers are buttons: taking one puts the city's spelling in
+  // the field and asks again, which is the correction the reader would otherwise have
+  // had to type from a name printed across the box. Delegated from the box, since
+  // every refusal writes the box afresh and the buttons are new each time.
+  document.getElementById('lookup-body').addEventListener('click', function (event) {
+    const button = event.target.closest ? event.target.closest('.pick') : null;
+    if (!button || !page.offers) { return; }
+    const offer = page.offers[Number(button.getAttribute('data-at'))];
+    if (!offer) { return; }
+    document.getElementById('lookup-text').value = offer.text;
+    armOff();
+    lookupTyped(offer.text);
+  });
   const button = document.getElementById('lookup-arm');
   if (button) {
     button.addEventListener('click', function () {
@@ -1953,6 +2104,258 @@ function wireLookup() {
     if (means === 'ask') { armOff(); }
     lookupPoint(event.latlng.lat, event.latlng.lng);
   });
+  wireSuggestions();
+}
+
+// --- The streets the field offers while a name is typed --------------------
+//
+// The lookup itself is silent until Enter: a reader who has typed half a name and
+// pressed nothing is told nothing, which is the right answer to a question not yet
+// asked. The list under the field is the other half of that - the names the file holds
+// that answer to what has been typed, offered while it is being typed, so a reader
+// learns the city's spelling (5e Avenue, not 5th) before being refused for not knowing
+// it, and can take it with one press instead of typing it again.
+//
+// The names come from data/street_names.json, which is the graph's own list written on
+// its own: a tenth of a megabyte against the graph's thirteen, so the list can be up
+// before anything has been asked, and it is fetched on the first press into the field
+// rather than with the page, so a reader who never types an address never pays for it.
+const STREET_NAMES = 'data/street_names.json';
+const SUGGEST_AT = 2;        // characters of a name before the list may open
+const SUGGEST_WAIT = 120;    // milliseconds after the last key before the list is built
+const SUGGEST_RECALL = 40;   // names the search hands over before the page orders them
+
+// Fuse is the search over the names: five kilobytes, no dependencies, and a score for
+// every name it hands back. It is given the keys tidy() writes - both the city's name
+// and the same name with the ordinal set aside - so the ordinal a reader typed and the
+// ordinal the city writes are one string before the search begins.
+//
+// Its score is not the order the list is shown in. Fuse matches inside a word, so "5e"
+// answers for the "5e" in "15e Avenue" as readily as for the "5e" of "5e Avenue", and
+// two streets that share an ordinal are not two spellings of one street. The page
+// orders what Fuse finds (see suggestionScore) and shows the first six.
+const FUSE_OPTIONS = { keys: ['key', 'flat'], includeScore: true, threshold: 0.5,
+                       ignoreLocation: true, minMatchCharLength: 2 };
+
+// The names, fetched once, and the two shapes they are searched in: one row per name
+// with the key tidy() makes of it and the same key with the ordinal set aside. A page
+// that cannot have them - a file left out of the folder - simply has no list, and the
+// lookup is exactly what it was: the suggestions are an offer, never the answer.
+function loadNames() {
+  if (!page.names) {
+    page.names = loadGeojson(STREET_NAMES).then(function (names) {
+      page.index = namesIndex(names);
+      page.fuse = typeof Fuse === 'function'
+        ? new Fuse(page.index, FUSE_OPTIONS) : null;
+      return names;
+    }, function (error) {
+      // A page without the list is a page without suggestions, which is no worse than
+      // the page was before them: the failure is said in the console, the promise is
+      // forgotten so the next press into the field asks again, and the lookup itself
+      // never learns that the list was missing.
+      console.error(error);
+      page.names = null;
+      return null;
+    });
+  }
+  return page.names;
+}
+
+function namesIndex(names) {
+  return names.map(function (name) {
+    const key = tidy(name);
+    return { name: name, key: key, flat: ordinalFree(key) };
+  });
+}
+
+// How well one name answers what has been typed, from 0 to 1. A name that begins with
+// the typing is what a reader is most likely reaching for, and one that begins with it
+// once the ordinal is set aside is the same reach one ordinal away: "5 av" is on its way
+// to "5e Avenue". Then letters in common, which is what catches a hand that slipped. An
+// exact match on either key is a match that begins with the typing, so it is already
+// scored by the two tests above and needs none of its own.
+function suggestionScore(key, item) {
+  if (item.key === key) { return 1; }
+  if (item.key.indexOf(key) === 0) { return 0.96; }
+  if (item.flat.indexOf(key) === 0) { return 0.94; }
+  return Math.max(similarity(key, item.key, SUGGEST_FLOOR),
+                  similarity(key, item.flat, SUGGEST_FLOOR));
+}
+
+// The names to show under the field for what has been typed so far: the street part of
+// it, since a house number says nothing about which street is meant, and the number put
+// back on the front of each name so that taking a suggestion asks the address the reader
+// was already typing rather than a street with no number on it.
+//
+// index is the names as loadNames() shapes them and fuse the search over them; a page
+// whose vendor file did not arrive has no fuse and is scanned whole instead. What comes
+// back is at most SUGGEST_SHOWN, best first.
+function suggestionsFor(text, index, fuse) {
+  const asked = splitAddress(text);
+  const key = tidy(asked ? asked.street : text);
+  if (key.replace(/ /g, '').length < SUGGEST_AT) { return []; }
+  const candidates = fuse
+    ? fuse.search(key, { limit: SUGGEST_RECALL }).map(function (hit) {
+      return hit.item;
+    })
+    : index;
+  const ranked = candidates.map(function (item) {
+    return { name: item.name, score: suggestionScore(key, item) };
+  }).filter(function (each) { return each.score >= SUGGEST_FLOOR; });
+  ranked.sort(function (one, other) { return other.score - one.score; });
+  return ranked.slice(0, SUGGEST_SHOWN).map(function (each) {
+    const value = asked ? asked.number + ' ' + each.name : each.name;
+    return { name: each.name, value: value, label: value };
+  });
+}
+
+// The list for what is in the field, from whatever is loaded: nothing at all before the
+// names arrive, which is what keeps the field silent until it has something to say.
+function typedChoices(value) {
+  return page.index ? suggestionsFor(value, page.index, page.fuse) : [];
+}
+
+// The list under the field, drawn from the picks: one line a street, the city's own
+// spelling with the number the reader typed in front of it, and nothing in it
+// focusable - the field keeps the focus and names the line the arrow keys are on, which
+// is how a listbox beside a text field is meant to work.
+function showSuggestions(value) {
+  if (typeof document === 'undefined') { return; }
+  const box = document.getElementById('lookup-picks');
+  const field = document.getElementById('lookup-text');
+  if (!box || !field) { return; }
+  const picks = typedChoices(value);
+  page.picks = picks;
+  page.at = -1;
+  box.innerHTML = picks.map(function (pick, at) {
+    return '<li role="option" id="pick-' + at + '" aria-selected="false" data-at="' +
+      at + '">' + escapeHtml(pick.label) + '</li>';
+  }).join('');
+  box.hidden = picks.length === 0;
+  field.setAttribute('aria-expanded', picks.length ? 'true' : 'false');
+  field.removeAttribute('aria-activedescendant');
+}
+
+// The list put away: after a choice, after Escape, and when the field loses the focus,
+// so a list never hangs under a field nobody is typing in. The timer that was waiting to
+// build the next list is taken with it, and offerToken moves on so that a list already
+// on its way - a names download started a moment ago - does not open the list again after
+// the reader has asked the question or left the field.
+function closeSuggestions() {
+  if (page.typing) { clearTimeout(page.typing); page.typing = null; }
+  page.offerToken += 1;
+  page.picks = [];
+  page.at = -1;
+  if (typeof document === 'undefined') { return; }
+  const box = document.getElementById('lookup-picks');
+  const field = document.getElementById('lookup-text');
+  if (box) { box.hidden = true; box.innerHTML = ''; }
+  if (field) {
+    field.setAttribute('aria-expanded', 'false');
+    field.removeAttribute('aria-activedescendant');
+  }
+}
+
+// Which line the arrow keys are on, said on the line for the eye and on the field for
+// a screen reader: the field is the only thing with the focus, so the line it is on is
+// named by the field's own aria-activedescendant.
+function markSuggestion(at) {
+  const box = document.getElementById('lookup-picks');
+  const field = document.getElementById('lookup-text');
+  if (!box || !field) { return; }
+  page.at = at;
+  for (let each = 0; each < box.children.length; each += 1) {
+    box.children[each].setAttribute('aria-selected', each === at ? 'true' : 'false');
+  }
+  if (at < 0) {
+    field.removeAttribute('aria-activedescendant');
+    return;
+  }
+  field.setAttribute('aria-activedescendant', 'pick-' + at);
+  if (box.children[at] && box.children[at].scrollIntoView) {
+    box.children[at].scrollIntoView({ block: 'nearest' });
+  }
+}
+
+// A name taken: the field is filled with what the button stands for - the number the
+// reader typed and the city's spelling - and the address is asked, which is the whole
+// point of offering it.
+function takeSuggestion(pick) {
+  document.getElementById('lookup-text').value = pick.value;
+  closeSuggestions();
+  armOff();
+  lookupTyped(pick.value);
+}
+
+// The field's list, wired once. Every way into it ends in the same two things: the
+// names for what is in the field, and the list under it. The keys are the field's own,
+// because the field never gives up the focus: Down and Up walk the list, Enter takes
+// the line they are on, and Escape puts the list away and leaves the typing alone.
+function wireSuggestions() {
+  const field = document.getElementById('lookup-text');
+  const box = document.getElementById('lookup-picks');
+  if (!field || !box) { return; }
+
+  // The names are fetched the first time the field is used, not with the page: a
+  // reader who never types an address never downloads them, and one who does gets the
+  // list a moment later rather than a list that was paid for on arrival. A list asked
+  // for before the names were in answers only if nothing has put the list away since.
+  function ask() {
+    const token = page.offerToken;
+    loadNames().then(function () {
+      if (page.offerToken !== token) { return; }
+      if (typeof document !== 'undefined' && document.activeElement === field) {
+        showSuggestions(field.value);
+      }
+    });
+  }
+  field.addEventListener('focus', ask);
+
+  // Typing waits for the hand to stop: a list built on every keystroke would search the
+  // names seven times for "sherbrooke" and show only the last of them.
+  field.addEventListener('input', function () {
+    if (page.typing) { clearTimeout(page.typing); }
+    page.typing = setTimeout(function () { page.typing = null; ask(); },
+                             SUGGEST_WAIT);
+  });
+
+  field.addEventListener('keydown', function (event) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      if (!page.picks.length) { return; }
+      // The list is a ring: Down from the last name is the first, and Up from the
+      // field with nothing chosen is the last, which is what makes the keys work the
+      // same way before and after a name has been chosen.
+      event.preventDefault();
+      const step = event.key === 'ArrowDown' ? 1 : -1;
+      markSuggestion(page.at < 0
+        ? (step > 0 ? 0 : page.picks.length - 1)
+        : (page.at + step + page.picks.length) % page.picks.length);
+      return;
+    }
+    if (event.key === 'Enter') {
+      // Enter on a name that has been arrowed to takes that name; Enter on the field
+      // alone is the form's own submit, and is left to the form.
+      if (page.at >= 0 && page.picks[page.at]) {
+        event.preventDefault();
+        takeSuggestion(page.picks[page.at]);
+      }
+      return;
+    }
+    if (event.key === 'Escape' || event.key === 'Tab') { closeSuggestions(); }
+  });
+
+  // A press on a name is taken before the field loses the focus: preventDefault on
+  // mousedown keeps the focus where the reader's hand is, so the list is still there to
+  // be pressed, and a press on the list's own edge does nothing.
+  box.addEventListener('mousedown', function (event) {
+    event.preventDefault();
+    const line = event.target.closest ? event.target.closest('li') : null;
+    if (!line) { return; }
+    const pick = page.picks[Number(line.getAttribute('data-at'))];
+    if (pick) { takeSuggestion(pick); }
+  });
+
+  field.addEventListener('blur', closeSuggestions);
 }
 
 // Whether a place is inside one of the 19 boroughs the page draws: the same
@@ -1983,10 +2386,12 @@ function inRing(lat, lng, ring) {
   return inside;
 }
 
-// How the street was arrived at, in words a reader can act on: the three passes
-// and the stranger's spelling are the file's own shorthand, and these are what
-// they mean to someone looking at the popup.
+// How the street was arrived at, in words a reader can act on: the passes and the
+// stranger's spelling are the file's own shorthand, and these are what they mean to
+// someone looking at the popup.
 const LOOKUP_NOTE = {
+  'ordinal': 'the ordinal was read as the city writes it',
+  're-ordered': 'the words were taken in another order to find this street',
   'type-free': 'the type word was set aside to find this street',
   'fuzzy': 'the name was corrected to the city spelling',
   're-spelt': 'the name was re-spelt by Photon'
@@ -2035,12 +2440,26 @@ function showPlaced(graph, placed, typed, asked) {
         'Sherbrooke Est.');
   }
   if (placed.kind === 'no-street') {
+    // The nearest names are offered as buttons rather than only printed: a reader who
+    // mistyped a street takes the city's spelling from the refusal with one press, and
+    // the street that holds their number is offered first, so the correction answers
+    // the address they were asking about and not only the name they got wrong.
+    const offers = suggestStreets(graph, placed.asked ? placed.asked.street : typed,
+      placed.asked ? placed.asked.number : null, 3, OFFER_FLOOR).map(function (each) {
+      return {
+        text: (placed.asked ? placed.asked.number + ' ' : '') + each.name,
+        label: each.name,
+        note: placed.asked && each.holds === false ? 'no ' + placed.asked.number : ''
+      };
+    });
     const near = (placed.nearest || []).map(function (each) {
       return each.name;
     });
     return sayLookup('No street by that name in the street file' +
-      (asked ? ', and Photon spells nothing in Montreal that fits it' : '') +
-      '.' + (near.length ? ' The nearest names are ' + listOf(near) + '.' : ''));
+      (asked ? ', and Photon spells nothing in Montreal that fits it' : '') + '.' +
+      (offers.length ? ' Did you mean one of these?'
+        : near.length ? ' The nearest names are ' + listOf(near) + '.' : ''),
+      offers);
   }
   if (placed.kind === 'no-block') {
     return sayLookup(placed.name + ' has no number ' + placed.asked.number +
@@ -2085,14 +2504,34 @@ function waitForGraph() {
 // What the box under the field says. A new question clears the last answer off
 // the map rather than leaving five lines pointing at an address that is no
 // longer the one being asked about.
-function sayLookup(message) {
+//
+// offers, when given, are the streets the refusal can offer as buttons: the name in
+// the city's own spelling, and what taking it would ask. The text each button stands
+// for is kept in page.offers rather than written into the markup, so a name is never
+// parsed back out of an attribute it was escaped into.
+function sayLookup(message, offers) {
   if (page.lookupGroup) { page.lookupGroup.clearLayers(); }
   page.answered = false;
+  page.offers = offers && offers.length ? offers : null;
   document.getElementById('lookup-body').innerHTML =
-    '<p class="said">' + escapeHtml(message) + '</p>';
+    '<p class="said">' + escapeHtml(message) + '</p>' + offerList(offers);
   // No answer is on the map now, so the address panel stands down: the walk map takes
   // the rail back if the filters are asked, and neither claims the map if they are not.
   showMode();
+}
+
+// The buttons a refusal offers, as one list: the street's name, and a note when that
+// street does not hold the number that was asked about - a button that answers with a
+// worse refusal is worse than no button, so the note is part of the name a reader and
+// a screen reader both get.
+function offerList(offers) {
+  if (!offers || !offers.length) { return ''; }
+  return '<ul class="picks">' + offers.map(function (offer, at) {
+    return '<li><button type="button" class="pick" data-at="' + at + '">' +
+      escapeHtml(offer.label) +
+      (offer.note ? '<span class="note"> ' + escapeHtml(offer.note) + '</span>' : '') +
+      '</button></li>';
+  }).join('') + '</ul>';
 }
 
 function reportFailure(error) {
@@ -2724,6 +3163,140 @@ async function checkWithoutBrowser() {
     slipped.kind === 'found' ? slipped.name + ', by ' + slipped.how
                              : slipped.kind);
 
+  // The same avenue, written every way a reader writes an ordinal on this island. The
+  // house number was never the question: the file has 5555 on two sides of 5e Avenue, and
+  // every one of these spellings has to reach that street and that point.
+  const spellings = ['5555 5e Avenue', '5555 5 Avenue', '5555 5th Avenue',
+                     '5555 5th Ave', '5555 5eme Avenue', '5555 5ième Avenue',
+                     '5555 5 e avenue', '5555 5E AVENUE'];
+  const written = spellings.map(function (text) {
+    return { text: text, placed: addressPoint(graph, text) };
+  });
+  const missed = written.filter(function (each) {
+    return each.placed.kind !== 'found' || each.placed.name !== '5e Avenue'
+      || each.placed.asked.number !== 5555;
+  });
+  check('a fifth avenue is found however its ordinal is written',
+    missed.length === 0,
+    missed.length ? missed.map(function (each) {
+      return each.text + ' gave ' + each.placed.kind +
+        (each.placed.name ? ' ' + each.placed.name : '');
+    }).join('; ') : spellings.length + ' spellings of 5555 5e Avenue');
+  const spots = written.map(function (each) { return each.placed.point; });
+  check('every spelling of the address stands at the same point',
+    missed.length === 0 && spots.every(function (point) {
+      return point[0] === spots[0][0] && point[1] === spots[0][1];
+    }), missed.length ? 'one spelling was refused'
+      : 'the first at ' + JSON.stringify(spots[0]));
+
+  // The pass that sets an ordinal aside, and the one that takes the words in another
+  // order, are only safe while each is one-to-one over the file: two streets answering to
+  // "5 avenue" would make the pass a guess, and a guess that silently picks one of two
+  // real streets is worse than a refusal. The build writes names that keep this true, and
+  // this counts it over every one of them.
+  const flatTaken = {};
+  const orderTaken = {};
+  const clashes = [];
+  graph.groups.forEach(function (group) {
+    const flat = ordinalFree(group.key);
+    const ordered = anyOrder(group.key);
+    if (flatTaken[flat] !== undefined) { clashes.push(flat + ' is two streets'); }
+    if (orderTaken[ordered] !== undefined) {
+      clashes.push(ordered + ' is two streets re-ordered');
+    }
+    flatTaken[flat] = true;
+    orderTaken[ordered] = true;
+  });
+  check('setting ordinals aside, and taking the words in another order, leaves every ' +
+    'street a name of its own', clashes.length === 0,
+    clashes.length ? clashes.slice(0, 3).join('; ')
+      : graph.groups.length + ' streets, no two alike');
+
+  // An ordinal is folded and a saint is not: the fold reads "5th" as a fifth, and must not
+  // read "1435 St-Denis" as a thousand four hundred and thirty-fifth, nor turn "5 St-Denis"
+  // - house five on that street - into an ordinal street.
+  const tidied = {
+    fifth: tidy('5th Avenue'), first: tidy('1st Avenue'),
+    accented: tidy('5ème Avenue'), split: tidy('5 e avenue'),
+    saintStreet: tidy('1435 St-Denis'), saintNumber: tidy('5 St-Denis'),
+    sainte: tidy('200 Ste-Catherine Ouest'), plain: tidy('1435 Rue Saint-Denis')
+  };
+  check('an ordinal is folded to the city\'s e, and a saint is left a saint',
+    tidied.fifth === '5e avenue' && tidied.first === '1e avenue'
+    && tidied.accented === '5e avenue' && tidied.split === '5e avenue'
+    && tidied.saintStreet === '1435 saint denis'
+    && tidied.saintNumber === '5 saint denis'
+    && tidied.sainte === '200 sainte catherine ouest'
+    && tidied.plain === '1435 rue saint denis',
+    JSON.stringify(tidied));
+
+  // The two passes that are not the name as written, each saying which pass answered so
+  // that the popup can tell a reader what it did - and neither of them taking the other
+  // street: "5e Avenue" is the fifth, and "Avenue Fifth" is Fifth Avenue.
+  const withoutOrdinal = findStreet(graph, '5 Avenue');
+  const inOrder = findStreet(graph, 'Fifth Avenue');
+  const fifth = graph.groupAt['5e avenue'];
+  const avenueFifth = graph.groupAt['avenue fifth'];
+  check('the ordinal set aside finds the fifth, and the words in another order find ' +
+    'Avenue Fifth, and neither takes the other street',
+    fifth !== undefined && avenueFifth !== undefined && fifth !== avenueFifth
+    && withoutOrdinal.found && withoutOrdinal.how === 'ordinal'
+    && withoutOrdinal.index === fifth
+    && inOrder.found && inOrder.how === 're-ordered'
+    && inOrder.index === avenueFifth
+    && findStreet(graph, '5e Avenue').index === fifth,
+    '5 Avenue by ' + (withoutOrdinal.how || 'nothing') +
+      ', Fifth Avenue by ' + (inOrder.how || 'nothing'));
+
+  // What a refusal offers and what the field lists: the fifth avenue comes first, and it
+  // is marked as holding the number asked about, which is the fact a reader needs before
+  // pressing a button that will ask again.
+  const offered = suggestStreets(graph, '5 Avenue', 5555, 3);
+  const idle = suggestStreets(graph, '5 Avenue', 99999, 3);
+  check('a name offered for 5 Avenue is the fifth avenue, and it says the number is on it',
+    offered.length > 0 && offered[0].name === '5e Avenue' && offered[0].holds === true,
+    offered.map(function (each) {
+      return each.name + (each.holds ? ' holds 5555' : ' no 5555');
+    }).join(', '));
+  check('a street that does not hold the number is still offered, and says so',
+    idle.length > 0 && idle[0].holds === false,
+    idle.map(function (each) { return each.name; }).join(', '));
+
+  // A street of another city is refused without a menu of Montreal streets that merely
+  // look like it: a button is a claim that this is the name the reader meant, and a name
+  // that only shares letters is a worse answer than the refusal it would replace.
+  const laval = addressPoint(graph, '1000 Boulevard Curé-Labelle');
+  const lavalOffers = suggestStreets(graph, laval.asked.street, laval.asked.number,
+                                     3, OFFER_FLOOR);
+  check('a street of another city is refused, and offered no Montreal street in its place',
+    laval.kind === 'no-street' && lavalOffers.length === 0,
+    lavalOffers.map(function (each) { return each.name; }).join(', ') ||
+      'nothing offered');
+
+  // The names the field offers are the graph's own, in its order: two files written by one
+  // run, so a name offered under the field is a name the lookup can find.
+  const namesOnDisk = JSON.parse(fs.readFileSync(
+    path.join(__dirname, 'data', 'street_names.json'), 'utf8'));
+  check('the names the field suggests are the graph\'s names, in its order',
+    Array.isArray(namesOnDisk) && namesOnDisk.length === graph.names.length
+    && namesOnDisk.every(function (name, at) { return name === graph.names[at]; }),
+    namesOnDisk.length + ' names against ' + graph.names.length);
+
+  // The field's list, both ways it can be built: the search over the names, and - on a
+  // page whose vendor file did not arrive - the names themselves. Both have to reach the
+  // fifth from the English spelling, or the list is only decoration.
+  const FuseSearch = require(path.join(__dirname, 'vendor', 'fuse.min.js'));
+  const nameRows = namesIndex(namesOnDisk);
+  const searched = suggestionsFor('5555 5th', nameRows,
+                                  new FuseSearch(nameRows, FUSE_OPTIONS));
+  const scanned = suggestionsFor('5555 5th', nameRows, null);
+  check('the field\'s search reaches the fifth avenue from 5th, with its search and ' +
+    'without it',
+    searched.length > 0 && searched[0].name === '5e Avenue'
+    && scanned.length > 0 && scanned[0].name === '5e Avenue',
+    searched.length ? searched[0].value + ', ' + searched.length + ' offered'
+      : 'nothing offered for 5555 5th');
+
   // A click is answered from wherever it lands on the network, and a point
   // nowhere near a street is refused rather than snapped to the nearest one
   // however far off that is.
@@ -2812,14 +3385,39 @@ async function checkWithoutBrowser() {
   const markup = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
   const wanted = ['lookup-form', 'lookup-text', 'lookup-body', 'lookup-arm',
                   'lookup-hint', 'lookup-head', 'address-state', 'walk-panel',
-                  'walk-head', 'walk-state'];
+                  'walk-head', 'walk-state', 'lookup-picks'];
   const absent = wanted.filter(function (id) {
     return markup.indexOf("id='" + id + "'") < 0
       && markup.indexOf('id="' + id + '"') < 0;
   });
   check('the page holds the box the lookup is typed into, the one it writes in, the ' +
-    'button that arms the map, and the two panels\' names and state words',
+    'list it suggests from, the button that arms the map, and the two panels\' names ' +
+    'and state words',
     absent.length === 0, absent.join(', '));
+
+  // The field's list is only a listbox when the field says so: the input names it in
+  // aria-controls and opens and closes it in aria-expanded, and the search is loaded
+  // before the file that builds it. Both are the kind of thing a rename or a moved
+  // script tag takes away without anything looking broken.
+  const fieldTag = markup.match(/<input[^>]*id='lookup-text'[^>]*>/);
+  const searchAt = markup.indexOf('vendor/fuse.min.js');
+  check('the field is a combobox over the list under it, and its search is loaded ' +
+    'before the file that uses it',
+    !!fieldTag && /role='combobox'/.test(fieldTag[0])
+    && /aria-controls='lookup-picks'/.test(fieldTag[0])
+    && /aria-expanded='false'/.test(fieldTag[0])
+    && searchAt >= 0 && searchAt < markup.indexOf("src='app.js'"),
+    fieldTag ? fieldTag[0] : 'no field in the markup');
+
+  // The list belongs under the field and above the button that arms the map: it is the
+  // field's own list, so it goes where the eye is already looking, and it must not push
+  // the answer below the two acts at the top of the panel.
+  const picksAt = markup.indexOf("id='lookup-picks'");
+  check('the field\'s list sits under the field, before the button that arms the map',
+    picksAt > markup.indexOf("id='lookup-form'")
+    && picksAt < markup.indexOf("id='lookup-arm'"),
+    picksAt + ' between ' + markup.indexOf("id='lookup-form'") + ' and ' +
+      markup.indexOf("id='lookup-arm'"));
 
   // The button that puts the filters back is a button and not a submit - the column has
   // nothing to submit, and a submit inside it would reload the page - and it is labelled in

@@ -132,6 +132,14 @@ BOROUGHS_GEOJSON = SITE_DIR / 'data' / 'boroughs.geojson'
 # GeoJSON feature would cost a property name per number for no gain.
 WALK_GRAPH_JSON = SITE_DIR / 'data' / 'walk_graph.json'
 
+# The graph's street names on their own, as the page's address field offers them
+# while a name is being typed. The same strings in the same order as the graph's
+# own `names`, written by the same run: a reader who has typed four letters has
+# not yet asked for an address, and 13 MB of network should not be fetched to
+# offer them a spelling. app.js's check compares the two files and fails the page
+# if they ever differ, so this is a copy of the graph's list and never a second one.
+STREET_NAMES_JSON = SITE_DIR / 'data' / 'street_names.json'
+
 # The city's 34 outlines, published twice: in degrees, which is what step 3
 # reads and the page's mask is cut round, and in MTM zone 8 metres, which is
 # what the self-check in Part 1 holds this file's projection against.
@@ -2213,7 +2221,11 @@ def collection(features):
 
 
 def write_checked(document, out_path, check, indent=None, report=None):
-    '''Write a whole GeoJSON document and check it, without leaving a bad file.
+    '''Write a whole document and check it, without leaving a bad file.
+
+    The document is a GeoJSON FeatureCollection for the four shapes, and the
+    graph's own plain JSON for the walk file and its list of street names; JSON
+    either way, so one writer serves both.
 
     The checks read the file back and test what actually landed on disk, so the
     writing has to come first. It goes to a temporary name beside the real file,
@@ -3891,7 +3903,32 @@ def write_walk_graph(nodes, edges, streets, spaces, entrances, corners_of):
                 f'{len(corners)} corners, {len(links)} links)')
 
     write_checked(document, WALK_GRAPH_JSON, check_walk_graph, report=report)
+    write_street_names(names)
     print(f'Graph done in {time.perf_counter() - started:.1f} s')
+
+
+def write_street_names(names):
+    '''The graph's street names on their own, for the address field's suggestions.
+
+    The field offers the streets the file holds while a name is being typed, so
+    the list has to be in the page before the graph is: the graph is fetched when
+    an address is asked, and a reader who has typed half a name has not asked yet.
+    These are the same strings in the same order as the graph's own list, written
+    by the same run, so the name the field offers and the street the lookup finds
+    cannot drift apart; app.js's check reads both files and says so.
+    '''
+    def check(path):
+        with open(path, encoding='utf-8') as f:
+            written = json.load(f)
+        assert isinstance(written, list), 'not a list of names'
+        assert written == names, "the names are not the graph's own"
+        assert all(isinstance(name, str) and name for name in written), \
+            'a name that is empty, or not text'
+
+    write_checked(names, STREET_NAMES_JSON, check,
+                  report=lambda path: (f'Written to {path} '
+                                       f'({path.stat().st_size // 1024} KB, '
+                                       f'{len(names)} street names)'))
 
 
 def check_walk_graph(path):

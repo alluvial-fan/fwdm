@@ -239,6 +239,27 @@ body.mode-walks #walk-panel .mark, body.mode-address #lookup .mark { color: var(
    an empty line takes the panel's gap with it. The panel keeps one line of input however
    narrow the column gets; the list that answers a question fills whatever is left. */
 #lookup form { display: flex; gap: 6px; }
+/* The list the field offers while a name is typed, in the flow under the field rather
+   than floating over the panel: the column is narrow and the panel is the only place
+   with room, so a list drawn over it would cover the button that asks the question and
+   would be cut off at the column's edge. It is the same make as the field above - the
+   subtle grey, the hairline, the corner - because it is the field's own list and not
+   another panel, and it takes height only while it is open: hidden, it is nothing. */
+#lookup-picks { margin: 0; padding: 3px; list-style: none; max-height: 168px;
+                overflow-y: auto; background: var(--subtle);
+                border: 1px solid var(--line-strong); border-radius: 5px;
+                box-shadow: var(--shadow); }
+#lookup-picks[hidden] { display: none; }
+/* One name a line. Nothing in the list is focusable - the field keeps the focus and
+   names the line the arrow keys are on - so a line has to show that state itself: the
+   one under the keys takes the accent as a surface, like a pressed button, and the one
+   under the pointer takes the field's own hover grey. */
+#lookup-picks li { padding: 4px 7px; font-size: 12.5px; line-height: 1.3;
+                   color: var(--ink); border-radius: 3px; cursor: pointer;
+                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#lookup-picks li:hover { background: var(--subtle-hover); }
+#lookup-picks li[aria-selected='true'] { background: var(--accent);
+                                         color: var(--on-accent); }
 /* The field and the two buttons are one family with the menus above: the same
    subtle grey, the same hairline, the same corner and the same height, so nothing
    in the column looks like it was dropped in from another page. */
@@ -331,6 +352,25 @@ body.arming #map { outline: 2px solid var(--accent); outline-offset: -2px; }
                   font-variant-numeric: tabular-nums; }
 #lookup-body .far { color: var(--ink-muted); font-variant-numeric: tabular-nums;
                     white-space: nowrap; }
+/* The streets a refusal offers, as buttons under the sentence: the correction a reader
+   needs is the city's spelling of a name, and the least they can do to take it is press
+   it. Drawn as the page's second kind of button - the raised surface, the strong edge,
+   the shadow - but at the size of the answer they sit in, since they are lines of an
+   answer rather than the two acts at the top of the panel. */
+#lookup-body .picks { display: flex; flex-direction: column; gap: 3px; margin: 4px 0 0; }
+#lookup-body .pick { font: inherit; font-size: 12px; text-align: left; cursor: pointer;
+                     width: 100%; padding: 3px 7px; color: var(--ink);
+                     background: var(--surface);
+                     border: 1px solid var(--line-strong); border-radius: 4px;
+                     box-shadow: var(--shadow); }
+#lookup-body .pick:hover { background: var(--subtle-hover);
+                           border-color: var(--ink-muted); }
+#lookup-body .pick:focus-visible { outline: 2px solid var(--accent);
+                                   outline-offset: 1px; }
+/* The note on a street that does not hold the number asked about: quieter than the
+   name, because the name is what the reader is choosing and the note only says what
+   they will not get by taking it. */
+#lookup-body .pick .note { color: var(--ink-muted); }
 
 /* The name on a destination: the parks and stations an answer names are labelled
    where they are, so a reader can tell which green shape is the park without
