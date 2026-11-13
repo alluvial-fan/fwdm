@@ -103,6 +103,15 @@ My edge case is when the address is either not recognized, or no calculations fo
 | 7. Mouse in my pocket | Pass. | n/a |
 | 8. Accessibility audit | Fail. | Added accessible names to the filters, made the left bar the page's main landmark so it stops complaining we don't have a main landmark. |
 
+### A3 Part 3: What I found, and one fix
+Evidence: On being given the instructions to lookup “5555 5e Avenue”, they looked up “5555 5th Avenue” or “5555 5 Avenue” which the lookup search tool didn’t understand and told them the address didn’t exist. [Round 1 and 2]
+Severity: 3, stops the user from being able to use the search feature to find the address they're looking for.
+My change: Added a dropdown to the street name search using Fuse.js to provide suggestions based on the street name file.
+Recheck: One of the two class TAs tested the feature. Upon retrying the same address that caused issues it worked. 
+  Fixed means: They do it without hesitating at that spot.
+Before: ![alt text](/screenshots/A3_Part3_before.png)
+After: ![alt text](/screenshots/A3_Part3_after.png)
+
 ## AI Disclosure
 
 This project was built with the help of AI coding models. Primiarly, it used DeepSeek's `V4.X Flash` and `V4 Pro` models within my IDE. I used it first as a brainstorming aid for the walk-time calculation, then gave it small, specific steps: turn the raw data into GeoJSON, keep only the fields the map reads, draw the result, repeat.
