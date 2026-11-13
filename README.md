@@ -118,13 +118,17 @@ After:
 
 ![alt text](/screenshots/A3_Part3_after.png)
 
+The fix spans several files and several sections of the code, but the main sections are found in `site\app.js`, from lines 2107 to 2358. When you pause in typing, a street names json is downloaded in the background. From that, fuse (ignoring the house number) will attempt to match similarities and returns 40 closest matches. From that, it creates the dropdown list. What I don't fully yet understand is how fuse.js works. It was recommended to me by a TA and I understand what it does, but not the intricacies of how it works.
+
 ## AI Disclosure
 
-This project was built with the help of AI coding models. Primiarly, it used DeepSeek's `V4.X Flash` and `V4 Pro` models within my IDE. I used it first as a brainstorming aid for the walk-time calculation, then gave it small, specific steps: turn the raw data into GeoJSON, keep only the fields the map reads, draw the result, repeat.
+This project (A2 and A3) was built with the help of AI coding models. Primiarly, it used DeepSeek's `V4.X Flash` and `V4 Pro` models within my IDE. I used it first as a brainstorming aid for the walk-time calculation, then gave it small, specific steps: turn the raw data into GeoJSON, keep only the fields the map reads, draw the result, repeat.
 
 It often needed several tries to understand the scope I wanted, and it hallucinated instructions when I asked it to limit what it processed. For every answer I checked it was solving the right problem, then opened the page in Live Server to confirm the map did what I expected, and committed each stage I trusted so there was always a fallback. The main dead end was drawing a polygon for every city block; I rejected that for static street corners, which were simpler to calculate and to draw.
 
 The problem, the audience, the core action, and every decision to accept, change or reject what the agent produced stayed mine.
+
+As the project progressed, I got better at giving it instructions to make sure it only covered what I was asking for, though I'd still have to be careful as it would often try to do more.
 
 At a lesser level, Github Copilot was used for commit summaries.
 
