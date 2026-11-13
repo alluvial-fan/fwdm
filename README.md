@@ -109,8 +109,11 @@ Severity: 3, stops the user from being able to use the search feature to find th
 My change: Added a dropdown to the street name search using Fuse.js to provide suggestions based on the street name file.
 Recheck: One of the two class TAs tested the feature. Upon retrying the same address that caused issues it worked. 
   Fixed means: They do it without hesitating at that spot.
-Before: ![alt text](/screenshots/A3_Part3_before.png)
-After: ![alt text](/screenshots/A3_Part3_after.png)
+Before: 
+![alt text](/screenshots/A3_Part3_before.png)
+
+After: 
+![alt text](/screenshots/A3_Part3_after.png)
 
 ## AI Disclosure
 
